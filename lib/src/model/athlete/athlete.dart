@@ -96,6 +96,7 @@ class Athlete {
   Future<String> convertPhotoBase64() async {
     if (photo != '') {
       try {
+        print('https://$imagePrefix/$photo');
         http.Response response =
             await http.get(Uri.parse('https://$imagePrefix/$photo'));
         final bytes = response.bodyBytes;
