@@ -1,5 +1,6 @@
 import 'package:eurocup_frontend/src/athletes/athlete_detail_view.dart';
 import 'package:eurocup_frontend/src/athletes/athlete_list_view.dart';
+import 'package:eurocup_frontend/src/crews/crew_list_view.dart';
 import 'package:eurocup_frontend/src/home_page_view.dart';
 import 'package:eurocup_frontend/src/login_view.dart';
 import 'package:flutter/material.dart';
@@ -79,6 +80,8 @@ class MyApp extends StatelessWidget {
                     return AthleteListView();
                   case AthleteDetailView.routeName:
                     return AthleteDetailView();
+                  case CrewListView.routeName:
+                    return CrewListView();
                   default:
                     return LoginView();
                 }

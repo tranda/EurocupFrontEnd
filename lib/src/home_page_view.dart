@@ -1,4 +1,5 @@
 import 'package:eurocup_frontend/src/athletes/athlete_list_view.dart';
+import 'package:eurocup_frontend/src/crews/crew_list_view.dart';
 import 'package:flutter/material.dart';
 
 import 'model/user.dart';
@@ -29,7 +30,9 @@ class _HomePageState extends State<HomePage> {
           child: const Text('Athletes'),
         ),
         TextButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.restorablePushNamed(context, CrewListView.routeName);
+          },
           child: const Text('Crews'),
         ),
       ]),

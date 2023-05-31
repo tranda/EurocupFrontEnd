@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
+import 'package:eurocup_frontend/src/model/race/race.dart';
 import 'package:eurocup_frontend/src/model/user.dart';
 import 'package:http/http.dart' as http;
 import 'common.dart';
@@ -45,8 +46,8 @@ Future<List<Athlete>> getAthletesForClub(int? clubId) async {
   http.StreamedResponse response = await request.send();
 
   if (response.statusCode == 200) {
-    List<dynamic> res = jsonDecode(await response.stream.bytesToString());
-    res.forEach((athlete) {
+    List<dynamic> result = jsonDecode(await response.stream.bytesToString());
+    result.forEach((athlete) {
       athletes.add(Athlete.fromMap(athlete));
     });
     print(athletes);
@@ -125,3 +126,27 @@ void deleteAthlete(Athlete athlete) async {
     print(response.reasonPhrase);
   }
 }
+
+Future<List<Race>> getDisciplines() async {
+    var headers = {
+      'Authorization': 'Bearer $token'
+    };
+    var request = http.Request(
+        'GET', Uri.parse('https://events.motion.rs/api/disciplines'));
+
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    List<Race> races = [];
+    if (response.statusCode == 200) {
+      List<dynamic> result = jsonDecode(await response.stream.bytesToString());
+      print(result);
+      result.forEach((race) {
+      races.add(Race.fromMap(race));
+    });
+    } else {
+      print(response.reasonPhrase);
+    }
+    return(races);
+  }
