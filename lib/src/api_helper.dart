@@ -128,25 +128,87 @@ void deleteAthlete(Athlete athlete) async {
 }
 
 Future<List<Race>> getDisciplines() async {
-    var headers = {
-      'Authorization': 'Bearer $token'
-    };
-    var request = http.Request(
-        'GET', Uri.parse('https://events.motion.rs/api/disciplines'));
+  var headers = {'Authorization': 'Bearer $token'};
+  var request = http.Request(
+      'GET', Uri.parse('https://events.motion.rs/api/disciplines'));
 
-    request.headers.addAll(headers);
+  request.headers.addAll(headers);
 
-    http.StreamedResponse response = await request.send();
+  http.StreamedResponse response = await request.send();
 
-    List<Race> races = [];
-    if (response.statusCode == 200) {
-      List<dynamic> result = jsonDecode(await response.stream.bytesToString());
-      print(result);
-      result.forEach((race) {
+  List<Race> races = [];
+  if (response.statusCode == 200) {
+    List<dynamic> result = jsonDecode(await response.stream.bytesToString());
+    print(result);
+    result.forEach((race) {
       races.add(Race.fromMap(race));
     });
-    } else {
-      print(response.reasonPhrase);
-    }
-    return(races);
+  } else {
+    print(response.reasonPhrase);
   }
+  return (races);
+}
+
+Future<Map<int, Athlete>> getCrewAthletesForCrew(int crewId) async {
+  var headers = {'Authorization': 'Bearer $token'};
+  var request = http.Request('GET',
+      Uri.parse('https://events.motion.rs/api/crewathletes?crew_id=$crewId'));
+
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+
+  Map<int, Athlete> crewAthletes = {};
+
+  if (response.statusCode == 200) {
+    List<dynamic> result = jsonDecode(await response.stream.bytesToString());
+    // print(result);
+    result.forEach((element) {
+      crewAthletes[element['crew_athlete']['no']] =
+          Athlete.fromMap(element['athlete']);
+    });
+    print(crewAthletes);
+  } else {
+    print(response.reasonPhrase);
+  }
+  return (crewAthletes);
+}
+
+void InsertCrewAthlete(int no, int crewId, int athleteId) async {
+  var headers = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Authorization': 'Bearer $token'
+  };
+  var request = http.Request(
+      'POST', Uri.parse('https://events.motion.rs/api/crewathletes'));
+  request.bodyFields = {
+    'no': no.toString(),
+    'crew_id': crewId.toString(),
+    'athlete_id': athleteId.toString()
+  };
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+
+  if (response.statusCode == 200) {
+    print(await response.stream.bytesToString());
+  } else {
+    print(response.reasonPhrase);
+  }
+}
+
+void deleteCrewAthlete(int id) async {
+  var headers = {'Authorization': 'Bearer $token'};
+  var request = http.Request(
+      'DELETE', Uri.parse('https://events.motion.rs/api/crewathletes/$id'));
+  request.bodyFields = {};
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+
+  if (response.statusCode == 200) {
+    print(await response.stream.bytesToString());
+  } else {
+    print(response.reasonPhrase);
+  }
+}

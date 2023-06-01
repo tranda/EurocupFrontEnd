@@ -1,11 +1,11 @@
+import 'package:eurocup_frontend/src/crews/crew_detail_view.dart';
 import 'package:eurocup_frontend/src/model/race/discipline_crew.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
-
 class CrewListView extends StatelessWidget {
   const CrewListView({Key? key}) : super(key: key);
-  
+
   static const routeName = '/crew_list';
 
   @override
@@ -14,8 +14,10 @@ class CrewListView extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Crew List'),
       ),
-      body: FutureBuilder(future: api.getDisciplines(), builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+      body: FutureBuilder(
+        future: api.getDisciplines(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasData) {
@@ -30,22 +32,37 @@ class CrewListView extends StatelessWidget {
                 return Column(
                   children: [
                     ListTile(
-                        title: Text(race.discipline!.getDisplayName()),
-                        ),
-                      Column(children: List.generate(race.disciplineCrews!.length, (index) {
-                        DisciplineCrew crew = race.disciplineCrews![index];
+                      title: Text(race.discipline!.getDisplayName()),
+                    ),
+                    Column(
+                      children:
+                          List.generate(race.disciplineCrews!.length, (index) {
+                        DisciplineCrew disciplineCrew =
+                            race.disciplineCrews![index];
                         return Row(children: [
-                          Text(crew.team!.name!),
+                          GestureDetector(
+                            child: Text(disciplineCrew.team!.name!),
+                            onTap: () {
+                              Navigator.of(context).pushNamed(
+                                  CrewDetailView.routeName,
+                                  arguments: {
+                                    'crewId': disciplineCrew.crew!.id,
+                                    'size': 20
+                                  });
+                            },
+                          ),
                         ]);
-                      }),),
-                      const Divider()
+                      }),
+                    ),
+                    const Divider()
                   ],
                 );
               },
             );
           }
           return (const Text('No data'));
-      },),
+        },
+      ),
     );
   }
 }

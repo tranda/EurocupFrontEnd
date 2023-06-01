@@ -1,5 +1,7 @@
 import 'package:eurocup_frontend/src/athletes/athlete_detail_view.dart';
 import 'package:eurocup_frontend/src/athletes/athlete_list_view.dart';
+import 'package:eurocup_frontend/src/crews/athlete_picker_view.dart';
+import 'package:eurocup_frontend/src/crews/crew_detail_view.dart';
 import 'package:eurocup_frontend/src/crews/crew_list_view.dart';
 import 'package:eurocup_frontend/src/home_page_view.dart';
 import 'package:eurocup_frontend/src/login_view.dart';
@@ -79,9 +81,13 @@ class MyApp extends StatelessWidget {
                   case AthleteListView.routeName:
                     return AthleteListView();
                   case AthleteDetailView.routeName:
-                    return AthleteDetailView();
+                    return const AthleteDetailView();
                   case CrewListView.routeName:
-                    return CrewListView();
+                    return const CrewListView();
+                  case CrewDetailView.routeName:
+                    return const CrewDetailView();
+                  case AthletePickerView.routeName:
+                    return const AthletePickerView();
                   default:
                     return LoginView();
                 }
