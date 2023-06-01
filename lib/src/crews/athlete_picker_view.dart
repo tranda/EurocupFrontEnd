@@ -24,7 +24,7 @@ class AthletePickerView extends StatelessWidget {
                 itemCount: _athletes.length,
                 itemBuilder: (context, index) {
                   return ListTile(
-                    title: Text(_athletes[index].firstName!),
+                    title: Text(_athletes[index].getDisplayName()),
                     onTap: () {
                       api.insertCrewAthlete(
                           no, crewId, _athletes[index].id!);

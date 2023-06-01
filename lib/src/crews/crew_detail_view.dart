@@ -3,6 +3,8 @@ import 'package:eurocup_frontend/src/model/race/crew.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
+import '../model/athlete/athlete.dart';
+
 class CrewDetailView extends StatefulWidget {
   const CrewDetailView({Key? key}) : super(key: key);
   static const routeName = '/crew_detail';
@@ -42,7 +44,7 @@ class _CrewDetailViewState extends State<CrewDetailView> {
                 var helmPrefix = no == helmNo ? "(helm)" : "";
                 if (_crewAthletes.containsKey(index)) {
                   return ListTile(
-                    title: Text("$no " + drummerPrefix + helmPrefix + " " + _crewAthletes[index]!['athlete']!.firstName!),
+                    title: Text("$no " + drummerPrefix + helmPrefix + " " + (_crewAthletes[index]!['athlete']! as Athlete).getDisplayName()),
                     trailing: IconButton(
                       icon: const Icon(
                         Icons.delete,

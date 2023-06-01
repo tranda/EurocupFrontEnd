@@ -107,4 +107,8 @@ class Athlete {
     }
     return (photoBase64);
   }
+
+  String getDisplayName(){
+    return('$firstName $lastName');
+  }
 }
