@@ -50,7 +50,8 @@ class CrewListView extends StatelessWidget {
                                   arguments: {
                                     'crewId': disciplineCrew.crew!.id,
                                     'size': size,
-                                    'helmNo' : helmNo
+                                    'helmNo' : helmNo,
+                                    'title' : race.discipline!.getDisplayName()
                                   });
                             },
                           ),

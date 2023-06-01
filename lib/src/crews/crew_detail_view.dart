@@ -23,10 +23,11 @@ class _CrewDetailViewState extends State<CrewDetailView> {
     int size = args['size'];
     int crewId = args['crewId'];
     int helmNo = args['helmNo'];
+    String title = args['title'];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Crew Detail'),
+        title: Text(title),
       ),
       body: FutureBuilder(
         future: api.getCrewAthletesForCrew(crewId),
