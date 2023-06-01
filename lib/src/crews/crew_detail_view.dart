@@ -1,5 +1,4 @@
 import 'package:eurocup_frontend/src/crews/athlete_picker_view.dart';
-import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
 import 'package:eurocup_frontend/src/model/race/crew.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
@@ -21,6 +20,7 @@ class _CrewDetailViewState extends State<CrewDetailView> {
     final args = ModalRoute.of(context)!.settings.arguments as Map;
     int size = args['size'];
     int crewId = args['crewId'];
+    int helmNo = args['helmNo'];
 
     return Scaffold(
       appBar: AppBar(
@@ -37,9 +37,12 @@ class _CrewDetailViewState extends State<CrewDetailView> {
             return ListView.builder(
               itemCount: size,
               itemBuilder: (context, index) {
+                var no = index + 1;
+                var drummerPrefix = no == 1 ? "(drummer)" : "";
+                var helmPrefix = no == helmNo ? "(helm)" : "";
                 if (_crewAthletes.containsKey(index)) {
                   return ListTile(
-                    title: Text(_crewAthletes[index]!['athlete']!.firstName!),
+                    title: Text("$no " + drummerPrefix + helmPrefix + " " + _crewAthletes[index]!['athlete']!.firstName!),
                     trailing: IconButton(
                       icon: const Icon(
                         Icons.delete,
@@ -56,11 +59,11 @@ class _CrewDetailViewState extends State<CrewDetailView> {
                   );
                 } else {
                   return ListTile(
-                    title: Text('$index'),
+                    title: Text("$no " + drummerPrefix + helmPrefix),
                     onTap: () {
                       Navigator.of(context).pushNamed(
                           AthletePickerView.routeName,
-                          arguments: {'crewId': crewId}).then((value) {
+                          arguments: {'crewId': crewId, 'no': index}).then((value) {
                         setState(() {});
                       });
                     },

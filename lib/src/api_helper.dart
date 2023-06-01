@@ -215,7 +215,7 @@ Future deleteCrewAthlete(int id) async {
   }
 }
 
-Future<List<Athlete>> getEligableAthletesForCrew(int crewId) async {
+Future<List<Athlete>> getEligibleAthletesForCrew(int crewId) async {
   var headers = {'Authorization': 'Bearer $token'};
   var request = http.Request(
       'GET',

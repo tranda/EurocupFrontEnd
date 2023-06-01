@@ -39,6 +39,8 @@ class CrewListView extends StatelessWidget {
                           List.generate(race.disciplineCrews!.length, (index) {
                         DisciplineCrew disciplineCrew =
                             race.disciplineCrews![index];
+                        var size = (race.discipline!.boatGroup == "Standard" ? 24 : 13);
+                        var helmNo = (race.discipline!.boatGroup == "Standard" ? 22 : 12);
                         return Row(children: [
                           GestureDetector(
                             child: Text(disciplineCrew.team!.name!),
@@ -47,7 +49,8 @@ class CrewListView extends StatelessWidget {
                                   CrewDetailView.routeName,
                                   arguments: {
                                     'crewId': disciplineCrew.crew!.id,
-                                    'size': 20
+                                    'size': size,
+                                    'helmNo' : helmNo
                                   });
                             },
                           ),

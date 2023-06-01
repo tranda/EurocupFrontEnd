@@ -9,10 +9,11 @@ class AthletePickerView extends StatelessWidget {
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments as Map;
     final crewId = args['crewId'];
+    final no = args['no'];
     return Scaffold(
       appBar: AppBar(title: const Text('Pick an Athlete')),
       body: FutureBuilder(
-        future: api.getEligableAthletesForCrew(args['crewId']),
+        future: api.getEligibleAthletesForCrew(args['crewId']),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -26,7 +27,7 @@ class AthletePickerView extends StatelessWidget {
                     title: Text(_athletes[index].firstName!),
                     onTap: () {
                       api.insertCrewAthlete(
-                          index, crewId, _athletes[index].id!);
+                          no, crewId, _athletes[index].id!);
                       Navigator.of(context).pop();
                     },
                   );
