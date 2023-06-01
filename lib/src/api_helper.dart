@@ -32,7 +32,6 @@ Future<bool> sendLoginRequest(String username, String password) async {
 }
 
 Future<List<Athlete>> getAthletesForClub(int? clubId) async {
-  List<Athlete> athletes = [];
   var headers = {
     'Authorization': 'Bearer $token',
     'Cookie':
@@ -44,7 +43,7 @@ Future<List<Athlete>> getAthletesForClub(int? clubId) async {
   request.headers.addAll(headers);
 
   http.StreamedResponse response = await request.send();
-
+  List<Athlete> athletes = [];
   if (response.statusCode == 200) {
     List<dynamic> result = jsonDecode(await response.stream.bytesToString());
     result.forEach((athlete) {
@@ -149,7 +148,8 @@ Future<List<Race>> getDisciplines() async {
   return (races);
 }
 
-Future<Map<int, Athlete>> getCrewAthletesForCrew(int crewId) async {
+Future<Map<int, Map<String, dynamic>>> getCrewAthletesForCrew(
+    int crewId) async {
   var headers = {'Authorization': 'Bearer $token'};
   var request = http.Request('GET',
       Uri.parse('https://events.motion.rs/api/crewathletes?crew_id=$crewId'));
@@ -158,14 +158,16 @@ Future<Map<int, Athlete>> getCrewAthletesForCrew(int crewId) async {
 
   http.StreamedResponse response = await request.send();
 
-  Map<int, Athlete> crewAthletes = {};
+  Map<int, Map<String, dynamic>> crewAthletes = {};
 
   if (response.statusCode == 200) {
     List<dynamic> result = jsonDecode(await response.stream.bytesToString());
     // print(result);
     result.forEach((element) {
-      crewAthletes[element['crew_athlete']['no']] =
-          Athlete.fromMap(element['athlete']);
+      crewAthletes[element['crew_athlete']['no']] = {
+        'id': element['crew_athlete']['id'],
+        'athlete': Athlete.fromMap(element['athlete'])
+      };
     });
     print(crewAthletes);
   } else {
@@ -174,7 +176,7 @@ Future<Map<int, Athlete>> getCrewAthletesForCrew(int crewId) async {
   return (crewAthletes);
 }
 
-void InsertCrewAthlete(int no, int crewId, int athleteId) async {
+void insertCrewAthlete(int no, int crewId, int athleteId) async {
   var headers = {
     'Content-Type': 'application/x-www-form-urlencoded',
     'Authorization': 'Bearer $token'
@@ -197,7 +199,7 @@ void InsertCrewAthlete(int no, int crewId, int athleteId) async {
   }
 }
 
-void deleteCrewAthlete(int id) async {
+Future deleteCrewAthlete(int id) async {
   var headers = {'Authorization': 'Bearer $token'};
   var request = http.Request(
       'DELETE', Uri.parse('https://events.motion.rs/api/crewathletes/$id'));
@@ -211,4 +213,27 @@ void deleteCrewAthlete(int id) async {
   } else {
     print(response.reasonPhrase);
   }
+}
+
+Future<List<Athlete>> getEligableAthletesForCrew(int crewId) async {
+  var headers = {'Authorization': 'Bearer $token'};
+  var request = http.Request(
+      'GET',
+      Uri.parse(
+          'https://events.motion.rs/api/eligibleAthletes?crew_id=$crewId'));
+
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+  List<Athlete> athletes = [];
+  if (response.statusCode == 200) {
+    List<dynamic> result = jsonDecode(await response.stream.bytesToString());
+    result.forEach((athlete) {
+      athletes.add(Athlete.fromMap(athlete));
+    });
+    print(athletes);
+  } else {
+    print(response.reasonPhrase);
+  }
+  return (athletes);
 }

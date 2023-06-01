@@ -39,15 +39,18 @@ class _CrewDetailViewState extends State<CrewDetailView> {
               itemBuilder: (context, index) {
                 if (_crewAthletes.containsKey(index)) {
                   return ListTile(
-                    title: Text(_crewAthletes[index]!.firstName!),
+                    title: Text(_crewAthletes[index]!['athlete']!.firstName!),
                     trailing: IconButton(
                       icon: const Icon(
                         Icons.delete,
                         color: Colors.red,
                       ),
                       onPressed: () {
-                        api.deleteCrewAthlete(_crewAthletes[index]!
-                            .id!); //TODO: ne znam sta je taj id
+                        api
+                            .deleteCrewAthlete(_crewAthletes[index]!['id'])
+                            .then((value) {
+                          setState(() {});
+                        });
                       },
                     ),
                   );

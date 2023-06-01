@@ -12,7 +12,7 @@ class AthletePickerView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Pick an Athlete')),
       body: FutureBuilder(
-        future: api.getAthletesForClub(args['crewId']),
+        future: api.getEligableAthletesForCrew(args['crewId']),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -25,7 +25,7 @@ class AthletePickerView extends StatelessWidget {
                   return ListTile(
                     title: Text(_athletes[index].firstName!),
                     onTap: () {
-                      api.InsertCrewAthlete(
+                      api.insertCrewAthlete(
                           index, crewId, _athletes[index].id!);
                       Navigator.of(context).pop();
                     },
