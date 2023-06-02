@@ -20,7 +20,7 @@ class LoginView extends StatelessWidget {
     usernameController.text = 'marko@gmail.com';
     passwordController.text = '12345678';
     return Scaffold(
-      appBar: appBar(title: 'Log In'),
+      appBar: appBar(title: 'Events Platform'),
       body: Center(
         child: SizedBox(
           width: MediaQuery.of(context).size.width,
