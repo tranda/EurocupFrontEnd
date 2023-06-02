@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'dart:html';
 
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
 import 'package:eurocup_frontend/src/model/race/race.dart';
 import 'package:eurocup_frontend/src/model/user.dart';
 import 'package:http/http.dart' as http;
 import 'common.dart';
+import 'model/event/event.dart';
 
 Future<bool> sendLoginRequest(String username, String password) async {
   var headers = {
@@ -236,4 +238,25 @@ Future<List<Athlete>> getEligibleAthletesForCrew(int crewId) async {
     print(response.reasonPhrase);
   }
   return (athletes);
+}
+
+Future<List<Competition>> getCompetitions() async {
+  var headers = {'X-CSRF-TOKEN': 'M25zLgHGk3G5M3yVw5QxY29FcZ4ZHj7mocwXicew'};
+  var request =
+      http.Request('GET', Uri.parse('https://events.motion.rs/api/events'));
+  request.bodyFields = {};
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+  // List<Competition> competitions = [];
+  if (response.statusCode == 200) {
+    List<dynamic> result = jsonDecode(await response.stream.bytesToString());
+    result.forEach((competition) {
+      competitions.add(Competition.fromMap(competition));
+    });
+    print(result);
+  } else {
+    print(response.reasonPhrase);
+  }
+  return (competitions);
 }

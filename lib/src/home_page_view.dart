@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'model/user.dart';
 import 'common.dart';
+import 'api_helper.dart' as api;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,7 +17,11 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final User user = currentUser;
-
+@override
+  void initState() {
+    api.getCompetitions();
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(

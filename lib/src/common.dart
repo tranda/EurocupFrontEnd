@@ -1,12 +1,18 @@
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
+import 'package:eurocup_frontend/src/model/event/event.dart';
 import 'package:flutter/material.dart';
 
 import 'model/user.dart';
 
 String imagesPath = 'assets/images/';
 
+var TEST = true;
+var testUser = "mymail@gmail.com";
+var testPassword = "12345678";
+
 User currentUser = User();
 String token = '';
+List<Competition> competitions = [];
 
 Athlete currentAthlete = Athlete();
 String imagePrefix = 'events.motion.rs/photos';
@@ -19,5 +25,4 @@ const double bigSpace = 50;
 const double cornerRadius = 4;
 const double iconSize = 24;
 
-const Color eurocupColor = Color.fromARGB(50, 200, 50, 0);
-const Color festivalColor = Color.fromARGB(50, 50, 200, 0);
+const List<Color> competitionColor = [Color.fromARGB(50, 200, 50, 0), Color.fromARGB(50, 50, 200, 0)];

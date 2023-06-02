@@ -63,7 +63,7 @@ class Discipline {
   /// Converts [Discipline] to a JSON string.
   String toJson() => json.encode(toMap());
 
-  String getDisplayName(){
-    return('$boatGroup $ageGroup $genderGroup ${distance}m');
+  String getDisplayName() {
+    return ('$boatGroup $ageGroup $genderGroup ${distance}m');
   }
 }

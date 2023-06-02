@@ -17,15 +17,14 @@ class CrewListView extends StatefulWidget {
 }
 
 class _CrewListViewState extends State<CrewListView> {
-
-    @override
+  @override
   void initState() {
     super.initState();
     // setState(() {
     //   getAthletes();
     // });
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,11 +43,13 @@ class _CrewListViewState extends State<CrewListView> {
               itemBuilder: (BuildContext context, int index) {
                 final race = _races[index];
                 // print(race);
+                var competition = competitions.firstWhere(
+                    (element) => element.id == race.discipline?.eventId);
+                var eventName = competition.name!;
+                var eventColor = competitionColor[race.discipline!.eventId! - 1];
+                var standardSize = 22 + competition.standardReserves!;
+                var smallSize = 12 + competition.standardReserves!;
 
-                var eventName =
-                    race.discipline!.eventId == 1 ? "Eurocup" : "Festival";
-                var eventColor =
-                    race.discipline!.eventId == 1 ? eurocupColor : festivalColor;
                 return Column(
                   children: [
                     ListTile(
@@ -72,11 +73,11 @@ class _CrewListViewState extends State<CrewListView> {
                         DisciplineCrew disciplineCrew =
                             race.disciplineCrews![index];
                         var size = (race.discipline!.boatGroup == "Standard"
-                            ? 24
-                            : 13);
-                        var helmNo = (race.discipline!.boatGroup == "Standard"
-                            ? 22
-                            : 12);
+                            ? standardSize
+                            : smallSize);
+                        var helmNo = race.discipline!.boatGroup == "Standard"
+                            ? standardSize - competition.standardReserves!
+                            : smallSize - competition.smallReserves!;
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [

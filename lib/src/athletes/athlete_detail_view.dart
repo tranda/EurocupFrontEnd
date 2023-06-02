@@ -48,7 +48,8 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
 
     return Scaffold(
         appBar: AppBar(
-          title: Text('${currentAthlete.firstName ?? ""} ${currentAthlete.lastName ?? ""}'),
+          title: Text(
+              '${currentAthlete.firstName ?? ""} ${currentAthlete.lastName ?? ""}'),
           actions: [
             Visibility(
               visible: !editable,

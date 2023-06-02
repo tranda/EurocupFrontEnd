@@ -17,8 +17,8 @@ class LoginView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    usernameController.text = 'marko@gmail.com';
-    passwordController.text = '12345678';
+    usernameController.text = TEST ? testUser : "";
+    passwordController.text = TEST ? testPassword : "";
     return Scaffold(
       appBar: appBar(title: 'Events Platform'),
       body: Center(
@@ -67,7 +67,8 @@ class LoginView extends StatelessWidget {
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: horizontalPadding, vertical: verticalPadding),
+                          horizontal: horizontalPadding,
+                          vertical: verticalPadding),
                       child: Center(
                         child: ElevatedButton(
                           onPressed: () {

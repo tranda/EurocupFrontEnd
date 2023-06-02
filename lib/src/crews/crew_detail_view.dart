@@ -73,7 +73,8 @@ class _CrewDetailViewState extends State<CrewDetailView> {
                   return Column(
                     children: [
                       ListTile(
-                        title: Text("$no $drummerPrefix$helmPrefix$reservePrefix",
+                        title: Text(
+                            "$no $drummerPrefix$helmPrefix$reservePrefix",
                             style: Theme.of(context).textTheme.bodyText1),
                         onTap: () {
                           Navigator.of(context).pushNamed(
