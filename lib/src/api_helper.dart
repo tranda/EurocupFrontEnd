@@ -241,7 +241,7 @@ Future<List<Athlete>> getEligibleAthletesForCrew(int crewId) async {
 }
 
 Future<List<Competition>> getCompetitions() async {
-  var headers = {'X-CSRF-TOKEN': 'M25zLgHGk3G5M3yVw5QxY29FcZ4ZHj7mocwXicew'};
+  var headers = {'Authorization': 'Bearer $token',};
   var request =
       http.Request('GET', Uri.parse('https://events.motion.rs/api/events'));
   request.bodyFields = {};
