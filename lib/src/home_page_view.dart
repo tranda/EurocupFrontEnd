@@ -24,35 +24,35 @@ class _HomePageState extends State<HomePage> {
       // appBar: AppBar(
       //   title: const Text('Home Page'),
       // ),
-      body: Center(
-        child: Card(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: bigSpace),
-              ListTile(
-                title: Text(
-                  'Athletes',
-                  style: Theme.of(context).textTheme.headline1,
-                ),
-                onTap: () {
-                  Navigator.restorablePushNamed(
-                      context, AthleteListView.routeName);
-                },
-              ),
-              ListTile(
-                title: Text(
-                  'Crews',
-                  style: Theme.of(context).textTheme.headline1,
-                ),
-                onTap: () {
-                  Navigator.restorablePushNamed(
-                      context, CrewListView.routeName);
-                },
-              ),
-            ],
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(height: bigSpace),
+          ListTile(
+            title: Text('Athletes',
+                style: Theme.of(context).textTheme.headline1,
+                textAlign: TextAlign.center),
+            onTap: () {
+              Navigator.restorablePushNamed(context, AthleteListView.routeName);
+            },
           ),
-        ),
+          ListTile(
+            title: Text('Crews',
+                style: Theme.of(context).textTheme.headline1,
+                textAlign: TextAlign.center),
+            onTap: () {
+              Navigator.restorablePushNamed(context, CrewListView.routeName);
+            },
+          ),
+          ListTile(
+            enabled: false,
+            title: Text('Settings',
+                style: Theme.of(context).textTheme.headline1,
+                textAlign: TextAlign.center),
+            onTap: () {},
+          ),
+        ],
       ),
     );
   }
