@@ -42,12 +42,13 @@ class _CrewDetailViewState extends State<CrewDetailView> {
                 var no = index + 1;
                 var drummerPrefix = no == 1 ? "(drummer)" : "";
                 var helmPrefix = no == helmNo ? "(helm)" : "";
+                var reservePrefix = no > helmNo ? "(reserve)" : "";
                 if (_crewAthletes.containsKey(index)) {
                   return Column(
                     children: [
                       ListTile(
                         title: Text(
-                            "$no $drummerPrefix$helmPrefix ${(_crewAthletes[index]!['athlete']! as Athlete).getDisplayName()}",
+                            "$no $drummerPrefix$helmPrefix$reservePrefix ${(_crewAthletes[index]!['athlete']! as Athlete).getDisplayName()}",
                             style: Theme.of(context).textTheme.bodyText1),
                         trailing: IconButton(
                           icon: const Icon(
@@ -72,7 +73,7 @@ class _CrewDetailViewState extends State<CrewDetailView> {
                   return Column(
                     children: [
                       ListTile(
-                        title: Text("$no $drummerPrefix$helmPrefix",
+                        title: Text("$no $drummerPrefix$helmPrefix$reservePrefix",
                             style: Theme.of(context).textTheme.bodyText1),
                         onTap: () {
                           Navigator.of(context).pushNamed(
