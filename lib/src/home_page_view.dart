@@ -1,5 +1,6 @@
 import 'package:eurocup_frontend/src/athletes/athlete_list_view.dart';
 import 'package:eurocup_frontend/src/crews/crew_list_view.dart';
+import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 
 import 'model/user.dart';
@@ -19,23 +20,40 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home Page'),
+      appBar: appBar(title: 'Home'),
+      // appBar: AppBar(
+      //   title: const Text('Home Page'),
+      // ),
+      body: Center(
+        child: Card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: bigSpace),
+              ListTile(
+                title: Text(
+                  'Athletes',
+                  style: Theme.of(context).textTheme.headline1,
+                ),
+                onTap: () {
+                  Navigator.restorablePushNamed(
+                      context, AthleteListView.routeName);
+                },
+              ),
+              ListTile(
+                title: Text(
+                  'Crews',
+                  style: Theme.of(context).textTheme.headline1,
+                ),
+                onTap: () {
+                  Navigator.restorablePushNamed(
+                      context, CrewListView.routeName);
+                },
+              ),
+            ],
+          ),
+        ),
       ),
-      body: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        TextButton(
-          onPressed: () {
-            Navigator.restorablePushNamed(context, AthleteListView.routeName);
-          },
-          child: const Text('Athletes'),
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.restorablePushNamed(context, CrewListView.routeName);
-          },
-          child: const Text('Crews'),
-        ),
-      ]),
     );
   }
 }

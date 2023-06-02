@@ -1,5 +1,6 @@
 import 'package:eurocup_frontend/src/crews/athlete_picker_view.dart';
 import 'package:eurocup_frontend/src/model/race/crew.dart';
+import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
@@ -26,9 +27,7 @@ class _CrewDetailViewState extends State<CrewDetailView> {
     String title = args['title'];
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-      ),
+      appBar: appBar(title: title),
       body: FutureBuilder(
         future: api.getCrewAthletesForCrew(crewId),
         builder: (context, snapshot) {
@@ -44,32 +43,52 @@ class _CrewDetailViewState extends State<CrewDetailView> {
                 var drummerPrefix = no == 1 ? "(drummer)" : "";
                 var helmPrefix = no == helmNo ? "(helm)" : "";
                 if (_crewAthletes.containsKey(index)) {
-                  return ListTile(
-                    title: Text("$no " + drummerPrefix + helmPrefix + " " + (_crewAthletes[index]!['athlete']! as Athlete).getDisplayName()),
-                    trailing: IconButton(
-                      icon: const Icon(
-                        Icons.delete,
-                        color: Colors.red,
+                  return Column(
+                    children: [
+                      ListTile(
+                        title: Text(
+                            "$no $drummerPrefix$helmPrefix ${(_crewAthletes[index]!['athlete']! as Athlete).getDisplayName()}",
+                            style: Theme.of(context).textTheme.bodyText1),
+                        trailing: IconButton(
+                          icon: const Icon(
+                            Icons.delete,
+                            color: Colors.red,
+                          ),
+                          onPressed: () {
+                            api
+                                .deleteCrewAthlete(_crewAthletes[index]!['id'])
+                                .then((value) {
+                              setState(() {});
+                            });
+                          },
+                        ),
                       ),
-                      onPressed: () {
-                        api
-                            .deleteCrewAthlete(_crewAthletes[index]!['id'])
-                            .then((value) {
-                          setState(() {});
-                        });
-                      },
-                    ),
+                      const Divider(
+                        height: 4,
+                      )
+                    ],
                   );
                 } else {
-                  return ListTile(
-                    title: Text("$no " + drummerPrefix + helmPrefix),
-                    onTap: () {
-                      Navigator.of(context).pushNamed(
-                          AthletePickerView.routeName,
-                          arguments: {'crewId': crewId, 'no': index}).then((value) {
-                        setState(() {});
-                      });
-                    },
+                  return Column(
+                    children: [
+                      ListTile(
+                        title: Text("$no $drummerPrefix$helmPrefix",
+                            style: Theme.of(context).textTheme.bodyText1),
+                        onTap: () {
+                          Navigator.of(context).pushNamed(
+                              AthletePickerView.routeName,
+                              arguments: {
+                                'crewId': crewId,
+                                'no': index
+                              }).then((value) {
+                            setState(() {});
+                          });
+                        },
+                      ),
+                      const Divider(
+                        height: 4,
+                      )
+                    ],
                   );
                 }
               },

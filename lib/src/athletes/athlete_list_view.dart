@@ -2,6 +2,7 @@ import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:eurocup_frontend/src/athletes/athlete_detail_view.dart';
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
+import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 
 class AthleteListView extends StatefulWidget {
@@ -26,20 +27,27 @@ class _AthleteListViewState extends State<AthleteListView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Athletes'),
-        actions: [
-          IconButton(
-              icon: Icon(Icons.add),
-              onPressed: () {
-                currentAthlete = Athlete();
-                Navigator.pushNamed(context, AthleteDetailView.routeName,
-                    arguments: {'mode': 'm'}).then((value) {
-                  setState(() {});
-                });
-              })
-        ],
-      ),
+      appBar: appBarWithAction(() {
+        currentAthlete = Athlete();
+        Navigator.pushNamed(context, AthleteDetailView.routeName,
+            arguments: {'mode': 'm'}).then((value) {
+          setState(() {});
+        });
+      }, title: 'Athlete List', icon: Icons.add),
+      // appBar: AppBar(
+      //   title: const Text('Athletes'),
+      //   actions: [
+      //     IconButton(
+      //         icon: Icon(Icons.add),
+      //         onPressed: () {
+      //           currentAthlete = Athlete();
+      //           Navigator.pushNamed(context, AthleteDetailView.routeName,
+      //               arguments: {'mode': 'm'}).then((value) {
+      //             setState(() {});
+      //           });
+      //         })
+      //   ],
+      // ),
       body: FutureBuilder<List<Athlete>>(
         future: api.getAthletesForClub(currentUser.clubId),
         builder: (context, snapshot) {
@@ -55,15 +63,29 @@ class _AthleteListViewState extends State<AthleteListView> {
                 final athlete = _athletes[index];
                 print(athlete);
 
-                return ListTile(
-                    title: Text('${athlete.firstName} ${athlete.lastName}'),
-                    onTap: () {
-                      currentAthlete = athlete;
-                      Navigator.pushNamed(context, AthleteDetailView.routeName,
-                          arguments: {'mode': 'r'}).then((value) {
-                        setState(() {});
-                      });
-                    });
+                return Column(
+                  children: [
+                    ListTile(
+                        title: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                              '${athlete.firstName} ${athlete.lastName}',
+                              style: Theme.of(context).textTheme.bodyText1),
+                        ),
+                        onTap: () {
+                          currentAthlete = athlete;
+                          Navigator.pushNamed(
+                              context, AthleteDetailView.routeName,
+                              arguments: {'mode': 'r'}).then((value) {
+                            setState(() {});
+                          });
+                        },
+                        trailing: const Icon(Icons.arrow_forward)),
+                    const Divider(
+                      height: 4,
+                    )
+                  ],
+                );
               },
             );
           }

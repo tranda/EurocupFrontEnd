@@ -1,3 +1,4 @@
+import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
@@ -11,7 +12,7 @@ class AthletePickerView extends StatelessWidget {
     final crewId = args['crewId'];
     final no = args['no'];
     return Scaffold(
-      appBar: AppBar(title: const Text('Pick an Athlete')),
+      appBar: appBar(title: 'Pick an Athlete'),
       body: FutureBuilder(
         future: api.getEligibleAthletesForCrew(args['crewId']),
         builder: (context, snapshot) {
@@ -23,13 +24,21 @@ class AthletePickerView extends StatelessWidget {
             return ListView.builder(
                 itemCount: _athletes.length,
                 itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(_athletes[index].getDisplayName()),
-                    onTap: () {
-                      api.insertCrewAthlete(
-                          no, crewId, _athletes[index].id!);
-                      Navigator.of(context).pop();
-                    },
+                  return Column(
+                    children: [
+                      ListTile(
+                        title: Text(_athletes[index].getDisplayName(),
+                            style: Theme.of(context).textTheme.bodyText1),
+                        onTap: () {
+                          api.insertCrewAthlete(
+                              no, crewId, _athletes[index].id!);
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      const Divider(
+                        height: 4,
+                      )
+                    ],
                   );
                 });
           }

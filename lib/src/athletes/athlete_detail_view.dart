@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
+import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 
 import 'package:eurocup_frontend/src/common.dart';
@@ -47,7 +48,7 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
 
     return Scaffold(
         appBar: AppBar(
-          title: Text('${currentAthlete.firstName} ${currentAthlete.lastName}'),
+          title: Text('${currentAthlete.firstName ?? ""} ${currentAthlete.lastName ?? ""}'),
           actions: [
             Visibility(
               visible: !editable,
@@ -95,40 +96,39 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                     );
                   }
                 }
-                return (const Text('No data'));
+                return Image.asset('assets/images/unknown.png');
               },
             ),
             onTap: () {
-              selectImageSource();
+              if (editable) {
+                selectImageSource();
+              }
             },
           )),
           TextField(
-            decoration: const InputDecoration(
-              labelText: 'First Name',
-            ),
+            decoration: buildStandardInputDecorationWithLabel('First Name'),
             controller: firstNameController,
             enabled: editable,
+            style: Theme.of(context).textTheme.bodyText1,
             onChanged: (value) {
               currentAthlete.firstName = value;
             },
           ),
           TextField(
-            decoration: const InputDecoration(
-              labelText: 'Last Name',
-            ),
+            decoration: buildStandardInputDecorationWithLabel('Last Name'),
             controller: lastNameController,
             enabled: editable,
+            style: Theme.of(context).textTheme.bodyText1,
             onChanged: (value) {
               currentAthlete.lastName = value;
             },
           ),
           TextField(
-            decoration: const InputDecoration(
-              labelText: 'Date of Birth',
-            ),
+            decoration: buildStandardInputDecorationWithLabel('Date of Birth'),
             controller: dateOfBirthController,
             readOnly: true,
             enabled: editable,
+            style: Theme.of(context).textTheme.bodyText1,
             onTap: () async {
               if (!editable) {
                 return;
@@ -138,7 +138,7 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                   initialDate: DateTime.tryParse(dateOfBirthController.text) ??
                       DateTime.now(),
                   firstDate: DateTime(1900),
-                  lastDate: DateTime(2101));
+                  lastDate: DateTime.now());
 
               if (pickedDate != null) {
                 String formattedDate =
@@ -152,14 +152,13 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
             },
           ),
           TextField(
-            decoration: const InputDecoration(
-              labelText: 'Gender',
-            ),
+            decoration: buildStandardInputDecorationWithLabel('Gender'),
             controller: genderController,
             enabled: editable,
             onChanged: (value) {
               currentAthlete.gender = value;
             },
+            style: Theme.of(context).textTheme.bodyText1,
           ),
         ]),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,

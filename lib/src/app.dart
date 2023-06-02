@@ -62,7 +62,58 @@ class MyApp extends StatelessWidget {
           // Define a light and dark color theme. Then, read the user's
           // preferred ThemeMode (light, dark, or system default) from the
           // SettingsController to display the correct theme.
-          theme: ThemeData(),
+          // theme: ThemeData(),
+          theme: ThemeData(
+          fontFamily: 'Roboto',
+          primarySwatch: Colors.orange,
+          canvasColor: Colors.white,
+          appBarTheme: const AppBarTheme(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.black //here you can give the text color
+              ),
+          textTheme: const TextTheme(
+            headline1: TextStyle(
+                fontSize: 24, fontWeight: FontWeight.bold),
+            headline2: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+            headline3: TextStyle(fontSize: 17, fontWeight: FontWeight.normal),
+            headline4: TextStyle(fontSize: 14, fontWeight: FontWeight.normal),
+            bodyText1: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            bodyText2: TextStyle(fontSize: 12, color: Colors.grey),
+            subtitle1: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.normal,
+                color: Colors.black),
+            subtitle2: TextStyle(
+                fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey, height: 1.0),
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: ButtonStyle(
+              foregroundColor: MaterialStateProperty.resolveWith(
+                  (Set<MaterialState> states) {
+                return states.contains(MaterialState.disabled)
+                    ? null
+                    : Colors.green;
+              }),
+            ),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ButtonStyle(
+              foregroundColor: MaterialStateProperty.resolveWith(
+                  (Set<MaterialState> states) {
+                return states.contains(MaterialState.disabled)
+                    ? null
+                    : Colors.white;
+              }),
+              backgroundColor: MaterialStateProperty.resolveWith(
+                  (Set<MaterialState> states) {
+                return states.contains(MaterialState.disabled)
+                    ? null
+                    : Colors.green;
+              }),
+            ),
+          ),
+        ),
+          
           darkTheme: ThemeData.dark(),
           themeMode: settingsController.themeMode,
 
