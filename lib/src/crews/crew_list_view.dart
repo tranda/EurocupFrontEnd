@@ -38,12 +38,12 @@ class _CrewListViewState extends State<CrewListView> {
           }
           if (snapshot.hasData) {
             final _races = snapshot.data!;
-            print(_races);
+            // print(_races);
             return ListView.builder(
               itemCount: _races.length,
               itemBuilder: (BuildContext context, int index) {
                 final race = _races[index];
-                print(race);
+                // print(race);
 
                 var eventName =
                     race.discipline!.eventId == 1 ? "Eurocup" : "Festival";

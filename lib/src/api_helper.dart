@@ -23,7 +23,7 @@ Future<bool> sendLoginRequest(String username, String password) async {
     var data = res['data'];
     token = data['token'];
     currentUser = User.fromMap(data['user']);
-    print(currentUser);
+    // print(currentUser);
     return (true);
   } else {
     print(response.reasonPhrase);
@@ -49,7 +49,7 @@ Future<List<Athlete>> getAthletesForClub(int? clubId) async {
     result.forEach((athlete) {
       athletes.add(Athlete.fromMap(athlete));
     });
-    print(athletes);
+    // print(athletes);
   } else {
     print(response.reasonPhrase);
   }
@@ -138,7 +138,7 @@ Future<List<Race>> getDisciplines() async {
   List<Race> races = [];
   if (response.statusCode == 200) {
     List<dynamic> result = jsonDecode(await response.stream.bytesToString());
-    print(result);
+    // print(result);
     result.forEach((race) {
       races.add(Race.fromMap(race));
     });
@@ -169,7 +169,7 @@ Future<Map<int, Map<String, dynamic>>> getCrewAthletesForCrew(
         'athlete': Athlete.fromMap(element['athlete'])
       };
     });
-    print(crewAthletes);
+    // print(crewAthletes);
   } else {
     print(response.reasonPhrase);
   }
@@ -231,7 +231,7 @@ Future<List<Athlete>> getEligibleAthletesForCrew(int crewId) async {
     result.forEach((athlete) {
       athletes.add(Athlete.fromMap(athlete));
     });
-    print(athletes);
+    // print(athletes);
   } else {
     print(response.reasonPhrase);
   }

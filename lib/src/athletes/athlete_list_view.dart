@@ -34,20 +34,6 @@ class _AthleteListViewState extends State<AthleteListView> {
           setState(() {});
         });
       }, title: 'Athlete List', icon: Icons.add),
-      // appBar: AppBar(
-      //   title: const Text('Athletes'),
-      //   actions: [
-      //     IconButton(
-      //         icon: Icon(Icons.add),
-      //         onPressed: () {
-      //           currentAthlete = Athlete();
-      //           Navigator.pushNamed(context, AthleteDetailView.routeName,
-      //               arguments: {'mode': 'm'}).then((value) {
-      //             setState(() {});
-      //           });
-      //         })
-      //   ],
-      // ),
       body: FutureBuilder<List<Athlete>>(
         future: api.getAthletesForClub(currentUser.clubId),
         builder: (context, snapshot) {
@@ -56,12 +42,12 @@ class _AthleteListViewState extends State<AthleteListView> {
           }
           if (snapshot.hasData) {
             final _athletes = snapshot.data!;
-            print(_athletes);
+            // print(_athletes);
             return ListView.builder(
               itemCount: _athletes.length,
               itemBuilder: (BuildContext context, int index) {
                 final athlete = _athletes[index];
-                print(athlete);
+                // print(athlete);
 
                 return Column(
                   children: [
