@@ -15,7 +15,7 @@ String token = '';
 List<Competition> competitions = [];
 
 Athlete currentAthlete = Athlete();
-String imagePrefix = 'events.motion.rs/photos';
+const String imagePrefix = 'events.motion.rs/photos';
 
 const double horizontalPadding = 24.0;
 const double verticalPadding = 8.0;

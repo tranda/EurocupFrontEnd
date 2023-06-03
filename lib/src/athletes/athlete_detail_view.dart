@@ -45,6 +45,8 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
     lastNameController.text = currentAthlete.lastName ?? '';
     dateOfBirthController.text = currentAthlete.birthDate ?? '';
     genderController.text = currentAthlete.gender ?? '';
+    var photoUrl = "https://$imagePrefix/${currentAthlete.photo}";
+    print('photo url: $photoUrl');
 
     return Scaffold(
         appBar: AppBar(
@@ -79,27 +81,42 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
         body: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Center(
               child: GestureDetector(
-            child: FutureBuilder(
-              future: currentAthlete.convertPhotoBase64(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasData) {
-                  final String Str64 = snapshot.data!;
-                  Uint8List bytesImage = const Base64Decoder().convert(Str64);
-                  print(Str64);
-                  if (Str64 != '') {
-                    return Image.memory(
-                      bytesImage,
-                      width: 100,
-                      height: 100,
-                    );
-                  }
-                }
-                return Image.asset('assets/images/unknown.png');
-              },
-            ),
+            child: currentAthlete.photo != null && currentAthlete.photo != ""
+                ? Image.network(
+                    photoUrl,
+                    width: 256,
+                    height: 256,
+                  )
+                : Image.asset(
+                    'assets/images/unknown.png',
+                    width: 256,
+                    height: 256,
+                  ),
+            // child: FutureBuilder(
+            //   future: currentAthlete.convertPhotoBase64(),
+            //   builder: (context, snapshot) {
+            //     if (snapshot.connectionState == ConnectionState.waiting) {
+            //       return const Center(child: CircularProgressIndicator());
+            //     }
+            //     if (snapshot.hasData) {
+            //       final String Str64 = snapshot.data!;
+            //       Uint8List bytesImage = const Base64Decoder().convert(Str64);
+            //       print(Str64);
+            //       if (Str64 != '') {
+            //         return Image.memory(
+            //           bytesImage,
+            //           width: 256,
+            //           height: 256,
+            //         );
+            //       }
+            //     }
+            //     return Image.asset(
+            //       'assets/images/unknown.png',
+            //       width: 256,
+            //       height: 256,
+            //     );
+            //   },
+            // ),
             onTap: () {
               if (editable) {
                 selectImageSource();
@@ -107,6 +124,7 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
             },
           )),
           TextField(
+            textCapitalization: TextCapitalization.words,
             decoration: buildStandardInputDecorationWithLabel('First Name'),
             controller: firstNameController,
             enabled: editable,
@@ -116,6 +134,7 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
             },
           ),
           TextField(
+            textCapitalization: TextCapitalization.words,
             decoration: buildStandardInputDecorationWithLabel('Last Name'),
             controller: lastNameController,
             enabled: editable,
@@ -152,15 +171,34 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
               }
             },
           ),
-          TextField(
-            decoration: buildStandardInputDecorationWithLabel('Gender'),
-            controller: genderController,
-            enabled: editable,
-            onChanged: (value) {
-              currentAthlete.gender = value;
-            },
-            style: Theme.of(context).textTheme.bodyText1,
-          ),
+          (!editable)
+              ? TextField(
+                  decoration: buildStandardInputDecorationWithLabel('Gender'),
+                  controller: genderController,
+                  enabled: editable,
+                  onChanged: (value) {
+                    currentAthlete.gender = value;
+                  },
+                  style: Theme.of(context).textTheme.bodyText1,
+                )
+              : DropdownButtonHideUnderline(
+                child: DropdownButton(
+                    enableFeedback: editable,
+                    value: currentAthlete.gender,
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'Male',
+                        child: Text('Male'),
+                      ),
+                      DropdownMenuItem(value: 'Female', child: Text('Female'))
+                    ],
+                    onChanged: (value) {
+                      currentAthlete.gender = value;
+                    },
+                    style: Theme.of(context).textTheme.bodyText1,
+                    padding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+                  ),
+              )
         ]),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         floatingActionButton: Visibility(
