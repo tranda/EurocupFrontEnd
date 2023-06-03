@@ -36,7 +36,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: bigSpace),
           ListTile(
             title: Text('Athletes',
-                style: Theme.of(context).textTheme.headline1,
+                style: Theme.of(context).textTheme.headline2,
                 textAlign: TextAlign.center),
             onTap: () {
               Navigator.restorablePushNamed(context, AthleteListView.routeName);
@@ -44,7 +44,7 @@ class _HomePageState extends State<HomePage> {
           ),
           ListTile(
             title: Text('Crews',
-                style: Theme.of(context).textTheme.headline1,
+                style: Theme.of(context).textTheme.headline2,
                 textAlign: TextAlign.center),
             onTap: () {
               Navigator.restorablePushNamed(context, CrewListView.routeName);
@@ -53,7 +53,7 @@ class _HomePageState extends State<HomePage> {
           ListTile(
             enabled: false,
             title: Text('Settings',
-                style: Theme.of(context).textTheme.headline1,
+                style: Theme.of(context).textTheme.headline2,
                 textAlign: TextAlign.center),
             onTap: () {},
           ),

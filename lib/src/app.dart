@@ -72,7 +72,7 @@ class MyApp extends StatelessWidget {
                 foregroundColor: Colors.black //here you can give the text color
                 ),
             textTheme: const TextTheme(
-              headline1: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              headline1: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
               headline2: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
               headline3: TextStyle(fontSize: 17, fontWeight: FontWeight.normal),
               headline4: TextStyle(fontSize: 14, fontWeight: FontWeight.normal),

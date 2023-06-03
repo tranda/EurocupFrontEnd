@@ -56,7 +56,7 @@ class _CrewListViewState extends State<CrewListView> {
                       tileColor: eventColor,
                       title: Text(
                         race.discipline!.getDisplayName(),
-                        style: Theme.of(context).textTheme.headline2,
+                        style: Theme.of(context).textTheme.bodyText1,
                       ),
                       trailing: Text(
                         eventName,
