@@ -72,20 +72,20 @@ class MyApp extends StatelessWidget {
                 foregroundColor: Colors.black //here you can give the text color
                 ),
             textTheme: const TextTheme(
-              headline1: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
-              headline2: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
-              headline3: TextStyle(fontSize: 17, fontWeight: FontWeight.normal),
-              headline4: TextStyle(fontSize: 14, fontWeight: FontWeight.normal),
-              bodyText1: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              bodyText2: TextStyle(fontSize: 12, color: Colors.grey),
-              subtitle1: TextStyle(
+              displayLarge: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 0, 80, 150)),
+              displayMedium: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 0, 80, 150)),
+              displaySmall: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 0, 80, 150)),
+              headlineMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: Color.fromARGB(255, 0, 80, 150)),
+              bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 255, 255, 255)),
+              bodyMedium: TextStyle(fontSize: 12, color: Color.fromARGB(255, 255, 255, 255)),
+              titleMedium: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.normal,
-                  color: Colors.black),
-              subtitle2: TextStyle(
+                   color: Color.fromARGB(255, 0, 80, 150)),
+              titleSmall: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey,
+                  color: Color.fromARGB(255, 0, 80, 150),
                   height: 1.0),
             ),
             textButtonTheme: TextButtonThemeData(
@@ -94,7 +94,7 @@ class MyApp extends StatelessWidget {
                     (Set<MaterialState> states) {
                   return states.contains(MaterialState.disabled)
                       ? null
-                      : Colors.green;
+                      : const Color.fromARGB(255, 0, 80, 150);
                 }),
               ),
             ),
@@ -110,14 +110,14 @@ class MyApp extends StatelessWidget {
                     (Set<MaterialState> states) {
                   return states.contains(MaterialState.disabled)
                       ? null
-                      : Colors.green;
+                      : const Color.fromARGB(255, 0, 80, 150);
                 }),
               ),
             ),
           ),
 
           darkTheme: ThemeData.dark(),
-          themeMode: settingsController.themeMode,
+          themeMode: ThemeMode.light, //settingsController.themeMode, // 
 
           // Define a function to handle named routes in order to support
           // Flutter web url navigation and deep linking.

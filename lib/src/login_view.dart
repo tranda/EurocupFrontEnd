@@ -21,85 +21,89 @@ class LoginView extends StatelessWidget {
     passwordController.text = TEST ? testPassword : "";
     return Scaffold(
       appBar: appBar(title: 'Events Platform'),
-      body: Center(
+      body: Container(
+        decoration: const BoxDecoration(
+            image: DecorationImage(
+                image: AssetImage('assets/images/naslovna-bck.jpg'),
+                fit: BoxFit.cover)),
         child: SizedBox(
           width: MediaQuery.of(context).size.width,
-          child: Card(
-            child: Form(
-              key: _formKey,
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: bigSpace),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 16),
-                      child: TextFormField(
-                        controller: usernameController,
-                        decoration: buildStandardInputDecoration("Username"),
-                        style: Theme.of(context).textTheme.bodyText1,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your username';
+          child: Form(
+            key: _formKey,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                    child: TextFormField(
+                      controller: usernameController,
+                      decoration: buildStandardInputDecoration("Username"),
+                      style: Theme.of(context).textTheme.displaySmall,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your username';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                    child: TextFormField(
+                      controller: passwordController,
+                      obscureText: true,
+                      decoration: buildPasswordInputDecoration("Password"),
+                      style: Theme.of(context).textTheme.displaySmall,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your password';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                        vertical: verticalPadding),
+                    child: Center(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            api
+                                .sendLoginRequest(usernameController.text,
+                                    passwordController.text)
+                                .then((value) => {
+                                      if (value)
+                                        {
+                                          Navigator.restorablePushNamed(
+                                              context, HomePage.routeName)
+                                        }
+                                      else
+                                        {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                                content: Text(
+                                                    'Incorrect username or password')),
+                                          )
+                                        }
+                                    });
                           }
-                          return null;
                         },
+                        child: const Text('LOG IN'),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 16),
-                      child: TextFormField(
-                        controller: passwordController,
-                        obscureText: true,
-                        decoration: buildPasswordInputDecoration("Password"),
-                        style: Theme.of(context).textTheme.bodyText1,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your password';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: horizontalPadding,
-                          vertical: verticalPadding),
-                      child: Center(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (_formKey.currentState!.validate()) {
-                              api
-                                  .sendLoginRequest(usernameController.text,
-                                      passwordController.text)
-                                  .then((value) => {
-                                        if (value)
-                                          {
-                                            Navigator.restorablePushNamed(
-                                                context, HomePage.routeName)
-                                          }
-                                        else
-                                          {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              const SnackBar(
-                                                  content: Text(
-                                                      'Incorrect username or password')),
-                                            )
-                                          }
-                                      });
-                            }
-                          },
-                          child: const Text('LOG IN'),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(
+                    height: bigSpace,
+                  ),
+                ],
               ),
             ),
           ),

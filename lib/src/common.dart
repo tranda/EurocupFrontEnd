@@ -25,4 +25,4 @@ const double bigSpace = 50;
 const double cornerRadius = 4;
 const double iconSize = 24;
 
-const List<Color> competitionColor = [Color.fromARGB(50, 200, 50, 0), Color.fromARGB(50, 50, 200, 0)];
+const List<Color> competitionColor = [Color.fromARGB(255, 15, 91, 169), Color.fromARGB(255, 32, 188, 237)];

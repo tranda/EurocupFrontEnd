@@ -17,11 +17,12 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final User user = currentUser;
-@override
+  @override
   void initState() {
     api.getCompetitions();
     super.initState();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,35 +30,63 @@ class _HomePageState extends State<HomePage> {
       // appBar: AppBar(
       //   title: const Text('Home Page'),
       // ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const SizedBox(height: bigSpace),
-          ListTile(
-            title: Text('Athletes',
-                style: Theme.of(context).textTheme.headline2,
-                textAlign: TextAlign.center),
-            onTap: () {
-              Navigator.restorablePushNamed(context, AthleteListView.routeName);
-            },
-          ),
-          ListTile(
-            title: Text('Crews',
-                style: Theme.of(context).textTheme.headline2,
-                textAlign: TextAlign.center),
-            onTap: () {
-              Navigator.restorablePushNamed(context, CrewListView.routeName);
-            },
-          ),
-          ListTile(
-            enabled: false,
-            title: Text('Settings',
-                style: Theme.of(context).textTheme.headline2,
-                textAlign: TextAlign.center),
-            onTap: () {},
-          ),
-        ],
+      body: Container(
+        decoration: const BoxDecoration(
+            image: DecorationImage(
+                image: AssetImage('assets/images/naslovna-bck.jpg'),
+                fit: BoxFit.cover)),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // const SizedBox(height: 400),
+            ListTile(
+              title: Text('List of Athletes',
+                  style: Theme.of(context).textTheme.displayLarge,
+                  textAlign: TextAlign.left),
+              onTap: () {
+                Navigator.restorablePushNamed(
+                    context, AthleteListView.routeName);
+              },
+              leading: const Icon(
+                Icons.play_arrow,
+                color: Color.fromARGB(255, 0, 80, 150),
+              ),
+            ),
+            ListTile(
+              title: Text('Crew Members',
+                  style: Theme.of(context).textTheme.displayLarge,
+                  textAlign: TextAlign.left),
+              onTap: () {
+                Navigator.restorablePushNamed(context, CrewListView.routeName);
+              },
+              leading: const Icon(
+                Icons.play_arrow,
+                color: Color.fromARGB(255, 0, 80, 150),
+              ),
+            ),
+            const SizedBox(
+              height: bigSpace,
+            ),
+            ListTile(
+              enabled: false,
+              title: Text('Settings',
+                  style: Theme.of(context).textTheme.displayMedium,
+                  textAlign: TextAlign.left),
+              onTap: () {},
+              leading: const Icon(
+                Icons.play_arrow,
+                color: Color.fromARGB(255, 0, 80, 150),
+              ),
+            ),
+            const SizedBox(
+              height: bigSpace,
+            ),
+            const SizedBox(
+              height: bigSpace,
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -34,49 +34,56 @@ class _AthleteListViewState extends State<AthleteListView> {
           setState(() {});
         });
       }, title: 'Athlete List', icon: Icons.add),
-      body: FutureBuilder<List<Athlete>>(
-        future: api.getAthletesForClub(currentUser.clubId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasData) {
-            final _athletes = snapshot.data!;
-            // print(_athletes);
-            return ListView.builder(
-              itemCount: _athletes.length,
-              itemBuilder: (BuildContext context, int index) {
-                final athlete = _athletes[index];
-                // print(athlete);
+      body: Container(
+        // decoration: const BoxDecoration(
+        //     image: DecorationImage(
+        //         image: AssetImage('assets/images/bck.jpg'),
+        //         fit: BoxFit.cover)),
+        child: FutureBuilder<List<Athlete>>(
+          future: api.getAthletesForClub(currentUser.clubId),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasData) {
+              final athletes = snapshot.data!;
+              // print(_athletes);
+              return ListView.builder(
+                itemCount: athletes.length,
+                itemBuilder: (BuildContext context, int index) {
+                  final athlete = athletes[index];
+                  // print(athlete);
 
-                return Column(
-                  children: [
-                    ListTile(
-                        title: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                              '${athlete.firstName} ${athlete.lastName}',
-                              style: Theme.of(context).textTheme.bodyText1),
-                        ),
-                        onTap: () {
-                          currentAthlete = athlete;
-                          Navigator.pushNamed(
-                              context, AthleteDetailView.routeName,
-                              arguments: {'mode': 'r'}).then((value) {
-                            setState(() {});
-                          });
-                        },
-                        trailing: const Icon(Icons.arrow_forward)),
-                    const Divider(
-                      height: 4,
-                    )
-                  ],
-                );
-              },
-            );
-          }
-          return (const Text('No data'));
-        },
+                  return Column(
+                    children: [
+                      ListTile(
+                          title: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                                '${athlete.firstName} ${athlete.lastName}',
+                                style: Theme.of(context).textTheme.displaySmall
+                                ),
+                          ),
+                          onTap: () {
+                            currentAthlete = athlete;
+                            Navigator.pushNamed(
+                                context, AthleteDetailView.routeName,
+                                arguments: {'mode': 'r'}).then((value) {
+                              setState(() {});
+                            });
+                          },
+                          trailing: const Icon(Icons.arrow_forward)),
+                      const Divider(
+                        height: 4,
+                      )
+                    ],
+                  );
+                },
+              );
+            }
+            return (const Text('No data'));
+          },
+        ),
       ),
     );
   }
