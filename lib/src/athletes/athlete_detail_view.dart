@@ -183,25 +183,22 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                 ? TextField(
                     decoration: buildStandardInputDecorationWithLabel('Gender'),
                     controller: genderController,
-                    enabled: editable,
-                    onChanged: (value) {
-                      currentAthlete.gender = value;
-                    },
+                    enabled: false,
                     style: Theme.of(context).textTheme.displaySmall,
                   )
                 : DropdownButtonHideUnderline(
                     child: DropdownButton(
                       enableFeedback: editable,
+                      hint: const Text('Select Gender'),
                       value: currentAthlete.gender,
                       items: const [
-                        DropdownMenuItem(
-                          value: 'Male',
-                          child: Text('Male'),
-                        ),
+                        DropdownMenuItem(value: 'Male', child: Text('Male')),
                         DropdownMenuItem(value: 'Female', child: Text('Female'))
                       ],
                       onChanged: (value) {
-                        currentAthlete.gender = value;
+                        setState(() {
+                          currentAthlete.gender = value;
+                        });
                       },
                       style: Theme.of(context).textTheme.displaySmall,
                       padding:
@@ -274,7 +271,8 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
   }
 
   void selectImage(BuildContext context, ImageSource imageSource) async {
-    final XFile? image = await ImagePicker().pickImage(source: imageSource, maxHeight: 1024, maxWidth: 1024);
+    final XFile? image = await ImagePicker()
+        .pickImage(source: imageSource, maxHeight: 1024, maxWidth: 1024);
     if (image != null) {
       List<int> imageBytes = await image.readAsBytes();
       setState(() {
