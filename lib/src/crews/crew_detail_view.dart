@@ -43,70 +43,76 @@ class _CrewDetailViewState extends State<CrewDetailView> {
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasData) {
-              final crewAthletes = snapshot.data!;
-              return ListView.builder(
-                itemCount: size,
-                itemBuilder: (context, index) {
-                  var no = index + 1;
-                  var drummerPrefix = no == 1 ? "(drummer)" : "";
-                  var helmPrefix = no == helmNo ? "(helm)" : "";
-                  var reservePrefix = no > helmNo ? "(reserve)" : "";
-                  if (crewAthletes.containsKey(index)) {
-                    return Column(
-                      children: [
-                        ListTile(
-                          title: Text(
-                              "$no $drummerPrefix$helmPrefix$reservePrefix ${(crewAthletes[index]!['athlete']! as Athlete).getDisplayName()}",
-                              style: Theme.of(context).textTheme.displaySmall),
-                          trailing: IconButton(
-                            icon: const Icon(
-                              Icons.delete,
-                              color: Colors.red,
+            } else if (snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.hasData) {
+                var crewAthletes = snapshot.data!;
+                print (crewAthletes);
+                return ListView.builder(
+                  itemCount: size,
+                  itemBuilder: (context, index) {
+                    var no = index + 1;
+                    var drummerPrefix = no == 1 ? "(drummer)" : "";
+                    var helmPrefix = no == helmNo ? "(helm)" : "";
+                    var reservePrefix = no > helmNo ? "(reserve)" : "";
+                    if (crewAthletes.containsKey(index)) {
+                      return Column(
+                        children: [
+                          ListTile(
+                            title: Text(
+                                "$no $drummerPrefix$helmPrefix$reservePrefix ${(crewAthletes[index]!['athlete']! as Athlete).getDisplayName()}",
+                                style:
+                                    Theme.of(context).textTheme.displaySmall),
+                            trailing: IconButton(
+                              icon: const Icon(
+                                Icons.delete,
+                                color: Colors.red,
+                              ),
+                              onPressed: () {
+                                api
+                                    .deleteCrewAthlete(
+                                        crewAthletes[index]!['id'])
+                                    .then((value) {
+                                  setState(() {});
+                                });
+                              },
                             ),
-                            onPressed: () {
-                              api
-                                  .deleteCrewAthlete(crewAthletes[index]!['id'])
-                                  .then((value) {
+                          ),
+                          const Divider(
+                            height: 4,
+                          )
+                        ],
+                      );
+                    } else {
+                      return Column(
+                        children: [
+                          ListTile(
+                            title: Text(
+                                "$no $drummerPrefix$helmPrefix$reservePrefix",
+                                style:
+                                    Theme.of(context).textTheme.displaySmall),
+                            onTap: () {
+                              Navigator.of(context).pushNamed(
+                                  AthletePickerView.routeName,
+                                  arguments: {
+                                    'crewId': crewId,
+                                    'no': index
+                                  }).then((value) {
                                 setState(() {});
                               });
                             },
                           ),
-                        ),
-                        const Divider(
-                          height: 4,
-                        )
-                      ],
-                    );
-                  } else {
-                    return Column(
-                      children: [
-                        ListTile(
-                          title: Text(
-                              "$no $drummerPrefix$helmPrefix$reservePrefix",
-                              style: Theme.of(context).textTheme.displaySmall),
-                          onTap: () {
-                            Navigator.of(context).pushNamed(
-                                AthletePickerView.routeName,
-                                arguments: {
-                                  'crewId': crewId,
-                                  'no': index
-                                }).then((value) {
-                              setState(() {});
-                            });
-                          },
-                        ),
-                        const Divider(
-                          height: 4,
-                        )
-                      ],
-                    );
-                  }
-                },
-              );
+                          const Divider(
+                            height: 4,
+                          )
+                        ],
+                      );
+                    }
+                  },
+                );
+              }
             }
-            return (const Text('No data'));
+              return (const Text('No data'));
+            
           },
         ),
       ),

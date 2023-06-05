@@ -18,7 +18,7 @@ class AthletePickerView extends StatelessWidget {
             image: DecorationImage(
                 image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
         child: FutureBuilder(
-          future: api.getEligibleAthletesForCrew(args['crewId']),
+          future: api.getEligibleAthletesForCrew(crewId, no),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());

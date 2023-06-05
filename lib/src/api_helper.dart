@@ -216,12 +216,12 @@ Future deleteCrewAthlete(int id) async {
   }
 }
 
-Future<List<Athlete>> getEligibleAthletesForCrew(int crewId) async {
+Future<List<Athlete>> getEligibleAthletesForCrew(int crewId, int no) async {
   var headers = {'Authorization': 'Bearer $token'};
   var request = http.Request(
       'GET',
       Uri.parse(
-          'https://events.motion.rs/api/eligibleAthletes?crew_id=$crewId'));
+          'https://events.motion.rs/api/eligibleAthletes?crew_id=$crewId&no=$no'));
 
   request.headers.addAll(headers);
 
