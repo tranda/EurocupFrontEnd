@@ -87,42 +87,7 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Center(
                 child: GestureDetector(
-              child: currentAthlete.photo != null && currentAthlete.photo != ""
-                  ? Image.network(
-                      photoUrl,
-                      width: 256,
-                      height: 256,
-                    )
-                  : Image.asset(
-                      'assets/images/unknown.png',
-                      width: 256,
-                      height: 256,
-                    ),
-              // child: FutureBuilder(
-              //   future: currentAthlete.convertPhotoBase64(),
-              //   builder: (context, snapshot) {
-              //     if (snapshot.connectionState == ConnectionState.waiting) {
-              //       return const Center(child: CircularProgressIndicator());
-              //     }
-              //     if (snapshot.hasData) {
-              //       final String Str64 = snapshot.data!;
-              //       Uint8List bytesImage = const Base64Decoder().convert(Str64);
-              //       print(Str64);
-              //       if (Str64 != '') {
-              //         return Image.memory(
-              //           bytesImage,
-              //           width: 256,
-              //           height: 256,
-              //         );
-              //       }
-              //     }
-              //     return Image.asset(
-              //       'assets/images/unknown.png',
-              //       width: 256,
-              //       height: 256,
-              //     );
-              //   },
-              // ),
+              child: imagePreview(photoUrl: photoUrl),
               onTap: () {
                 if (editable) {
                   selectImageSource();
@@ -279,5 +244,93 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
         currentAthlete.photoBase64 = base64Encode(imageBytes);
       });
     }
+  }
+}
+
+class imagePreview extends StatelessWidget {
+  const imagePreview({
+    super.key,
+    required this.photoUrl,
+  });
+
+  final String photoUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    if (currentAthlete.photoBase64 != '') {
+      Uint8List bytesImage =
+          const Base64Decoder().convert(currentAthlete.photoBase64);
+      if (currentAthlete.photoBase64 != '') {
+        return Image.memory(
+          bytesImage,
+          width: 256,
+          height: 256,
+        );
+      }
+    } else if (currentAthlete.photo != null && currentAthlete.photo != "") {
+      return imageFromUrl(photoUrl: photoUrl);
+    } 
+    {
+      return const imageUnknown();
+    }
+
+    // return FutureBuilder(
+    //   future: currentAthlete.convertPhotoBase64(),
+    //   builder: (context, snapshot) {
+    //     if (snapshot.connectionState == ConnectionState.waiting) {
+    //       return const Center(child: CircularProgressIndicator());
+    //     }
+    //     if (snapshot.hasData) {
+    //       final String Str64 = snapshot.data!;
+    //       Uint8List bytesImage = const Base64Decoder().convert(Str64);
+    //       print(Str64);
+    //       if (Str64 != '') {
+    //         return Image.memory(
+    //           bytesImage,
+    //           width: 256,
+    //           height: 256,
+    //         );
+    //       }
+    //     }
+    //     return Image.asset(
+    //       'assets/images/unknown.png',
+    //       width: 256,
+    //       height: 256,
+    //     );
+    //   },
+    // );
+  }
+}
+
+class imageFromUrl extends StatelessWidget {
+  const imageFromUrl({
+    super.key,
+    required this.photoUrl,
+  });
+
+  final String photoUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.network(
+      photoUrl,
+      width: 256,
+      height: 256,
+    );
+  }
+}
+
+class imageUnknown extends StatelessWidget {
+  const imageUnknown({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      'assets/images/unknown.png',
+      width: 256,
+      height: 256,
+    );
   }
 }
