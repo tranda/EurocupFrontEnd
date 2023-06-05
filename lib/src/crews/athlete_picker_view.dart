@@ -34,9 +34,10 @@ class AthletePickerView extends StatelessWidget {
                           title: Text(athletes[index].getDisplayName(),
                               style: Theme.of(context).textTheme.displaySmall),
                           onTap: () {
-                            api.insertCrewAthlete(
-                                no, crewId, athletes[index].id!);
-                            Navigator.of(context).pop();
+                            api
+                                .insertCrewAthlete(
+                                    no, crewId, athletes[index].id!)
+                                .then((value) => Navigator.of(context).pop());
                           },
                         ),
                         const Divider(

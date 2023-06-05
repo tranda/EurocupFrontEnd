@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
 import 'package:eurocup_frontend/src/model/race/race.dart';
@@ -151,9 +152,10 @@ Future<List<Race>> getDisciplines() async {
 
 Future<Map<int, Map<String, dynamic>>> getCrewAthletesForCrew(
     int crewId) async {
-  var headers = {'Authorization': 'Bearer $token'};
+  var dummy = Random().nextInt(10000000);
+  var headers = {'Authorization': 'Bearer $token', 'Cache-Control': 'no-cache'};
   var request = http.Request('GET',
-      Uri.parse('https://events.motion.rs/api/crewathletes?crew_id=$crewId'));
+      Uri.parse('https://events.motion.rs/api/crewathletes?crew_id=$crewId&dummy=$dummy'));
 
   request.headers.addAll(headers);
 
@@ -174,10 +176,11 @@ Future<Map<int, Map<String, dynamic>>> getCrewAthletesForCrew(
   } else {
     print(response.reasonPhrase);
   }
+  // print("http response: $crewAthletes");
   return (crewAthletes);
 }
 
-void insertCrewAthlete(int no, int crewId, int athleteId) async {
+Future insertCrewAthlete(int no, int crewId, int athleteId) async {
   var headers = {
     'Content-Type': 'application/x-www-form-urlencoded',
     'Authorization': 'Bearer $token'
@@ -240,7 +243,9 @@ Future<List<Athlete>> getEligibleAthletesForCrew(int crewId, int no) async {
 }
 
 Future<List<Competition>> getCompetitions() async {
-  var headers = {'Authorization': 'Bearer $token',};
+  var headers = {
+    'Authorization': 'Bearer $token',
+  };
   var request =
       http.Request('GET', Uri.parse('https://events.motion.rs/api/events'));
   request.bodyFields = {};

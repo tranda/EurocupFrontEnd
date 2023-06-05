@@ -46,7 +46,7 @@ class _CrewDetailViewState extends State<CrewDetailView> {
             } else if (snapshot.connectionState == ConnectionState.done) {
               if (snapshot.hasData) {
                 var crewAthletes = snapshot.data!;
-                print (crewAthletes);
+                // print (crewAthletes);
                 return ListView.builder(
                   itemCount: size,
                   itemBuilder: (context, index) {
