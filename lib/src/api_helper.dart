@@ -58,7 +58,7 @@ Future<List<Athlete>> getAthletesForClub(int? clubId) async {
   return (athletes);
 }
 
-void updateAthlete(Athlete athlete) async {
+Future updateAthlete(Athlete athlete) async {
   if (athlete.id == null) {
     createAthlete(athlete);
     return;

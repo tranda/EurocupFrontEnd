@@ -15,6 +15,7 @@ class Athlete {
   DateTime? createdAt;
   DateTime? updatedAt;
   String photoBase64 = '';
+  String? category;
 
   Athlete({
     this.id,
@@ -23,6 +24,7 @@ class Athlete {
     this.lastName,
     this.birthDate,
     this.gender,
+    this.category,
     this.photo,
     this.createdAt,
     this.updatedAt,
@@ -40,6 +42,7 @@ class Athlete {
         lastName: data['last_name'] as String?,
         birthDate: data['birth_date'] as String?,
         gender: data['gender'] as String?,
+        category: data['category'] as String?,
         photo: data['photo'] as String?,
         createdAt: data['created_at'] == null
             ? null
@@ -56,6 +59,7 @@ class Athlete {
         'last_name': lastName,
         'birth_date': birthDate,
         'gender': gender,
+        'category': category,
         'photo': photo,
         'created_at': createdAt?.toIso8601String(),
         'updated_at': updatedAt?.toIso8601String(),

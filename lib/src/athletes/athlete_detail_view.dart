@@ -71,7 +71,11 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                 onPressed: () {
                   setState(() {
                     mode = 'r';
-                    api.updateAthlete(currentAthlete);
+                    api
+                        .updateAthlete(currentAthlete)
+                        .then((value) => Navigator.pop(
+                              context,
+                            ));
                   });
                 },
               ),
@@ -83,94 +87,111 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
               image: DecorationImage(
                   image: AssetImage('assets/images/bck.jpg'),
                   fit: BoxFit.cover)),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Center(
-                child: GestureDetector(
-              child: imagePreview(photoUrl: photoUrl),
-              onTap: () {
-                if (editable) {
-                  selectImageSource();
-                }
-              },
-            )),
-            TextField(
-              textCapitalization: TextCapitalization.words,
-              decoration: buildStandardInputDecorationWithLabel('First Name'),
-              controller: firstNameController,
-              enabled: editable,
-              style: Theme.of(context).textTheme.displaySmall,
-              onChanged: (value) {
-                currentAthlete.firstName = value;
-              },
-            ),
-            TextField(
-              textCapitalization: TextCapitalization.words,
-              decoration: buildStandardInputDecorationWithLabel('Last Name'),
-              controller: lastNameController,
-              enabled: editable,
-              style: Theme.of(context).textTheme.displaySmall,
-              onChanged: (value) {
-                currentAthlete.lastName = value;
-              },
-            ),
-            TextField(
-              decoration:
-                  buildStandardInputDecorationWithLabel('Date of Birth'),
-              controller: dateOfBirthController,
-              readOnly: true,
-              enabled: editable,
-              style: Theme.of(context).textTheme.displaySmall,
-              onTap: () async {
-                if (!editable) {
-                  return;
-                }
-                DateTime? pickedDate = await showDatePicker(
-                    context: context,
-                    initialDate:
-                        DateTime.tryParse(dateOfBirthController.text) ??
-                            DateTime.now(),
-                    firstDate: DateTime(1900),
-                    lastDate: DateTime.now());
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                  child: GestureDetector(
+                child: imagePreview(photoUrl: photoUrl),
+                onTap: () {
+                  if (editable) {
+                    selectImageSource();
+                  }
+                },
+              )),
+              TextField(
+                textCapitalization: TextCapitalization.words,
+                decoration: buildStandardInputDecorationWithLabel('First Name'),
+                controller: firstNameController,
+                enabled: editable,
+                style: Theme.of(context).textTheme.displaySmall,
+                onChanged: (value) {
+                  currentAthlete.firstName = value;
+                },
+              ),
+              TextField(
+                textCapitalization: TextCapitalization.words,
+                decoration: buildStandardInputDecorationWithLabel('Last Name'),
+                controller: lastNameController,
+                enabled: editable,
+                style: Theme.of(context).textTheme.displaySmall,
+                onChanged: (value) {
+                  currentAthlete.lastName = value;
+                },
+              ),
+              TextField(
+                decoration:
+                    buildStandardInputDecorationWithLabel('Date of Birth'),
+                controller: dateOfBirthController,
+                readOnly: true,
+                enabled: editable,
+                style: Theme.of(context).textTheme.displaySmall,
+                onTap: () async {
+                  if (!editable) {
+                    return;
+                  }
+                  DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate:
+                          DateTime.tryParse(dateOfBirthController.text) ??
+                              DateTime.now(),
+                      firstDate: DateTime(1900),
+                      lastDate: DateTime.now());
 
-                if (pickedDate != null) {
-                  String formattedDate =
-                      DateFormat('yyyy-MM-dd').format(pickedDate);
+                  if (pickedDate != null) {
+                    String formattedDate =
+                        DateFormat('yyyy-MM-dd').format(pickedDate);
 
-                  setState(() {
-                    dateOfBirthController.text = formattedDate;
-                    currentAthlete.birthDate = dateOfBirthController.text;
-                  });
-                }
-              },
-            ),
-            (!editable)
-                ? TextField(
-                    decoration: buildStandardInputDecorationWithLabel('Gender'),
-                    controller: genderController,
-                    enabled: false,
-                    style: Theme.of(context).textTheme.displaySmall,
-                  )
-                : DropdownButtonHideUnderline(
-                    child: DropdownButton(
-                      enableFeedback: editable,
-                      hint: const Text('Select Gender'),
-                      value: currentAthlete.gender,
-                      items: const [
-                        DropdownMenuItem(value: 'Male', child: Text('Male')),
-                        DropdownMenuItem(value: 'Female', child: Text('Female'))
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          currentAthlete.gender = value;
-                        });
-                      },
+                    setState(() {
+                      dateOfBirthController.text = formattedDate;
+                      currentAthlete.birthDate = dateOfBirthController.text;
+                    });
+                  }
+                },
+              ),
+              (!editable)
+                  ? TextField(
+                      decoration:
+                          buildStandardInputDecorationWithLabel('Gender'),
+                      controller: genderController,
+                      enabled: false,
                       style: Theme.of(context).textTheme.displaySmall,
-                      padding:
-                          const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+                    )
+                  : DropdownButtonHideUnderline(
+                      child: DropdownButton(
+                        enableFeedback: editable,
+                        hint: const Text('Select Gender'),
+                        value: currentAthlete.gender,
+                        items: const [
+                          DropdownMenuItem(value: 'Male', child: Text('Male')),
+                          DropdownMenuItem(
+                              value: 'Female', child: Text('Female'))
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            currentAthlete.gender = value;
+                          });
+                        },
+                        style: Theme.of(context).textTheme.displaySmall,
+                        padding:
+                            const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+                      ),
                     ),
-                  )
-          ]),
+              const SizedBox(
+                height: bigSpace,
+              ),
+              Visibility(
+                visible: !editable,
+                child: ListTile(
+                  title: Text(
+                    currentAthlete.category ?? "",
+                    style: Theme.of(context).textTheme.displayLarge,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         floatingActionButton: Visibility(
@@ -269,7 +290,7 @@ class imagePreview extends StatelessWidget {
       }
     } else if (currentAthlete.photo != null && currentAthlete.photo != "") {
       return imageFromUrl(photoUrl: photoUrl);
-    } 
+    }
     {
       return const imageUnknown();
     }
