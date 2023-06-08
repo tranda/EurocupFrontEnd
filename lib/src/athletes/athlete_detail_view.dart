@@ -65,7 +65,7 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
               ),
             ),
             Visibility(
-              visible: editable,
+              visible: false,
               child: IconButton(
                 icon: const Icon(Icons.save),
                 onPressed: () {
@@ -190,6 +190,29 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                   ),
                 ),
               ),
+              Visibility(
+                visible: editable,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    SizedBox(
+                        width: 128,
+                        height: 44,
+                        child: ElevatedButton(
+                            onPressed: () {}, child: Text('SAVE'))),
+                    // SizedBox(
+                    //   width: 128,
+                    //   height: 44,
+                    //   child: ElevatedButton(
+                    //     onPressed: () {},
+                    //     child: Text('DELETE'),
+                    //     // style: const ButtonStyle(backgroundColor: Colors.red),
+                    //   ),
+                    // )
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -210,9 +233,10 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                             child: const Text('Cancel')),
                         TextButton(
                             onPressed: () {
-                              api.deleteAthlete(currentAthlete);
-                              Navigator.pop(context);
-                              Navigator.pop(context);
+                              api.deleteAthlete(currentAthlete).then((value) {
+                                Navigator.pop(context);
+                                Navigator.pop(context);
+                              });
                             },
                             child: const Text('Delete')),
                       ],
