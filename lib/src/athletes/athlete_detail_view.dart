@@ -200,7 +200,17 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                         width: 128,
                         height: 44,
                         child: ElevatedButton(
-                            onPressed: () {}, child: Text('SAVE'))),
+                            onPressed: () {
+                              setState(() {
+                                mode = 'r';
+                                api
+                                    .updateAthlete(currentAthlete)
+                                    .then((value) => Navigator.pop(
+                                          context,
+                                        ));
+                              });
+                            },
+                            child: const Text('SAVE'))),
                     // SizedBox(
                     //   width: 128,
                     //   height: 44,
