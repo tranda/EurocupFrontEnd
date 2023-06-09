@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
     // The AnimatedBuilder Widget listens to the SettingsController for changes.
     // Whenever the user updates their settings, the MaterialApp is rebuilt.
     return Container(
-constraints: const BoxConstraints(maxWidth: 500),
+      constraints: const BoxConstraints(maxWidth: 500),
       child: AnimatedBuilder(
         animation: settingsController,
         builder: (BuildContext context, Widget? child) {
