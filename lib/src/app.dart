@@ -71,8 +71,12 @@ class MyApp extends StatelessWidget {
               // theme: ThemeData(),
               theme: ThemeData(
                 fontFamily: 'Roboto',
-                primarySwatch: Colors.orange,
+                primarySwatch: Colors.blue,
                 canvasColor: Colors.white,
+                datePickerTheme: const DatePickerThemeData(
+                  backgroundColor: Colors.grey,
+                  surfaceTintColor: Colors.amber
+                ),
                 appBarTheme: const AppBarTheme(
                     backgroundColor: Colors.white,
                     foregroundColor:

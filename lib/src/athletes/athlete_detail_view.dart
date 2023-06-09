@@ -131,12 +131,14 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                     return;
                   }
                   DateTime? pickedDate = await showDatePicker(
-                      context: context,
-                      initialDate:
-                          DateTime.tryParse(dateOfBirthController.text) ??
-                              DateTime.now(),
-                      firstDate: DateTime(1900),
-                      lastDate: DateTime.now());
+                    context: context,
+                    initialDate:
+                        DateTime.tryParse(dateOfBirthController.text) ??
+                            DateTime.now(),
+                    firstDate: DateTime(1900),
+                    lastDate: DateTime.now(),
+                    initialDatePickerMode: DatePickerMode.year,
+                  );
 
                   if (pickedDate != null) {
                     String formattedDate =
