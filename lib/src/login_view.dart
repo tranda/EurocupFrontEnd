@@ -1,24 +1,69 @@
 import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'common.dart';
 import 'home_page_view.dart';
 import 'api_helper.dart' as api;
 
-class LoginView extends StatelessWidget {
+const _storage = FlutterSecureStorage();
+Future readToken() async {
+  token = await _storage.read(key: 'TOKEN') ?? "";
+}
+
+Future saveToken(token) async {
+  await _storage.write(key: 'TOKEN', value: token);
+}
+
+Future clearToken() async {
+  await _storage.delete(key: 'TOKEN');
+  token = '';
+}
+
+class LoginView extends StatefulWidget {
   LoginView({super.key});
 
   static const routeName = '/login';
 
+  @override
+  State<LoginView> createState() => _LoginViewState();
+}
+
+class _LoginViewState extends State<LoginView> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  var startUser = "";
+  var startPassword = "";
+
+  @override
+  void initState() {
+    readToken();
+    super.initState();
+
+    if (kDebugMode) {
+      // Code specific to debug mode
+      print('Running in debug mode');
+      startUser = ADMINTEST ? adminUser : (TEST ? testUser : "");
+      startPassword = ADMINTEST ? adminPassword : (TEST ? testPassword : "");
+    } else {
+      // Code specific to release mode
+      print('Running in release mode');
+      startUser = "";
+      startPassword = "";
+    }
+
+    if (token != '') {
+      Navigator.pushNamed(context, HomePage.routeName);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    usernameController.text = TEST ? testUser : "";
-    passwordController.text = TEST ? testPassword : "";
+    usernameController.text = startUser;
+    passwordController.text = startPassword;
     return Scaffold(
       appBar: appBar(title: 'Events Platform'),
       body: Container(
@@ -27,7 +72,7 @@ class LoginView extends StatelessWidget {
                 image: AssetImage('assets/images/naslovna-bck.jpg'),
                 fit: BoxFit.cover)),
         child: SizedBox(
-          width: MediaQuery.of(context).size.width,
+          // width: 640,
           child: Form(
             key: _formKey,
             child: Padding(
@@ -81,7 +126,7 @@ class LoginView extends StatelessWidget {
                                 .then((value) => {
                                       if (value)
                                         {
-                                          Navigator.restorablePushNamed(
+                                          Navigator.pushNamed(
                                               context, HomePage.routeName)
                                         }
                                       else
