@@ -37,6 +37,7 @@ class _LoginViewState extends State<LoginView> {
   final TextEditingController passwordController = TextEditingController();
   var startUser = "";
   var startPassword = "";
+  bool busy = false;
 
   @override
   void initState() {
@@ -117,31 +118,36 @@ class _LoginViewState extends State<LoginView> {
                         horizontal: horizontalPadding,
                         vertical: verticalPadding),
                     child: Center(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            api
-                                .sendLoginRequest(usernameController.text,
-                                    passwordController.text)
-                                .then((value) => {
-                                      if (value)
-                                        {
-                                          Navigator.pushNamed(
-                                              context, HomePage.routeName)
-                                        }
-                                      else
-                                        {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            const SnackBar(
-                                                content: Text(
-                                                    'Incorrect username or password')),
-                                          )
-                                        }
-                                    });
-                          }
-                        },
-                        child: const Text('LOG IN'),
+                      child: Visibility(
+                        visible: !busy,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (_formKey.currentState!.validate()) {
+                              setState(() {
+                                busy = true;
+                              });
+                              api
+                                  .sendLoginRequest(usernameController.text,
+                                      passwordController.text)
+                                  .then((value) {
+                                if (value) {
+                                  Navigator.pushNamed(
+                                      context, HomePage.routeName);
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text(
+                                            'Incorrect username or password')),
+                                  );
+                                }
+                                setState(() {
+                                  busy = false;
+                                });
+                              });
+                            }
+                          },
+                          child: const Text('LOG IN'),
+                        ),
                       ),
                     ),
                   ),
