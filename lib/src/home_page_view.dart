@@ -30,19 +30,16 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: appBar(title: 'Events Platform'),
-      // appBar: AppBar(
-      //   title: const Text('Home Page'),
-      // ),
       body: Container(
         decoration: const BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage('assets/images/naslovna-bck.jpg'),
-                fit: BoxFit.cover)),
+          image: DecorationImage(
+              image: AssetImage('assets/images/naslovna-bck.jpg'),
+              fit: BoxFit.cover, alignment: Alignment.bottomCenter),
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // const SizedBox(height: 400),
             ListTile(
               title: Text('List of Athletes',
                   style: Theme.of(context).textTheme.displayLarge,
