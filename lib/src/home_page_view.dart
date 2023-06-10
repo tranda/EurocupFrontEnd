@@ -88,7 +88,7 @@ class _HomePageState extends State<HomePage> {
               onTap: () {
                 api.sendLogoutRequest().then((value) {
                   Navigator.pop(context);
-                  clearToken();
+                  // ClearToken();
                 });
               },
               leading: const Icon(

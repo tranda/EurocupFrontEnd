@@ -1,25 +1,25 @@
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+// import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'common.dart';
 import 'home_page_view.dart';
 import 'api_helper.dart' as api;
 
-const _storage = FlutterSecureStorage();
-Future readToken() async {
-  token = await _storage.read(key: 'TOKEN') ?? "";
-}
+// const _storage = FlutterSecureStorage();
+// Future ReadToken() async {
+//   token = await _storage.read(key: 'TOKEN') ?? "";
+// }
 
-Future saveToken(token) async {
-  await _storage.write(key: 'TOKEN', value: token);
-}
+// Future SaveToken(token) async {
+//   await _storage.write(key: 'TOKEN', value: token);
+// }
 
-Future clearToken() async {
-  await _storage.delete(key: 'TOKEN');
-  token = '';
-}
+// Future ClearToken() async {
+//   await _storage.delete(key: 'TOKEN');
+//   token = null;
+// }
 
 class LoginView extends StatefulWidget {
   LoginView({super.key});
@@ -41,7 +41,6 @@ class _LoginViewState extends State<LoginView> {
 
   @override
   void initState() {
-    readToken();
     super.initState();
 
     if (kDebugMode) {
@@ -56,9 +55,6 @@ class _LoginViewState extends State<LoginView> {
       startPassword = "";
     }
 
-    if (token != '') {
-      Navigator.pushNamed(context, HomePage.routeName);
-    }
   }
 
   @override

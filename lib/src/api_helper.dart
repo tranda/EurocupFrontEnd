@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:eurocup_frontend/src/login_view.dart';
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
 import 'package:eurocup_frontend/src/model/race/race.dart';
 import 'package:eurocup_frontend/src/model/user.dart';
@@ -28,7 +27,7 @@ Future<bool> sendLoginRequest(String username, String password) async {
     var data = res['data'];
     token = data['token'];
     currentUser = User.fromMap(data['user']);
-    saveToken(token);
+    // SaveToken(token);
     // print(currentUser);
     return (true);
   } else {
@@ -48,7 +47,7 @@ Future<bool> sendLogoutRequest() async {
   http.StreamedResponse response = await request.send();
 
   if (response.statusCode == 200) {
-    clearToken();
+    // ClearToken();
     print('User logged out.');
     return (true);
   } else {

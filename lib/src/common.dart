@@ -15,7 +15,7 @@ var adminUser = "tranda@gmail.com";
 var adminPassword = "12345678";
 
 User currentUser = User();
-String token = '';
+String? token = '';
 List<Competition> competitions = [];
 List<Discipline> disciplines = [];
 

@@ -37,6 +37,20 @@ class MyApp extends StatelessWidget {
           return Container(
             constraints: const BoxConstraints(maxWidth: 500),
             child: MaterialApp(
+            //           home: FutureBuilder(
+            // future: ReadToken(),
+            // builder: (context, snapshot) {
+            //   switch (snapshot.connectionState) {
+            //     case ConnectionState.none:
+            //     case ConnectionState.waiting:
+            //       return CircularProgressIndicator();
+            //     default:
+            //       if (snapshot.hasError)
+            //         return Text('Error: ${snapshot.error}');
+            //       // else if (snapshot.data == null)
+            //         return LoginView();
+            //   }
+            // }),
               // Providing a restorationScopeId allows the Navigator built by the
               // MaterialApp to restore the navigation stack when a user leaves and
               // returns to the app after it has been killed while running in the
