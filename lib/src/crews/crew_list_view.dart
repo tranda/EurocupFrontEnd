@@ -52,8 +52,8 @@ class _CrewListViewState extends State<CrewListView> {
                   var eventName = competition.name!;
                   var eventColor =
                       competitionColor[race.discipline!.eventId! - 1];
-                  var standardSize = 22 + competition.standardReserves!;
-                  var smallSize = 12 + competition.standardReserves!;
+                  var standardSize = 22;
+                  var smallSize = 12;
 
                   return Column(
                     children: [
@@ -80,9 +80,13 @@ class _CrewListViewState extends State<CrewListView> {
                           var size = (race.discipline!.boatGroup == "Standard"
                               ? standardSize
                               : smallSize);
+                          var reserves =
+                              (race.discipline!.boatGroup == "Standard"
+                                  ? competition.standardReserves!
+                                  : competition.smallReserves!);
                           var helmNo = race.discipline!.boatGroup == "Standard"
-                              ? standardSize - competition.standardReserves!
-                              : smallSize - competition.smallReserves!;
+                              ? standardSize
+                              : smallSize;
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -92,8 +96,9 @@ class _CrewListViewState extends State<CrewListView> {
                                         horizontal: verticalPadding),
                                     child: Text(
                                       disciplineCrew.team!.name!,
-                                      style:
-                                          Theme.of(context).textTheme.displaySmall,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .displaySmall,
                                     ),
                                   ),
                                   onTap: () {
@@ -101,12 +106,20 @@ class _CrewListViewState extends State<CrewListView> {
                                         CrewDetailView.routeName,
                                         arguments: {
                                           'crewId': disciplineCrew.crew!.id,
-                                          'size': size,
+                                          'size': size + reserves,
                                           'helmNo': helmNo,
                                           'title':
                                               race.discipline!.getDisplayName()
-                                        });
+                                        }).then((value) {
+                                      setState(() {});
+                                    });
                                   },
+                                  leading: Text(
+                                    "${disciplineCrew.crew!.capacity}/$size+$reserves",
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .displaySmall,
+                                  ),
                                   trailing: const Icon(Icons.arrow_forward)),
                               const Divider()
                             ],

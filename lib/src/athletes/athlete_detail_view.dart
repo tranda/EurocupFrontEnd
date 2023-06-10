@@ -18,6 +18,7 @@ class AthleteDetailView extends StatefulWidget {
 }
 
 class _AthleteDetailViewState extends State<AthleteDetailView> {
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController dateOfBirthController = TextEditingController();
@@ -88,85 +89,114 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                 image: DecorationImage(
                     image: AssetImage('assets/images/bck.jpg'),
                     fit: BoxFit.cover)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                    child: GestureDetector(
-                  child: imagePreview(photoUrl: photoUrl),
-                  onTap: () {
-                    if (editable) {
-                      selectImageSource();
-                    }
-                  },
-                )),
-                TextField(
-                  textCapitalization: TextCapitalization.words,
-                  decoration:
-                      buildStandardInputDecorationWithLabel('First Name'),
-                  controller: firstNameController,
-                  enabled: editable,
-                  style: Theme.of(context).textTheme.displaySmall,
-                  onChanged: (value) {
-                    currentAthlete.firstName = value;
-                  },
-                ),
-                TextField(
-                  textCapitalization: TextCapitalization.words,
-                  decoration:
-                      buildStandardInputDecorationWithLabel('Last Name'),
-                  controller: lastNameController,
-                  enabled: editable,
-                  style: Theme.of(context).textTheme.displaySmall,
-                  onChanged: (value) {
-                    currentAthlete.lastName = value;
-                  },
-                ),
-                TextField(
-                  decoration:
-                      buildStandardInputDecorationWithLabel('Date of Birth'),
-                  controller: dateOfBirthController,
-                  readOnly: true,
-                  enabled: editable,
-                  style: Theme.of(context).textTheme.displaySmall,
-                  onTap: () async {
-                    if (!editable) {
-                      return;
-                    }
-                    DateTime? pickedDate = await showDatePicker(
-                      context: context,
-                      initialDate:
-                          DateTime.tryParse(dateOfBirthController.text) ??
-                              DateTime.now(),
-                      firstDate: DateTime(1900),
-                      lastDate: DateTime.now(),
-                      initialDatePickerMode: DatePickerMode.year,
-                    );
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                      child: GestureDetector(
+                    child: imagePreview(photoUrl: photoUrl),
+                    onTap: () {
+                      if (editable) {
+                        selectImageSource();
+                      }
+                    },
+                  )),
+                  TextFormField(
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Required';
+                      }
+                      return null;
+                    },
+                    textCapitalization: TextCapitalization.words,
+                    decoration:
+                        buildStandardInputDecorationWithLabel('First Name'),
+                    controller: firstNameController,
+                    enabled: editable,
+                    style: Theme.of(context).textTheme.displaySmall,
+                    onChanged: (value) {
+                      currentAthlete.firstName = value;
+                    },
+                  ),
+                  TextFormField(
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Required';
+                      }
+                      return null;
+                    },
+                    textCapitalization: TextCapitalization.words,
+                    decoration:
+                        buildStandardInputDecorationWithLabel('Last Name'),
+                    controller: lastNameController,
+                    enabled: editable,
+                    style: Theme.of(context).textTheme.displaySmall,
+                    onChanged: (value) {
+                      currentAthlete.lastName = value;
+                    },
+                  ),
+                  TextFormField(
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Required';
+                      }
+                      return null;
+                    },
+                    decoration:
+                        buildStandardInputDecorationWithLabel('Date of Birth'),
+                    controller: dateOfBirthController,
+                    readOnly: true,
+                    enabled: editable,
+                    style: Theme.of(context).textTheme.displaySmall,
+                    onTap: () async {
+                      if (!editable) {
+                        return;
+                      }
+                      DateTime? pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate:
+                            DateTime.tryParse(dateOfBirthController.text) ??
+                                DateTime.now(),
+                        firstDate: DateTime(1900),
+                        lastDate: DateTime.now(),
+                        initialDatePickerMode: DatePickerMode.year,
+                      );
 
-                    if (pickedDate != null) {
-                      String formattedDate =
-                          DateFormat('yyyy-MM-dd').format(pickedDate);
+                      if (pickedDate != null) {
+                        String formattedDate =
+                            DateFormat('yyyy-MM-dd').format(pickedDate);
 
-                      setState(() {
-                        dateOfBirthController.text = formattedDate;
-                        currentAthlete.birthDate = dateOfBirthController.text;
-                      });
-                    }
-                  },
-                ),
-                (!editable)
-                    ? TextField(
-                        decoration:
-                            buildStandardInputDecorationWithLabel('Gender'),
-                        controller: genderController,
-                        enabled: false,
-                        style: Theme.of(context).textTheme.displaySmall,
-                      )
-                    : DropdownButtonHideUnderline(
-                        child: DropdownButton(
-                          enableFeedback: editable,
+                        setState(() {
+                          dateOfBirthController.text = formattedDate;
+                          currentAthlete.birthDate = dateOfBirthController.text;
+                        });
+                      }
+                    },
+                  ),
+                  (!editable)
+                      ? TextFormField(
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Required!';
+                            }
+                            return null;
+                          },
+                          decoration:
+                              buildStandardInputDecorationWithLabel('Gender'),
+                          controller: genderController,
+                          enabled: false,
+                          style: Theme.of(context).textTheme.displaySmall,
+                        )
+                      : DropdownButtonFormField(
                           hint: const Text('Select Gender'),
-                          value: currentAthlete.gender,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Required';
+                            }
+                            return null;
+                          },
                           items: const [
                             DropdownMenuItem(
                                 value: 'Male', child: Text('Male')),
@@ -182,45 +212,47 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                           padding:
                               const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
                         ),
+                  const SizedBox(
+                    height: bigSpace,
+                  ),
+                  Visibility(
+                    visible: !editable,
+                    child: ListTile(
+                      title: Text(
+                        currentAthlete.category ?? "",
+                        style: Theme.of(context).textTheme.displayLarge,
+                        textAlign: TextAlign.center,
                       ),
-                const SizedBox(
-                  height: bigSpace,
-                ),
-                Visibility(
-                  visible: !editable,
-                  child: ListTile(
-                    title: Text(
-                      currentAthlete.category ?? "",
-                      style: Theme.of(context).textTheme.displayLarge,
-                      textAlign: TextAlign.center,
                     ),
                   ),
-                ),
-                Visibility(
-                  visible: false, // editable,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      SizedBox(
-                          width: 128,
-                          height: 44,
-                          child: ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  mode = 'r';
-                                  api
-                                      .updateAthlete(currentAthlete)
-                                      .then((value) => Navigator.pop(
-                                            context,
-                                          ));
-                                });
-                              },
-                              child: const Text('SAVE'))),
-                    ],
+                  Visibility(
+                    visible: false, // editable,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        SizedBox(
+                            width: 128,
+                            height: 44,
+                            child: ElevatedButton(
+                                onPressed: () {
+                                  if (_formKey.currentState!.validate()) {
+                                    setState(() {
+                                      mode = 'r';
+                                      api
+                                          .updateAthlete(currentAthlete)
+                                          .then((value) => Navigator.pop(
+                                                context,
+                                              ));
+                                    });
+                                  }
+                                },
+                                child: const Text('SAVE'))),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -233,14 +265,16 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
               FloatingActionButton(
                 backgroundColor: Colors.blue,
                 onPressed: () {
-                  setState(() {
-                    mode = 'r';
-                    api
-                        .updateAthlete(currentAthlete)
-                        .then((value) => Navigator.pop(
-                              context,
-                            ));
-                  });
+                  if (_formKey.currentState!.validate()) {
+                    setState(() {
+                      mode = 'r';
+                      api
+                          .updateAthlete(currentAthlete)
+                          .then((value) => Navigator.pop(
+                                context,
+                              ));
+                    });
+                  }
                 },
                 child: const Icon(Icons.save),
               ),
@@ -279,7 +313,7 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
 
   void selectImageSource() {
     showModalBottomSheet(
-      backgroundColor: Colors.blue,
+        backgroundColor: Colors.blue,
         context: context,
         builder: (context) => Wrap(
               children: [

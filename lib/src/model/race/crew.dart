@@ -6,6 +6,7 @@ class Crew {
   int? disciplineId;
   DateTime? createdAt;
   DateTime? updatedAt;
+  int? capacity;
 
   Crew({
     this.id,
@@ -13,12 +14,14 @@ class Crew {
     this.disciplineId,
     this.createdAt,
     this.updatedAt,
+    this.capacity
   });
 
   factory Crew.fromMap(Map<String, dynamic> data) => Crew(
         id: data['id'] as int?,
         teamId: data['team_id'] as int?,
         disciplineId: data['discipline_id'] as int?,
+        capacity: data['capacity'] as int?,
         createdAt: data['created_at'] == null
             ? null
             : DateTime.parse(data['created_at'] as String),
@@ -31,6 +34,7 @@ class Crew {
         'id': id,
         'team_id': teamId,
         'discipline_id': disciplineId,
+        'capacity': capacity,
         'created_at': createdAt?.toIso8601String(),
         'updated_at': updatedAt?.toIso8601String(),
       };
