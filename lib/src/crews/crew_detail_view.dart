@@ -23,6 +23,24 @@ class _CrewDetailViewState extends State<CrewDetailView> {
     super.initState();
   }
 
+  bool checkMix(
+      Map<int, Map<String, dynamic>> crewAthletes, int size, int helmNo) {
+    int countMale = 0;
+    int countFemale = 0;
+    crewAthletes.forEach((key, value) {
+      var athlete = crewAthletes[key]!['athlete']! as Athlete;
+      if (key != 0 && key < helmNo-1) {
+        if (athlete.gender == "Male") {
+          countMale += 1;
+        } else {
+          countFemale += 1;
+        }
+      }
+    });
+    print('male #: $countMale, female #: $countFemale');
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     // Map<int, Athlete> crewAthletes;
@@ -46,6 +64,7 @@ class _CrewDetailViewState extends State<CrewDetailView> {
             } else if (snapshot.connectionState == ConnectionState.done) {
               if (snapshot.hasData) {
                 var crewAthletes = snapshot.data!;
+                checkMix(crewAthletes, size, helmNo);
                 // print (crewAthletes);
                 return ListView.builder(
                   itemCount: size,
@@ -111,8 +130,7 @@ class _CrewDetailViewState extends State<CrewDetailView> {
                 );
               }
             }
-              return (const Text('No data'));
-            
+            return (const Text('No data'));
           },
         ),
       ),
