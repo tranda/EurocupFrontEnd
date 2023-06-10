@@ -71,12 +71,12 @@ class _LoginViewState extends State<LoginView> {
         decoration: const BoxDecoration(
             image: DecorationImage(
                 image: AssetImage('assets/images/naslovna-bck.jpg'),
-                fit: BoxFit.cover)),
+                fit: BoxFit.cover,
+                alignment: Alignment.bottomCenter)),
         child: SizedBox(
-          // width: 640,
           child: Form(
             key: _formKey,
-            child: Padding(
+            child: busy ? busyOverlay(context) : Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -118,36 +118,33 @@ class _LoginViewState extends State<LoginView> {
                         horizontal: horizontalPadding,
                         vertical: verticalPadding),
                     child: Center(
-                      child: Visibility(
-                        visible: !busy,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (_formKey.currentState!.validate()) {
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            setState(() {
+                              busy = true;
+                            });
+                            api
+                                .sendLoginRequest(usernameController.text,
+                                    passwordController.text)
+                                .then((value) {
+                              if (value) {
+                                Navigator.pushNamed(
+                                    context, HomePage.routeName);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text(
+                                          'Incorrect username or password')),
+                                );
+                              }
                               setState(() {
-                                busy = true;
+                                busy = false;
                               });
-                              api
-                                  .sendLoginRequest(usernameController.text,
-                                      passwordController.text)
-                                  .then((value) {
-                                if (value) {
-                                  Navigator.pushNamed(
-                                      context, HomePage.routeName);
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text(
-                                            'Incorrect username or password')),
-                                  );
-                                }
-                                setState(() {
-                                  busy = false;
-                                });
-                              });
-                            }
-                          },
-                          child: const Text('LOG IN'),
-                        ),
+                            });
+                          }
+                        },
+                        child: const Text('LOG IN'),
                       ),
                     ),
                   ),

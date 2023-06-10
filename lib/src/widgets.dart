@@ -98,6 +98,8 @@ InputDecoration buildInputDecorationWithSuffix(
 
 InputDecoration buildStandardInputDecoration(String? hint) {
   return InputDecoration(
+    // fillColor: Colors.white,
+    // filled: true,
     hintText: hint,
     contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
     border:
@@ -116,6 +118,8 @@ InputDecoration buildStandardInputDecorationWithLabel(String? label) {
 
 InputDecoration buildPasswordInputDecoration(String? hint) {
   return InputDecoration(
+    // fillColor: Colors.white,
+    // filled: true,
     hintText: hint,
     contentPadding: EdgeInsets.fromLTRB(20.0, 0.0, 20.0, 0.0),
     border:
@@ -147,6 +151,14 @@ Row loadingRow() {
   return const Row(
     mainAxisAlignment: MainAxisAlignment.center,
     children: <Widget>[CircularProgressIndicator(), Text("Please wait...")],
+  );
+}
+
+Widget busyOverlay(BuildContext context) {
+  return SizedBox(
+    width: MediaQuery.of(context).size.width,
+    height: MediaQuery.of(context).size.height,
+    child: GestureDetector(child: const Center(child: CircularProgressIndicator())),
   );
 }
 
