@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'src/app.dart';
 import 'src/settings/settings_controller.dart';
@@ -18,6 +19,10 @@ void main() async {
   // SettingsController for changes, then passes it further down to the
   // SettingsView.
 
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations(
+      [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
+      
   final runnableApp = _buildRunnableApp(
     isWeb: kIsWeb,
     webAppWidth: 480.0,
