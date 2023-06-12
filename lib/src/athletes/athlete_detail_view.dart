@@ -191,6 +191,7 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                         )
                       : DropdownButtonFormField(
                           hint: const Text('Select Gender'),
+                          value: currentAthlete.gender,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Required';
