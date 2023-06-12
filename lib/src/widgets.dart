@@ -98,8 +98,8 @@ InputDecoration buildInputDecorationWithSuffix(
 
 InputDecoration buildStandardInputDecoration(String? hint) {
   return InputDecoration(
-    // fillColor: Colors.white,
-    // filled: true,
+    fillColor: Colors.white,
+    filled: true,
     hintText: hint,
     contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
     border:
@@ -118,8 +118,8 @@ InputDecoration buildStandardInputDecorationWithLabel(String? label) {
 
 InputDecoration buildPasswordInputDecoration(String? hint) {
   return InputDecoration(
-    // fillColor: Colors.white,
-    // filled: true,
+    fillColor: Colors.white,
+    filled: true,
     hintText: hint,
     contentPadding: EdgeInsets.fromLTRB(20.0, 0.0, 20.0, 0.0),
     border:

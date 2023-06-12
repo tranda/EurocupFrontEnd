@@ -1,11 +1,8 @@
 import 'package:eurocup_frontend/src/common.dart';
-import 'package:eurocup_frontend/src/crews/crew_detail_view.dart';
-import 'package:eurocup_frontend/src/model/race/discipline_crew.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
-import '../model/race/race.dart';
 import 'discipline_list_view.dart';
 
 class TeamListView extends StatefulWidget {
@@ -14,10 +11,10 @@ class TeamListView extends StatefulWidget {
   static const routeName = '/team_list';
 
   @override
-  State<TeamListView> createState() => _CrewListViewState();
+  State<TeamListView> createState() => ListViewState();
 }
 
-class _CrewListViewState extends State<TeamListView> {
+class ListViewState extends State<TeamListView> {
   @override
   void initState() {
     super.initState();

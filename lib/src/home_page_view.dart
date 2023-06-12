@@ -4,6 +4,7 @@ import 'package:eurocup_frontend/src/login_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 
+import 'administration/administration_view.dart';
 import 'model/user.dart';
 import 'common.dart';
 import 'api_helper.dart' as api;
@@ -67,17 +68,20 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(
               height: bigSpace,
             ),
-            ListTile(
-              enabled: (currentUser.accessLevel! >= 2),
-              title: Text('Settings',
-                  style: Theme.of(context).textTheme.displayMedium,
-                  textAlign: TextAlign.left),
-              onTap: () {
-                Navigator.pushNamed(context, TeamListView.routeName);
-              },
-              leading: const Icon(
-                Icons.play_arrow,
-                color: Color.fromARGB(255, 0, 80, 150),
+            Visibility(
+              visible: (currentUser.accessLevel! >= 2),
+              child: ListTile(
+                enabled: (currentUser.accessLevel! >= 2),
+                title: Text('Administration',
+                    style: Theme.of(context).textTheme.displayMedium,
+                    textAlign: TextAlign.left),
+                onTap: () {
+                  Navigator.pushNamed(context, AdministrationPage.routeName);
+                },
+                leading: const Icon(
+                  Icons.play_arrow,
+                  color: Color.fromARGB(255, 0, 80, 150),
+                ),
               ),
             ),
             ListTile(
@@ -86,6 +90,8 @@ class _HomePageState extends State<HomePage> {
                   style: Theme.of(context).textTheme.displayMedium,
                   textAlign: TextAlign.left),
               onTap: () {
+                lastUser = null;
+                lastPassword = null;
                 api.sendLogoutRequest().then((value) {
                   Navigator.pop(context);
                   // ClearToken();

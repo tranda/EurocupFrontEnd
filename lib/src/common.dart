@@ -13,6 +13,9 @@ var testUser = "test@gmail.com";
 var testPassword = "12345678";
 var adminUser = "tranda@gmail.com";
 var adminPassword = "12345678";
+String? lastUser;
+String? lastPassword;
+
 
 User currentUser = User();
 String? token = '';
