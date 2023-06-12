@@ -11,12 +11,14 @@ import 'model/race/crew.dart';
 import 'model/race/discipline.dart';
 import 'model/race/team.dart';
 
+String apiURL = "https://events.motion.rs/api";
+
 Future<bool> sendLoginRequest(String username, String password) async {
   var headers = {
     'Content-Type': 'application/x-www-form-urlencoded',
   };
   var request =
-      http.Request('POST', Uri.parse('https://events.motion.rs/api/login'));
+      http.Request('POST', Uri.parse('$apiURL/login'));
   request.bodyFields = {'email': username, 'password': password};
   request.headers.addAll(headers);
 
@@ -41,7 +43,7 @@ Future<bool> sendLogoutRequest() async {
     'Authorization': 'Bearer $token'
   };
   var request =
-      http.Request('POST', Uri.parse('https://events.motion.rs/api/logout'));
+      http.Request('POST', Uri.parse('$apiURL/logout'));
   request.headers.addAll(headers);
 
   http.StreamedResponse response = await request.send();
@@ -61,7 +63,7 @@ Future<List<Athlete>> getAthletesForClub(int? clubId) async {
     'Authorization': 'Bearer $token',
   };
   var request = http.Request('GET',
-      Uri.parse('https://events.motion.rs/api/athletes?club_id=$clubId'));
+      Uri.parse('$apiURL/athletes?club_id=$clubId'));
   request.bodyFields = {};
   request.headers.addAll(headers);
 
@@ -89,7 +91,7 @@ Future updateAthlete(Athlete athlete) async {
     'Authorization': 'Bearer $token'
   };
   var request = http.Request(
-      'PUT', Uri.parse('https://events.motion.rs/api/athletes/${athlete.id}'));
+      'PUT', Uri.parse('$apiURL/athletes/${athlete.id}'));
   request.bodyFields = {
     'first_name': athlete.firstName as String,
     'last_name': athlete.lastName as String,
@@ -114,7 +116,7 @@ Future createAthlete(Athlete athlete) async {
     'Authorization': 'Bearer $token'
   };
   var request =
-      http.Request('POST', Uri.parse('https://events.motion.rs/api/athletes'));
+      http.Request('POST', Uri.parse('$apiURL/athletes'));
   request.bodyFields = {
     'first_name': athlete.firstName as String,
     'last_name': athlete.lastName as String,
@@ -136,7 +138,7 @@ Future createAthlete(Athlete athlete) async {
 Future deleteAthlete(Athlete athlete) async {
   var headers = {'Authorization': 'Bearer $token'};
   var request = http.Request('DELETE',
-      Uri.parse('https://events.motion.rs/api/athletes/${athlete.id}'));
+      Uri.parse('$apiURL/athletes/${athlete.id}'));
   request.bodyFields = {};
   request.headers.addAll(headers);
 
@@ -152,7 +154,7 @@ Future deleteAthlete(Athlete athlete) async {
 Future<List<Team>> getTeamsAll() async {
   var headers = {'Authorization': 'Bearer $token'};
   var request = http.Request(
-      'GET', Uri.parse('https://events.motion.rs/api/teamsAll'));
+      'GET', Uri.parse('$apiURL/teamsAll'));
 
   request.headers.addAll(headers);
 
@@ -174,7 +176,7 @@ Future<List<Team>> getTeamsAll() async {
 Future<List<Discipline>> getDisciplinesAll() async {
   var headers = {'Authorization': 'Bearer $token'};
   var request = http.Request(
-      'GET', Uri.parse('https://events.motion.rs/api/disciplinesAll'));
+      'GET', Uri.parse('$apiURL/disciplinesAll'));
 
   request.headers.addAll(headers);
 
@@ -196,7 +198,7 @@ Future<List<Discipline>> getDisciplinesAll() async {
 Future<List<Crew>> getCrewsAll() async {
   var headers = {'Authorization': 'Bearer $token'};
   var request = http.Request(
-      'GET', Uri.parse('https://events.motion.rs/api/crewsAll'));
+      'GET', Uri.parse('$apiURL/crewsAll'));
 
   request.headers.addAll(headers);
 
@@ -219,7 +221,7 @@ Future<List<Crew>> getCrewsAll() async {
 Future<List<Race>> getDisciplines() async {
   var headers = {'Authorization': 'Bearer $token'};
   var request = http.Request(
-      'GET', Uri.parse('https://events.motion.rs/api/disciplines'));
+      'GET', Uri.parse('$apiURL/disciplines'));
 
   request.headers.addAll(headers);
 
@@ -241,7 +243,7 @@ Future<List<Race>> getDisciplines() async {
 Future<List<Race>> getTeamDisciplines(int teamId) async {
   var headers = {'Authorization': 'Bearer $token'};
   var request = http.Request(
-      'GET', Uri.parse('https://events.motion.rs/api/teamDisciplines?team_id=$teamId'));
+      'GET', Uri.parse('$apiURL/teamDisciplines?team_id=$teamId'));
 
   request.headers.addAll(headers);
 
@@ -265,7 +267,7 @@ Future<Map<int, Map<String, dynamic>>> getCrewAthletesForCrew(
   var dummy = Random().nextInt(10000000);
   var headers = {'Authorization': 'Bearer $token', 'Cache-Control': 'no-cache'};
   var request = http.Request('GET',
-      Uri.parse('https://events.motion.rs/api/crewathletes?crew_id=$crewId&dummy=$dummy'));
+      Uri.parse('$apiURL/crewathletes?crew_id=$crewId&dummy=$dummy'));
 
   request.headers.addAll(headers);
 
@@ -296,7 +298,7 @@ Future insertCrewAthlete(int no, int crewId, int athleteId) async {
     'Authorization': 'Bearer $token'
   };
   var request = http.Request(
-      'POST', Uri.parse('https://events.motion.rs/api/crewathletes'));
+      'POST', Uri.parse('$apiURL/crewathletes'));
   request.bodyFields = {
     'no': no.toString(),
     'crew_id': crewId.toString(),
@@ -319,7 +321,7 @@ Future registerCrew(int teamId, int disciplineId) async {
     'Authorization': 'Bearer $token'
   };
   var request = http.Request(
-      'POST', Uri.parse('https://events.motion.rs/api/registercrew'));
+      'POST', Uri.parse('$apiURL/registercrew'));
   request.bodyFields = {
     'team_id': teamId.toString(),
     'discipline_id': disciplineId.toString()
@@ -341,7 +343,7 @@ Future unregisterCrew(int teamId, int disciplineId) async {
     'Authorization': 'Bearer $token'
   };
   var request = http.Request(
-      'POST', Uri.parse('https://events.motion.rs/api/unregistercrew'));
+      'POST', Uri.parse('$apiURL/unregistercrew'));
   request.bodyFields = {
     'team_id': teamId.toString(),
     'discipline_id': disciplineId.toString()
@@ -360,7 +362,7 @@ Future unregisterCrew(int teamId, int disciplineId) async {
 Future deleteCrewAthlete(int id) async {
   var headers = {'Authorization': 'Bearer $token'};
   var request = http.Request(
-      'DELETE', Uri.parse('https://events.motion.rs/api/crewathletes/$id'));
+      'DELETE', Uri.parse('$apiURL/crewathletes/$id'));
   request.bodyFields = {};
   request.headers.addAll(headers);
 
@@ -378,7 +380,7 @@ Future<List<Athlete>> getEligibleAthletesForCrew(int crewId, int no) async {
   var request = http.Request(
       'GET',
       Uri.parse(
-          'https://events.motion.rs/api/eligibleAthletes?crew_id=$crewId&no=$no'));
+          '$apiURL/eligibleAthletes?crew_id=$crewId&no=$no'));
 
   request.headers.addAll(headers);
 
@@ -401,7 +403,7 @@ Future<List<Competition>> getCompetitions() async {
     'Authorization': 'Bearer $token',
   };
   var request =
-      http.Request('GET', Uri.parse('https://events.motion.rs/api/events'));
+      http.Request('GET', Uri.parse('$apiURL/events'));
   request.bodyFields = {};
   request.headers.addAll(headers);
 
@@ -418,3 +420,107 @@ Future<List<Competition>> getCompetitions() async {
   }
   return (competitions);
 }
+
+Future<List<User>> getUsers() async {
+  var headers = {
+    'Authorization': 'Bearer $token',
+  };
+  var request =
+      http.Request('GET', Uri.parse('$apiURL/users'));
+  request.bodyFields = {};
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+  List<User> users = [];
+  if (response.statusCode == 200) {
+    var responseString = await response.stream.bytesToString();
+    List<dynamic> result = jsonDecode(responseString);
+   result.forEach((user) {
+      users.add(User.fromMap(user));
+    });
+    print(result);
+  } else {
+    print(response.reasonPhrase);
+  }
+  return (users);
+}
+
+Future createUser(User user) async {
+  var headers = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Authorization': 'Bearer $token'
+  };
+  var request =
+      http.Request('POST', Uri.parse('$apiURL/users'));
+  request.bodyFields = {
+    'name': user.name as String,
+    'email': user.email as String,
+    'password': user.password as String,
+    'password_confirmation': user.password_confirmation as String,
+    'club_id': '${user.clubId}',
+    'event_id': '${user.eventId}',
+    'access_level': '${user.accessLevel}'
+  };
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+
+  print('response.statusCode: ${response.statusCode}');
+      var responseString = await response.stream.bytesToString();
+    print(responseString);
+  if (response.statusCode == 200) {
+    var responseString = await response.stream.bytesToString();
+    print(responseString);
+  } else {
+    print('error response: ${response.reasonPhrase}');
+  }
+}
+
+Future deleteUser(User user) async {
+  var headers = {'Authorization': 'Bearer $token'};
+  var request = http.Request('DELETE',
+      Uri.parse('$apiURL/users/${user.id}'));
+  request.bodyFields = {};
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+
+  if (response.statusCode == 200) {
+    print(await response.stream.bytesToString());
+  } else {
+    print(response.reasonPhrase);
+  }
+}
+
+Future updateUser(User user) async {
+  if (user.id == null) {
+    await createUser(user);
+    return;
+  }
+  var headers = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Authorization': 'Bearer $token'
+  };
+  var request = http.Request(
+      'PUT', Uri.parse('$apiURL/users/${user.id}'));
+  request.bodyFields = {
+    'name': user.name as String,
+    'email': user.email as String,
+    // 'password': 'user',//.password as String,
+    // 'password_confirmation': 'user',//.password_confirmation as String,
+    'club_id': '${user.clubId}',
+    'event_id': '${user.eventId}',
+    'access_level': '${user.accessLevel}'
+  };
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+
+  if (response.statusCode == 200) {
+    var responseString = await response.stream.bytesToString();
+    print(responseString);
+  } else {
+    print('error response: ${response.reasonPhrase}');
+  }
+}
+

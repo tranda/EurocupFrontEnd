@@ -1,3 +1,4 @@
+import 'package:eurocup_frontend/src/administration/administration_view.dart';
 import 'package:eurocup_frontend/src/athletes/athlete_detail_view.dart';
 import 'package:eurocup_frontend/src/athletes/athlete_list_view.dart';
 import 'package:eurocup_frontend/src/crews/athlete_picker_view.dart';
@@ -6,6 +7,8 @@ import 'package:eurocup_frontend/src/crews/crew_list_view.dart';
 import 'package:eurocup_frontend/src/home_page_view.dart';
 import 'package:eurocup_frontend/src/login_view.dart';
 import 'package:eurocup_frontend/src/teams/team_list_view.dart';
+import 'package:eurocup_frontend/src/users/user_detail_view.dart';
+import 'package:eurocup_frontend/src/users/users_list_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -37,20 +40,20 @@ class MyApp extends StatelessWidget {
           return Container(
             constraints: const BoxConstraints(maxWidth: 500),
             child: MaterialApp(
-            //           home: FutureBuilder(
-            // future: ReadToken(),
-            // builder: (context, snapshot) {
-            //   switch (snapshot.connectionState) {
-            //     case ConnectionState.none:
-            //     case ConnectionState.waiting:
-            //       return CircularProgressIndicator();
-            //     default:
-            //       if (snapshot.hasError)
-            //         return Text('Error: ${snapshot.error}');
-            //       // else if (snapshot.data == null)
-            //         return LoginView();
-            //   }
-            // }),
+              //           home: FutureBuilder(
+              // future: ReadToken(),
+              // builder: (context, snapshot) {
+              //   switch (snapshot.connectionState) {
+              //     case ConnectionState.none:
+              //     case ConnectionState.waiting:
+              //       return CircularProgressIndicator();
+              //     default:
+              //       if (snapshot.hasError)
+              //         return Text('Error: ${snapshot.error}');
+              //       // else if (snapshot.data == null)
+              //         return LoginView();
+              //   }
+              // }),
               // Providing a restorationScopeId allows the Navigator built by the
               // MaterialApp to restore the navigation stack when a user leaves and
               // returns to the app after it has been killed while running in the
@@ -88,9 +91,8 @@ class MyApp extends StatelessWidget {
                 primarySwatch: Colors.blue,
                 canvasColor: Colors.white,
                 datePickerTheme: const DatePickerThemeData(
-                  backgroundColor: Colors.grey,
-                  surfaceTintColor: Colors.amber
-                ),
+                    backgroundColor: Colors.grey,
+                    surfaceTintColor: Colors.amber),
                 appBarTheme: const AppBarTheme(
                     backgroundColor: Colors.white,
                     foregroundColor:
@@ -177,6 +179,12 @@ class MyApp extends StatelessWidget {
                         return LoginView();
                       case HomePage.routeName:
                         return const HomePage();
+                      case AdministrationPage.routeName:
+                        return const AdministrationPage();
+                      case UserListView.routeName:
+                        return const UserListView();
+                      case UserDetailView.routeName:
+                        return const UserDetailView();
                       case AthleteListView.routeName:
                         return AthleteListView();
                       case AthleteDetailView.routeName:

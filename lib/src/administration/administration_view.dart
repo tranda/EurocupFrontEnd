@@ -1,0 +1,97 @@
+import 'package:eurocup_frontend/src/users/users_list_view.dart';
+import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:flutter/material.dart';
+import 'package:eurocup_frontend/src/api_helper.dart' as api;
+
+import '../common.dart';
+import '../model/user.dart';
+import '../teams/team_list_view.dart';
+
+class AdministrationPage extends StatefulWidget {
+  const AdministrationPage({super.key});
+  static const routeName = '/administration_page';
+
+  @override
+  State<AdministrationPage> createState() => _AdministrationPageState();
+}
+
+class _AdministrationPageState extends State<AdministrationPage> {
+  final User user = currentUser;
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: appBar(title: 'Events Platform'),
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+              image: AssetImage('assets/images/naslovna-bck.jpg'),
+              fit: BoxFit.cover,
+              alignment: Alignment.bottomCenter),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ListTile(
+              title: Text('Users',
+                  style: Theme.of(context).textTheme.displayMedium,
+                  textAlign: TextAlign.left),
+              onTap: () {
+                Navigator.pushNamed(context, UserListView.routeName);
+              },
+              leading: const Icon(
+                Icons.play_arrow,
+                color: Color.fromARGB(255, 0, 80, 150),
+              ),
+            ),
+                        ListTile(
+              title: Text('Events',
+                  style: Theme.of(context).textTheme.displayMedium,
+                  textAlign: TextAlign.left),
+              onTap: () {
+                Navigator.pushNamed(context, UserListView.routeName);
+              },
+              leading: const Icon(
+                Icons.play_arrow,
+                color: Color.fromARGB(255, 0, 80, 150),
+              ),
+            ),
+
+            ListTile(
+              title: Text('Disciplines',
+                  style: Theme.of(context).textTheme.displayMedium,
+                  textAlign: TextAlign.left),
+              onTap: () {
+                Navigator.pushNamed(context, UserListView.routeName);
+              },
+              leading: const Icon(
+                Icons.play_arrow,
+                color: Color.fromARGB(255, 0, 80, 150),
+              ),
+            ),
+            ListTile(
+              title: Text('Clubs',
+                  style: Theme.of(context).textTheme.displayMedium,
+                  textAlign: TextAlign.left),
+              onTap: () {
+                Navigator.pushNamed(context, UserListView.routeName);
+              },
+              leading: const Icon(
+                Icons.play_arrow,
+                color: Color.fromARGB(255, 0, 80, 150),
+              ),
+            ),
+            const SizedBox(
+              height: bigSpace,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

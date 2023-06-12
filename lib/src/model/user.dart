@@ -10,6 +10,8 @@ class User {
   int? eventId;
   DateTime? createdAt;
   DateTime? updatedAt;
+  String? password;
+  String? password_confirmation;
 
   User({
     this.id,
@@ -21,6 +23,8 @@ class User {
     this.eventId,
     this.createdAt,
     this.updatedAt,
+    this.password,
+    this.password_confirmation
   });
 
   @override
@@ -30,6 +34,8 @@ class User {
 
   factory User.fromMap(Map<String, dynamic> data) => User(
         id: data['id'] as int?,
+        password: data['password'] as String?,
+        password_confirmation: data['password_confirmation'] as String?,
         name: data['name'] as String?,
         email: data['email'] as String?,
         emailVerifiedAt: data['email_verified_at'] as dynamic,
@@ -54,6 +60,8 @@ class User {
         'event_id': eventId,
         'created_at': createdAt?.toIso8601String(),
         'updated_at': updatedAt?.toIso8601String(),
+        'password' : password,
+        'password_confirmation' : password_confirmation
       };
 
   /// `dart:convert`
