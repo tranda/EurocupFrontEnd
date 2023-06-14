@@ -158,7 +158,8 @@ Widget busyOverlay(BuildContext context) {
   return SizedBox(
     width: MediaQuery.of(context).size.width,
     height: MediaQuery.of(context).size.height,
-    child: GestureDetector(child: const Center(child: CircularProgressIndicator())),
+    child: GestureDetector(
+        child: const Center(child: CircularProgressIndicator())),
   );
 }
 

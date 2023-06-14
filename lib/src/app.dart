@@ -1,6 +1,7 @@
 import 'package:eurocup_frontend/src/administration/administration_view.dart';
 import 'package:eurocup_frontend/src/athletes/athlete_detail_view.dart';
 import 'package:eurocup_frontend/src/athletes/athlete_list_view.dart';
+import 'package:eurocup_frontend/src/clubs/club_list_view.dart';
 import 'package:eurocup_frontend/src/crews/athlete_picker_view.dart';
 import 'package:eurocup_frontend/src/crews/crew_detail_view.dart';
 import 'package:eurocup_frontend/src/crews/crew_list_view.dart';
@@ -13,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'clubs/club_athlete_list_view.dart';
 import 'settings/settings_controller.dart';
 import 'settings/settings_view.dart';
 import 'teams/discipline_list_view.dart';
@@ -187,6 +189,10 @@ class MyApp extends StatelessWidget {
                         return const UserDetailView();
                       case AthleteListView.routeName:
                         return AthleteListView();
+                      case ClubListView.routeName:
+                        return const ClubListView();
+                      case ClubAthleteListView.routeName:
+                        return ClubAthleteListView();
                       case AthleteDetailView.routeName:
                         return const AthleteDetailView();
                       case CrewListView.routeName:

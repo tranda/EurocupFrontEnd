@@ -4,7 +4,6 @@ import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
-
 class UserListView extends StatefulWidget {
   const UserListView({Key? key}) : super(key: key);
 
@@ -18,16 +17,15 @@ class ListViewState extends State<UserListView> {
   @override
   void initState() {
     super.initState();
-
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-            appBar: appBarWithAction(() {
+      appBar: appBarWithAction(() {
         // currentAthlete = Athlete();
-        Navigator.pushNamed(context, UserDetailView.routeName,
-            arguments: null).then((value) {
+        Navigator.pushNamed(context, UserDetailView.routeName, arguments: null)
+            .then((value) {
           setState(() {});
         });
       }, title: 'User List', icon: Icons.add),
@@ -58,8 +56,9 @@ class ListViewState extends State<UserListView> {
                           onTap: () {
                             // currentAthlete = athlete;
                             Navigator.pushNamed(
-                                context, UserDetailView.routeName,
-                                arguments:  users[index]).then((value) {
+                                    context, UserDetailView.routeName,
+                                    arguments: users[index])
+                                .then((value) {
                               setState(() {});
                             });
                           },

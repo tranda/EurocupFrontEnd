@@ -3,6 +3,7 @@ import 'dart:convert';
 class User {
   int? id;
   String? name;
+  String? username;
   String? email;
   dynamic emailVerifiedAt;
   int? accessLevel;
@@ -13,23 +14,23 @@ class User {
   String? password;
   String? password_confirmation;
 
-  User({
-    this.id,
-    this.name,
-    this.email,
-    this.emailVerifiedAt,
-    this.accessLevel,
-    this.clubId,
-    this.eventId,
-    this.createdAt,
-    this.updatedAt,
-    this.password,
-    this.password_confirmation
-  });
+  User(
+      {this.id,
+      this.name,
+      this.username,
+      this.email,
+      this.emailVerifiedAt,
+      this.accessLevel,
+      this.clubId,
+      this.eventId,
+      this.createdAt,
+      this.updatedAt,
+      this.password,
+      this.password_confirmation});
 
   @override
   String toString() {
-    return 'User(id: $id, name: $name, email: $email, emailVerifiedAt: $emailVerifiedAt, accessLevel: $accessLevel, clubId: $clubId, eventId: $eventId, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'User(id: $id, name: $name, name: $username, email: $email, emailVerifiedAt: $emailVerifiedAt, accessLevel: $accessLevel, clubId: $clubId, eventId: $eventId, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   factory User.fromMap(Map<String, dynamic> data) => User(
@@ -37,6 +38,7 @@ class User {
         password: data['password'] as String?,
         password_confirmation: data['password_confirmation'] as String?,
         name: data['name'] as String?,
+        username: data['username'] as String?,
         email: data['email'] as String?,
         emailVerifiedAt: data['email_verified_at'] as dynamic,
         accessLevel: data['access_level'] as int?,
@@ -53,6 +55,7 @@ class User {
   Map<String, dynamic> toMap() => {
         'id': id,
         'name': name,
+        'username': username,
         'email': email,
         'email_verified_at': emailVerifiedAt,
         'access_level': accessLevel,
@@ -60,8 +63,8 @@ class User {
         'event_id': eventId,
         'created_at': createdAt?.toIso8601String(),
         'updated_at': updatedAt?.toIso8601String(),
-        'password' : password,
-        'password_confirmation' : password_confirmation
+        'password': password,
+        'password_confirmation': password_confirmation
       };
 
   /// `dart:convert`

@@ -9,13 +9,12 @@ String imagesPath = 'assets/images/';
 
 var TEST = true;
 var ADMINTEST = true;
-var testUser = "test@gmail.com";
+var testUser = "test";
 var testPassword = "12345678";
-var adminUser = "tranda@gmail.com";
+var adminUser = "tranda";
 var adminPassword = "12345678";
 String? lastUser;
 String? lastPassword;
-
 
 User currentUser = User();
 String? token = '';
@@ -33,4 +32,8 @@ const double bigSpace = 50;
 const double cornerRadius = 4;
 const double iconSize = 24;
 
-const List<Color> competitionColor = [Color.fromARGB(255, 15, 91, 169), Color.fromARGB(255, 32, 188, 237)];
+const List<Color> competitionColor = [
+  Color.fromARGB(255, 15, 91, 169),
+  Color.fromARGB(255, 32, 188, 237)
+];
+const Color inactiveColor = Color.fromARGB(255, 176, 176, 176);

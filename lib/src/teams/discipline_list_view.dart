@@ -48,6 +48,8 @@ class _CrewListViewState extends State<DisciplineListView> {
                 itemCount: disciplines.length,
                 itemBuilder: (BuildContext context, int index) {
                   final discipline = disciplines[index];
+                  final inactiveStatus =
+                      discipline.status == "inactive" ? "(INACTIVE)" : "";
                   var competition = competitions.firstWhere(
                       (element) => element.id == discipline.eventId);
                   var eventName = competition.name!;
@@ -64,11 +66,11 @@ class _CrewListViewState extends State<DisciplineListView> {
                           tileColor: eventColor,
                           leading: Text(eventName),
                           title: Text(
-                            discipline.getDisplayName(),
+                            discipline.getDisplayName() + " ${inactiveStatus}",
                             style: Theme.of(context).textTheme.bodyLarge,
                           ),
                           trailing: Visibility(
-                            visible: discipline.status == "active",
+                            visible: true, // discipline.status == "active",
                             child: Checkbox(
                                 value: registered,
                                 onChanged: (value) {

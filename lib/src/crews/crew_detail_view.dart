@@ -29,7 +29,7 @@ class _CrewDetailViewState extends State<CrewDetailView> {
     int countFemale = 0;
     crewAthletes.forEach((key, value) {
       var athlete = crewAthletes[key]!['athlete']! as Athlete;
-      if (key != 0 && key < helmNo-1) {
+      if (key != 0 && key < helmNo - 1) {
         if (athlete.gender == "Male") {
           countMale += 1;
         } else {

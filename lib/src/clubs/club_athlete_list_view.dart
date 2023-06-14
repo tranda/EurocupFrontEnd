@@ -1,46 +1,50 @@
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
-import 'package:eurocup_frontend/src/athletes/athlete_detail_view.dart';
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 
-class AthleteListView extends StatefulWidget {
-  AthleteListView({super.key});
+import '../athletes/athlete_detail_view.dart';
 
-  static const routeName = '/athlete_list';
+class ClubAthleteListView extends StatefulWidget {
+  ClubAthleteListView({super.key});
+
+  static const routeName = '/club_athlete_list';
   final List<Athlete> athletes = List.empty();
 
   @override
-  State<AthleteListView> createState() => _AthleteListViewState();
+  State<ClubAthleteListView> createState() => _ClubAthleteListViewState();
 }
 
-class _AthleteListViewState extends State<AthleteListView> {
+class _ClubAthleteListViewState extends State<ClubAthleteListView> {
   @override
   void initState() {
     super.initState();
-    // setState(() {
-    //   getAthletes();
-    // });
   }
 
   @override
   Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)!.settings.arguments as Map;
+    int clubId = args['clubId'];
+
     return Scaffold(
-      appBar: appBarWithAction(() {
-        currentAthlete = Athlete();
-        Navigator.pushNamed(context, AthleteDetailView.routeName,
-            arguments: {'mode': 'm'}).then((value) {
-          setState(() {});
-        });
-      }, title: 'Athlete List', icon: Icons.add),
+      appBar: appBarWithAction(
+        () {
+          // currentAthlete = Athlete();
+          // Navigator.pushNamed(context, AthleteDetailView.routeName,
+          //     arguments: {'mode': 'm'}).then((value) {
+          //   setState(() {});
+          // });
+        },
+        title: 'Athlete List',
+      ),
       body: Container(
         // decoration: const BoxDecoration(
         //     image: DecorationImage(
         //         image: AssetImage('assets/images/bck.jpg'),
         //         fit: BoxFit.cover)),
         child: FutureBuilder<List<Athlete>>(
-          future: api.getAthletesForClub(currentUser.clubId),
+          future: api.getAthletesForClub(clubId),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -52,7 +56,6 @@ class _AthleteListViewState extends State<AthleteListView> {
                 itemCount: athletes.length,
                 itemBuilder: (BuildContext context, int index) {
                   final athlete = athletes[index];
-                  // print(athlete);
 
                   return Column(
                     children: [
@@ -65,12 +68,12 @@ class _AthleteListViewState extends State<AthleteListView> {
                                     Theme.of(context).textTheme.displaySmall),
                           ),
                           onTap: () {
-                            currentAthlete = athlete;
-                            Navigator.pushNamed(
-                                context, AthleteDetailView.routeName,
-                                arguments: {'mode': 'r'}).then((value) {
-                              setState(() {});
-                            });
+                          currentAthlete = athlete;
+                          Navigator.pushNamed(
+                              context, AthleteDetailView.routeName,
+                              arguments: {'mode': 'r'}).then((value) {
+                            setState(() {});
+                          });
                           },
                           trailing: const Icon(Icons.arrow_forward)),
                       const Divider(

@@ -3,62 +3,57 @@ import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
-import 'discipline_list_view.dart';
+import '../athletes/athlete_list_view.dart';
+import 'club_athlete_list_view.dart';
 
-class TeamListView extends StatefulWidget {
-  const TeamListView({Key? key}) : super(key: key);
 
-  static const routeName = '/team_list';
+class ClubListView extends StatefulWidget {
+  const ClubListView({Key? key}) : super(key: key);
+
+  static const routeName = '/club_list';
 
   @override
-  State<TeamListView> createState() => ListViewState();
+  State<ClubListView> createState() => ListViewState();
 }
 
-class ListViewState extends State<TeamListView> {
+class ListViewState extends State<ClubListView> {
   @override
   void initState() {
     super.initState();
-    // setState(() {
-    //   getAthletes();
-    // });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appBar(title: 'Team List'),
+      appBar: appBar(title: 'Club List'),
       body: Container(
         // decoration: const BoxDecoration(
         //     image: DecorationImage(
         //         image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
         child: FutureBuilder(
-          future: api.getTeamsAll(),
+          future: api.getClubs(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasData) {
-              final teams = snapshot.data!;
+              final clubs = snapshot.data!;
               // print(_races);
               return ListView.builder(
-                itemCount: teams.length,
+                itemCount: clubs.length,
                 itemBuilder: (BuildContext context, int index) {
                   return Column(
                     children: [
                       ListTile(
                           // tileColor: Colors.blue,
                           title: Text(
-                            teams[index].name!,
+                            clubs[index].name!,
                             style: Theme.of(context).textTheme.displaySmall,
                           ),
                           onTap: () {
-                            // currentAthlete = athlete;
                             Navigator.pushNamed(
-                                context, DisciplineListView.routeName,
-                                arguments: {
-                                  'teamId': teams[index].id,
-                                  'teamName': teams[index].name
-                                }).then((value) {
+                                context, ClubAthleteListView.routeName,
+                                arguments: {'clubId': clubs[index].id}).then((value) {
                               setState(() {});
                             });
                           },

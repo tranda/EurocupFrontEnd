@@ -3,6 +3,7 @@ import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
+import '../clubs/club_list_view.dart';
 import '../common.dart';
 import '../model/user.dart';
 import '../teams/team_list_view.dart';
@@ -49,25 +50,22 @@ class _AdministrationPageState extends State<AdministrationPage> {
                 color: Color.fromARGB(255, 0, 80, 150),
               ),
             ),
-                        ListTile(
+            ListTile(
               title: Text('Events',
                   style: Theme.of(context).textTheme.displayMedium,
                   textAlign: TextAlign.left),
-              onTap: () {
-                Navigator.pushNamed(context, UserListView.routeName);
-              },
+              onTap: () {},
               leading: const Icon(
                 Icons.play_arrow,
                 color: Color.fromARGB(255, 0, 80, 150),
               ),
             ),
-
             ListTile(
               title: Text('Disciplines',
                   style: Theme.of(context).textTheme.displayMedium,
                   textAlign: TextAlign.left),
               onTap: () {
-                Navigator.pushNamed(context, UserListView.routeName);
+                Navigator.pushNamed(context, TeamListView.routeName);
               },
               leading: const Icon(
                 Icons.play_arrow,
@@ -79,7 +77,7 @@ class _AdministrationPageState extends State<AdministrationPage> {
                   style: Theme.of(context).textTheme.displayMedium,
                   textAlign: TextAlign.left),
               onTap: () {
-                Navigator.pushNamed(context, UserListView.routeName);
+                Navigator.pushNamed(context, ClubListView.routeName);
               },
               leading: const Icon(
                 Icons.play_arrow,

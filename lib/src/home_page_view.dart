@@ -22,6 +22,8 @@ class _HomePageState extends State<HomePage> {
   final User user = currentUser;
   @override
   void initState() {
+    competitions = [];
+    disciplines = [];
     api.getCompetitions();
     api.getDisciplinesAll();
     super.initState();
@@ -35,7 +37,8 @@ class _HomePageState extends State<HomePage> {
         decoration: const BoxDecoration(
           image: DecorationImage(
               image: AssetImage('assets/images/naslovna-bck.jpg'),
-              fit: BoxFit.cover, alignment: Alignment.bottomCenter),
+              fit: BoxFit.cover,
+              alignment: Alignment.bottomCenter),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,

@@ -1,4 +1,3 @@
-
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
@@ -23,13 +22,13 @@ class _UserDetailViewState extends State<UserDetailView> {
   final TextEditingController eventController = TextEditingController();
   final TextEditingController accessLevelController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController passwordConfirmedController = TextEditingController();
+  final TextEditingController passwordConfirmedController =
+      TextEditingController();
 
   bool editable = false;
   User user = User();
   String mode = 'r';
   bool newUser = false;
-  
 
   @override
   Widget build(BuildContext context) {
@@ -110,7 +109,7 @@ class _UserDetailViewState extends State<UserDetailView> {
                     textCapitalization: TextCapitalization.words,
                     decoration: buildStandardInputDecorationWithLabel('email'),
                     controller: eMailController,
-                    enabled: editable,
+                    enabled: newUser,
                     style: Theme.of(context).textTheme.displaySmall,
                     onChanged: (value) {
                       user.email = value;
@@ -126,7 +125,8 @@ class _UserDetailViewState extends State<UserDetailView> {
                         return null;
                       },
                       textCapitalization: TextCapitalization.words,
-                      decoration: buildStandardInputDecorationWithLabel('Password'),
+                      decoration:
+                          buildStandardInputDecorationWithLabel('Password'),
                       controller: passwordController,
                       enabled: editable && newUser,
                       style: Theme.of(context).textTheme.displaySmall,
@@ -145,7 +145,8 @@ class _UserDetailViewState extends State<UserDetailView> {
                         return null;
                       },
                       textCapitalization: TextCapitalization.words,
-                      decoration: buildStandardInputDecorationWithLabel('Password Confirmation'),
+                      decoration: buildStandardInputDecorationWithLabel(
+                          'Password Confirmation'),
                       controller: passwordConfirmedController,
                       enabled: editable && newUser,
                       style: Theme.of(context).textTheme.displaySmall,

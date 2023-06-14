@@ -109,7 +109,6 @@ class _LoginViewState extends State<LoginView> {
                             decoration:
                                 buildStandardInputDecoration("Username"),
                             style: Theme.of(context).textTheme.displaySmall,
-                            keyboardType: TextInputType.emailAddress,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter your username';
