@@ -6,6 +6,7 @@ import 'package:eurocup_frontend/src/model/race/race.dart';
 import 'package:eurocup_frontend/src/model/user.dart';
 import 'package:http/http.dart' as http;
 import 'common.dart';
+import 'model/club/club.dart';
 import 'model/event/event.dart';
 import 'model/race/crew.dart';
 import 'model/race/discipline.dart';
@@ -17,9 +18,8 @@ Future<bool> sendLoginRequest(String username, String password) async {
   var headers = {
     'Content-Type': 'application/x-www-form-urlencoded',
   };
-  var request =
-      http.Request('POST', Uri.parse('$apiURL/login'));
-  request.bodyFields = {'email': username, 'password': password};
+  var request = http.Request('POST', Uri.parse('$apiURL/login'));
+  request.bodyFields = {'username': username, 'password': password};
   request.headers.addAll(headers);
 
   http.StreamedResponse response = await request.send();
@@ -39,11 +39,8 @@ Future<bool> sendLoginRequest(String username, String password) async {
 }
 
 Future<bool> sendLogoutRequest() async {
-  var headers = {
-    'Authorization': 'Bearer $token'
-  };
-  var request =
-      http.Request('POST', Uri.parse('$apiURL/logout'));
+  var headers = {'Authorization': 'Bearer $token'};
+  var request = http.Request('POST', Uri.parse('$apiURL/logout'));
   request.headers.addAll(headers);
 
   http.StreamedResponse response = await request.send();
@@ -62,8 +59,8 @@ Future<List<Athlete>> getAthletesForClub(int? clubId) async {
   var headers = {
     'Authorization': 'Bearer $token',
   };
-  var request = http.Request('GET',
-      Uri.parse('$apiURL/athletes?club_id=$clubId'));
+  var request =
+      http.Request('GET', Uri.parse('$apiURL/athletes?club_id=$clubId'));
   request.bodyFields = {};
   request.headers.addAll(headers);
 
@@ -90,8 +87,8 @@ Future updateAthlete(Athlete athlete) async {
     'Content-Type': 'application/x-www-form-urlencoded',
     'Authorization': 'Bearer $token'
   };
-  var request = http.Request(
-      'PUT', Uri.parse('$apiURL/athletes/${athlete.id}'));
+  var request =
+      http.Request('PUT', Uri.parse('$apiURL/athletes/${athlete.id}'));
   request.bodyFields = {
     'first_name': athlete.firstName as String,
     'last_name': athlete.lastName as String,
@@ -115,8 +112,7 @@ Future createAthlete(Athlete athlete) async {
     'Content-Type': 'application/x-www-form-urlencoded',
     'Authorization': 'Bearer $token'
   };
-  var request =
-      http.Request('POST', Uri.parse('$apiURL/athletes'));
+  var request = http.Request('POST', Uri.parse('$apiURL/athletes'));
   request.bodyFields = {
     'first_name': athlete.firstName as String,
     'last_name': athlete.lastName as String,
@@ -137,8 +133,8 @@ Future createAthlete(Athlete athlete) async {
 
 Future deleteAthlete(Athlete athlete) async {
   var headers = {'Authorization': 'Bearer $token'};
-  var request = http.Request('DELETE',
-      Uri.parse('$apiURL/athletes/${athlete.id}'));
+  var request =
+      http.Request('DELETE', Uri.parse('$apiURL/athletes/${athlete.id}'));
   request.bodyFields = {};
   request.headers.addAll(headers);
 
@@ -153,8 +149,7 @@ Future deleteAthlete(Athlete athlete) async {
 
 Future<List<Team>> getTeamsAll() async {
   var headers = {'Authorization': 'Bearer $token'};
-  var request = http.Request(
-      'GET', Uri.parse('$apiURL/teamsAll'));
+  var request = http.Request('GET', Uri.parse('$apiURL/teamsAll'));
 
   request.headers.addAll(headers);
 
@@ -175,8 +170,7 @@ Future<List<Team>> getTeamsAll() async {
 
 Future<List<Discipline>> getDisciplinesAll() async {
   var headers = {'Authorization': 'Bearer $token'};
-  var request = http.Request(
-      'GET', Uri.parse('$apiURL/disciplinesAll'));
+  var request = http.Request('GET', Uri.parse('$apiURL/disciplinesAll'));
 
   request.headers.addAll(headers);
 
@@ -197,8 +191,7 @@ Future<List<Discipline>> getDisciplinesAll() async {
 
 Future<List<Crew>> getCrewsAll() async {
   var headers = {'Authorization': 'Bearer $token'};
-  var request = http.Request(
-      'GET', Uri.parse('$apiURL/crewsAll'));
+  var request = http.Request('GET', Uri.parse('$apiURL/crewsAll'));
 
   request.headers.addAll(headers);
 
@@ -217,11 +210,9 @@ Future<List<Crew>> getCrewsAll() async {
   return (crews);
 }
 
-
 Future<List<Race>> getDisciplines() async {
   var headers = {'Authorization': 'Bearer $token'};
-  var request = http.Request(
-      'GET', Uri.parse('$apiURL/disciplines'));
+  var request = http.Request('GET', Uri.parse('$apiURL/disciplines'));
 
   request.headers.addAll(headers);
 
@@ -242,8 +233,8 @@ Future<List<Race>> getDisciplines() async {
 
 Future<List<Race>> getTeamDisciplines(int teamId) async {
   var headers = {'Authorization': 'Bearer $token'};
-  var request = http.Request(
-      'GET', Uri.parse('$apiURL/teamDisciplines?team_id=$teamId'));
+  var request =
+      http.Request('GET', Uri.parse('$apiURL/teamDisciplines?team_id=$teamId'));
 
   request.headers.addAll(headers);
 
@@ -266,8 +257,8 @@ Future<Map<int, Map<String, dynamic>>> getCrewAthletesForCrew(
     int crewId) async {
   var dummy = Random().nextInt(10000000);
   var headers = {'Authorization': 'Bearer $token', 'Cache-Control': 'no-cache'};
-  var request = http.Request('GET',
-      Uri.parse('$apiURL/crewathletes?crew_id=$crewId&dummy=$dummy'));
+  var request = http.Request(
+      'GET', Uri.parse('$apiURL/crewathletes?crew_id=$crewId&dummy=$dummy'));
 
   request.headers.addAll(headers);
 
@@ -297,8 +288,7 @@ Future insertCrewAthlete(int no, int crewId, int athleteId) async {
     'Content-Type': 'application/x-www-form-urlencoded',
     'Authorization': 'Bearer $token'
   };
-  var request = http.Request(
-      'POST', Uri.parse('$apiURL/crewathletes'));
+  var request = http.Request('POST', Uri.parse('$apiURL/crewathletes'));
   request.bodyFields = {
     'no': no.toString(),
     'crew_id': crewId.toString(),
@@ -320,8 +310,7 @@ Future registerCrew(int teamId, int disciplineId) async {
     'Content-Type': 'application/x-www-form-urlencoded',
     'Authorization': 'Bearer $token'
   };
-  var request = http.Request(
-      'POST', Uri.parse('$apiURL/registercrew'));
+  var request = http.Request('POST', Uri.parse('$apiURL/registercrew'));
   request.bodyFields = {
     'team_id': teamId.toString(),
     'discipline_id': disciplineId.toString()
@@ -342,8 +331,7 @@ Future unregisterCrew(int teamId, int disciplineId) async {
     'Content-Type': 'application/x-www-form-urlencoded',
     'Authorization': 'Bearer $token'
   };
-  var request = http.Request(
-      'POST', Uri.parse('$apiURL/unregistercrew'));
+  var request = http.Request('POST', Uri.parse('$apiURL/unregistercrew'));
   request.bodyFields = {
     'team_id': teamId.toString(),
     'discipline_id': disciplineId.toString()
@@ -361,8 +349,7 @@ Future unregisterCrew(int teamId, int disciplineId) async {
 
 Future deleteCrewAthlete(int id) async {
   var headers = {'Authorization': 'Bearer $token'};
-  var request = http.Request(
-      'DELETE', Uri.parse('$apiURL/crewathletes/$id'));
+  var request = http.Request('DELETE', Uri.parse('$apiURL/crewathletes/$id'));
   request.bodyFields = {};
   request.headers.addAll(headers);
 
@@ -378,9 +365,7 @@ Future deleteCrewAthlete(int id) async {
 Future<List<Athlete>> getEligibleAthletesForCrew(int crewId, int no) async {
   var headers = {'Authorization': 'Bearer $token'};
   var request = http.Request(
-      'GET',
-      Uri.parse(
-          '$apiURL/eligibleAthletes?crew_id=$crewId&no=$no'));
+      'GET', Uri.parse('$apiURL/eligibleAthletes?crew_id=$crewId&no=$no'));
 
   request.headers.addAll(headers);
 
@@ -402,8 +387,7 @@ Future<List<Competition>> getCompetitions() async {
   var headers = {
     'Authorization': 'Bearer $token',
   };
-  var request =
-      http.Request('GET', Uri.parse('$apiURL/events'));
+  var request = http.Request('GET', Uri.parse('$apiURL/events'));
   request.bodyFields = {};
   request.headers.addAll(headers);
 
@@ -421,12 +405,33 @@ Future<List<Competition>> getCompetitions() async {
   return (competitions);
 }
 
+Future<List<Club>> getClubs() async {
+  var headers = {
+    'Authorization': 'Bearer $token',
+  };
+  var request = http.Request('GET', Uri.parse('$apiURL/clubs'));
+  request.bodyFields = {};
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+  List<Club> clubs = [];
+  if (response.statusCode == 200) {
+    List<dynamic> result = jsonDecode(await response.stream.bytesToString());
+    result.forEach((club) {
+      clubs.add(Club.fromMap(club));
+    });
+    print(result);
+  } else {
+    print(response.reasonPhrase);
+  }
+  return (clubs);
+}
+
 Future<List<User>> getUsers() async {
   var headers = {
     'Authorization': 'Bearer $token',
   };
-  var request =
-      http.Request('GET', Uri.parse('$apiURL/users'));
+  var request = http.Request('GET', Uri.parse('$apiURL/users'));
   request.bodyFields = {};
   request.headers.addAll(headers);
 
@@ -435,7 +440,7 @@ Future<List<User>> getUsers() async {
   if (response.statusCode == 200) {
     var responseString = await response.stream.bytesToString();
     List<dynamic> result = jsonDecode(responseString);
-   result.forEach((user) {
+    result.forEach((user) {
       users.add(User.fromMap(user));
     });
     print(result);
@@ -450,8 +455,7 @@ Future createUser(User user) async {
     'Content-Type': 'application/x-www-form-urlencoded',
     'Authorization': 'Bearer $token'
   };
-  var request =
-      http.Request('POST', Uri.parse('$apiURL/users'));
+  var request = http.Request('POST', Uri.parse('$apiURL/users'));
   request.bodyFields = {
     'name': user.name as String,
     'email': user.email as String,
@@ -466,8 +470,8 @@ Future createUser(User user) async {
   http.StreamedResponse response = await request.send();
 
   print('response.statusCode: ${response.statusCode}');
-      var responseString = await response.stream.bytesToString();
-    print(responseString);
+  var responseString = await response.stream.bytesToString();
+  print(responseString);
   if (response.statusCode == 200) {
     var responseString = await response.stream.bytesToString();
     print(responseString);
@@ -478,8 +482,7 @@ Future createUser(User user) async {
 
 Future deleteUser(User user) async {
   var headers = {'Authorization': 'Bearer $token'};
-  var request = http.Request('DELETE',
-      Uri.parse('$apiURL/users/${user.id}'));
+  var request = http.Request('DELETE', Uri.parse('$apiURL/users/${user.id}'));
   request.bodyFields = {};
   request.headers.addAll(headers);
 
@@ -501,11 +504,10 @@ Future updateUser(User user) async {
     'Content-Type': 'application/x-www-form-urlencoded',
     'Authorization': 'Bearer $token'
   };
-  var request = http.Request(
-      'PUT', Uri.parse('$apiURL/users/${user.id}'));
+  var request = http.Request('PUT', Uri.parse('$apiURL/users/${user.id}'));
   request.bodyFields = {
     'name': user.name as String,
-    'email': user.email as String,
+    // 'email': user.email as String,
     // 'password': 'user',//.password as String,
     // 'password_confirmation': 'user',//.password_confirmation as String,
     'club_id': '${user.clubId}',
@@ -524,3 +526,25 @@ Future updateUser(User user) async {
   }
 }
 
+Future updatePassword(User user) async {
+  var headers = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Authorization': 'Bearer $token'
+  };
+  var request =
+      http.Request('PUT', Uri.parse('$apiURL/userPassword/${user.id}'));
+  request.bodyFields = {
+    'password': user.password as String,
+    'password_confirmation': user.password_confirmation as String,
+  };
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+
+  if (response.statusCode == 200) {
+    var responseString = await response.stream.bytesToString();
+    print(responseString);
+  } else {
+    print('error response: ${response.reasonPhrase}');
+  }
+}
