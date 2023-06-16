@@ -51,7 +51,7 @@ class _ClubAthleteListViewState extends State<ClubAthleteListView> {
             }
             if (snapshot.hasData) {
               final athletes = snapshot.data!;
-              // print(_athletes);
+              
               return ListView.builder(
                 itemCount: athletes.length,
                 itemBuilder: (BuildContext context, int index) {

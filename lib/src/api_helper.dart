@@ -458,6 +458,7 @@ Future createUser(User user) async {
   var request = http.Request('POST', Uri.parse('$apiURL/users'));
   request.bodyFields = {
     'name': user.name as String,
+    'username': user.username as String,
     'email': user.email as String,
     'password': user.password as String,
     'password_confirmation': user.password_confirmation as String,
@@ -507,6 +508,7 @@ Future updateUser(User user) async {
   var request = http.Request('PUT', Uri.parse('$apiURL/users/${user.id}'));
   request.bodyFields = {
     'name': user.name as String,
+    'username': user.username as String,
     // 'email': user.email as String,
     // 'password': 'user',//.password as String,
     // 'password_confirmation': 'user',//.password_confirmation as String,

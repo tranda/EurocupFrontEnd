@@ -17,6 +17,7 @@ class UserDetailView extends StatefulWidget {
 class _UserDetailViewState extends State<UserDetailView> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController nameController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
   final TextEditingController eMailController = TextEditingController();
   final TextEditingController clubController = TextEditingController();
   final TextEditingController eventController = TextEditingController();
@@ -49,6 +50,7 @@ class _UserDetailViewState extends State<UserDetailView> {
     }
 
     nameController.text = user.name ?? '';
+    usernameController.text = user.username ?? '';
     eMailController.text = user.email ?? '';
     clubController.text = '${user.clubId}';
     eventController.text = '${user.eventId}';
@@ -107,6 +109,23 @@ class _UserDetailViewState extends State<UserDetailView> {
                       return null;
                     },
                     textCapitalization: TextCapitalization.words,
+                    decoration:
+                        buildStandardInputDecorationWithLabel('Username'),
+                    controller: usernameController,
+                    enabled: editable && newUser,
+                    style: Theme.of(context).textTheme.displaySmall,
+                    onChanged: (value) {
+                      user.username = value;
+                    },
+                  ),
+                  TextFormField(
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Required';
+                      }
+                      return null;
+                    },
+                    textCapitalization: TextCapitalization.words,
                     decoration: buildStandardInputDecorationWithLabel('email'),
                     controller: eMailController,
                     enabled: newUser,
@@ -126,7 +145,7 @@ class _UserDetailViewState extends State<UserDetailView> {
                       },
                       textCapitalization: TextCapitalization.words,
                       decoration:
-                          buildStandardInputDecorationWithLabel('Password'),
+                          buildPasswordInputDecoration('Password'),
                       controller: passwordController,
                       enabled: editable && newUser,
                       style: Theme.of(context).textTheme.displaySmall,
@@ -145,7 +164,7 @@ class _UserDetailViewState extends State<UserDetailView> {
                         return null;
                       },
                       textCapitalization: TextCapitalization.words,
-                      decoration: buildStandardInputDecorationWithLabel(
+                      decoration: buildPasswordInputDecoration(
                           'Password Confirmation'),
                       controller: passwordConfirmedController,
                       enabled: editable && newUser,
@@ -179,8 +198,20 @@ class _UserDetailViewState extends State<UserDetailView> {
                             return null;
                           },
                           items: const [
-                            DropdownMenuItem(value: 1, child: Text('Club 1')),
-                            DropdownMenuItem(value: 2, child: Text('Club 2'))
+                            DropdownMenuItem(value: 0, child: Text('No club')),
+                            DropdownMenuItem(value: 1, child: Text('Motion')),
+                            DropdownMenuItem(value: 2, child: Text('Wraysbury Dragons & Waka Ama')),
+                            DropdownMenuItem(value: 3, child: Text('Haifa Lions Sea Sports Club')),
+                            DropdownMenuItem(value: 4, child: Text('Gladiators Abu Dhabi')),
+                            DropdownMenuItem(value: 5, child: Text('Britannia UK')),
+                            DropdownMenuItem(value: 6, child: Text('Clubul West Sport Arad')),
+                            DropdownMenuItem(value: 7, child: Text('Nautic Banat Timisoara')),
+                            DropdownMenuItem(value: 9, child: Text('Beodragons')),
+                            DropdownMenuItem(value: 11, child: Text('HSB Marİne Dragon Team')),
+                            DropdownMenuItem(value: 12, child: Text('Wraysbury/Britannia')),
+                            DropdownMenuItem(value: 13, child: Text('Long sprint')),
+                            DropdownMenuItem(value: 14, child: Text('Adski zmajevi')),
+                            DropdownMenuItem(value: 15, child: Text('Vulturi')),
                           ],
                           onChanged: (value) {
                             setState(() {

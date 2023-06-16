@@ -44,32 +44,54 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.end,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            ListTile(
-              title: Text('List of Athletes',
-                  style: Theme.of(context).textTheme.displayLarge,
-                  textAlign: TextAlign.left),
-              onTap: () {
-                Navigator.pushNamed(context, AthleteListView.routeName);
-              },
-              leading: const Icon(
-                Icons.play_arrow,
-                color: Color.fromARGB(255, 0, 80, 150),
+            Visibility(
+              visible: (currentUser.accessLevel! == 0),
+              child: ListTile(
+                title: Text('List of Athletes',
+                    style: Theme.of(context).textTheme.displayLarge,
+                    textAlign: TextAlign.left),
+                onTap: () {
+                  Navigator.pushNamed(context, AthleteListView.routeName);
+                },
+                leading: const Icon(
+                  Icons.play_arrow,
+                  color: Color.fromARGB(255, 0, 80, 150),
+                ),
               ),
             ),
-            ListTile(
-              title: Text('Crew Members',
-                  style: Theme.of(context).textTheme.displayLarge,
-                  textAlign: TextAlign.left),
-              onTap: () {
-                Navigator.pushNamed(context, CrewListView.routeName);
-              },
-              leading: const Icon(
-                Icons.play_arrow,
-                color: Color.fromARGB(255, 0, 80, 150),
+            Visibility(
+              visible: (currentUser.accessLevel! == 0),
+              child: ListTile(
+                title: Text('Crew Members',
+                    style: Theme.of(context).textTheme.displayLarge,
+                    textAlign: TextAlign.left),
+                onTap: () {
+                  Navigator.pushNamed(context, CrewListView.routeName);
+                },
+                leading: const Icon(
+                  Icons.play_arrow,
+                  color: Color.fromARGB(255, 0, 80, 150),
+                ),
               ),
             ),
             const SizedBox(
               height: bigSpace,
+            ),
+            Visibility(
+              visible: (currentUser.accessLevel! >= 1),
+              child: ListTile(
+                enabled: true,
+                title: Text('Races Overview',
+                    style: Theme.of(context).textTheme.displayMedium,
+                    textAlign: TextAlign.left),
+                onTap: () {
+                  Navigator.pushNamed(context, AdministrationPage.routeName);
+                },
+                leading: const Icon(
+                  Icons.play_arrow,
+                  color: Color.fromARGB(255, 0, 80, 150),
+                ),
+              ),
             ),
             Visibility(
               visible: (currentUser.accessLevel! >= 2),
