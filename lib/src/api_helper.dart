@@ -231,6 +231,27 @@ Future<List<Race>> getDisciplines() async {
   return (races);
 }
 
+Future<List<Race>> getDisciplinesCombined() async {
+  var headers = {'Authorization': 'Bearer $token'};
+  var request = http.Request('GET', Uri.parse('$apiURL/disciplinesCombined'));
+
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+
+  List<Race> races = [];
+  if (response.statusCode == 200) {
+    List<dynamic> result = jsonDecode(await response.stream.bytesToString());
+    // print(result);
+    result.forEach((discipline) {
+      races.add(Race.fromMap(discipline));
+    });
+  } else {
+    print(response.reasonPhrase);
+  }
+  return (races);
+}
+
 Future<List<Race>> getTeamDisciplines(int teamId) async {
   var headers = {'Authorization': 'Bearer $token'};
   var request =
@@ -366,6 +387,27 @@ Future<List<Athlete>> getEligibleAthletesForCrew(int crewId, int no) async {
   var headers = {'Authorization': 'Bearer $token'};
   var request = http.Request(
       'GET', Uri.parse('$apiURL/eligibleAthletes?crew_id=$crewId&no=$no'));
+
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+  List<Athlete> athletes = [];
+  if (response.statusCode == 200) {
+    List<dynamic> result = jsonDecode(await response.stream.bytesToString());
+    result.forEach((athlete) {
+      athletes.add(Athlete.fromMap(athlete));
+    });
+    // print(athletes);
+  } else {
+    print(response.reasonPhrase);
+  }
+  return (athletes);
+}
+
+Future<List<Athlete>> getEligibleAthletesForCombinedCrew(int crewId, int no) async {
+  var headers = {'Authorization': 'Bearer $token'};
+  var request = http.Request(
+      'GET', Uri.parse('$apiURL/eligibleCombinedAthletes?crew_id=$crewId&no=$no'));
 
   request.headers.addAll(headers);
 

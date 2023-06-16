@@ -33,7 +33,7 @@ class _CrewListViewState extends State<CrewListView> {
         //     image: DecorationImage(
         //         image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
         child: FutureBuilder(
-          future: api.getDisciplines(),
+          future: api.getDisciplinesCombined(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
