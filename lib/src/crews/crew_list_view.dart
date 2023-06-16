@@ -5,7 +5,6 @@ import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
-import '../model/race/race.dart';
 
 class CrewListView extends StatefulWidget {
   const CrewListView({Key? key}) : super(key: key);

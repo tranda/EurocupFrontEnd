@@ -1,6 +1,4 @@
 import 'package:eurocup_frontend/src/common.dart';
-import 'package:eurocup_frontend/src/crews/crew_detail_view.dart';
-import 'package:eurocup_frontend/src/model/race/discipline_crew.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;

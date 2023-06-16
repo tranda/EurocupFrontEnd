@@ -3,7 +3,6 @@ import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
-import '../athletes/athlete_list_view.dart';
 import 'club_athlete_list_view.dart';
 
 
