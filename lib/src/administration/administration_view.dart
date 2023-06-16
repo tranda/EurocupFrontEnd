@@ -1,7 +1,6 @@
 import 'package:eurocup_frontend/src/users/users_list_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
 import '../clubs/club_list_view.dart';
 import '../common.dart';
