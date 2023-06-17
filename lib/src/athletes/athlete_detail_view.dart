@@ -26,12 +26,14 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
 
   bool editable = false;
   String? mode;
+  bool allowEdit = true;
 
   @override
   Widget build(BuildContext context) {
     if (mode == null) {
       final args = ModalRoute.of(context)!.settings.arguments;
       mode = args == null ? 'r' : (args as Map)['mode'];
+      allowEdit = args == null ? true : (args as Map)['allowEdit'] ?? true;
     }
     switch (mode) {
       case 'r':
@@ -47,7 +49,7 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
     dateOfBirthController.text = currentAthlete.birthDate ?? '';
     genderController.text = currentAthlete.gender ?? '';
     var photoUrl = "https://$imagePrefix/${currentAthlete.photo}";
-    print('photo url: $photoUrl');
+    // print('photo url: $photoUrl');
 
     return Scaffold(
         appBar: AppBar(
@@ -55,28 +57,12 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
               '${currentAthlete.firstName ?? ""} ${currentAthlete.lastName ?? ""}'),
           actions: [
             Visibility(
-              visible: !editable,
+              visible: !editable && allowEdit,
               child: IconButton(
                 icon: const Icon(Icons.edit),
                 onPressed: () {
                   setState(() {
                     mode = 'm';
-                  });
-                },
-              ),
-            ),
-            Visibility(
-              visible: false,
-              child: IconButton(
-                icon: const Icon(Icons.save),
-                onPressed: () {
-                  setState(() {
-                    mode = 'r';
-                    api
-                        .updateAthlete(currentAthlete)
-                        .then((value) => Navigator.pop(
-                              context,
-                            ));
                   });
                 },
               ),

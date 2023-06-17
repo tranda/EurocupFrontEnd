@@ -71,7 +71,7 @@ class _ClubAthleteListViewState extends State<ClubAthleteListView> {
                           currentAthlete = athlete;
                           Navigator.pushNamed(
                               context, AthleteDetailView.routeName,
-                              arguments: {'mode': 'r'}).then((value) {
+                              arguments: {'mode': 'r', 'allowEdit':false}).then((value) {
                             setState(() {});
                           });
                           },

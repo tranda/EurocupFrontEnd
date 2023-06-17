@@ -37,23 +37,41 @@ class _AdministrationPageState extends State<AdministrationPage> {
           mainAxisAlignment: MainAxisAlignment.end,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            ListTile(
-              title: Text('Users',
-                  style: Theme.of(context).textTheme.displayMedium,
-                  textAlign: TextAlign.left),
-              onTap: () {
-                Navigator.pushNamed(context, UserListView.routeName);
-              },
-              leading: const Icon(
-                Icons.play_arrow,
-                color: Color.fromARGB(255, 0, 80, 150),
+            Visibility(
+              visible: currentUser.accessLevel! >= 3,
+              child: ListTile(
+                title: Text('Users',
+                    style: Theme.of(context).textTheme.displayMedium,
+                    textAlign: TextAlign.left),
+                onTap: () {
+                  Navigator.pushNamed(context, UserListView.routeName);
+                },
+                leading: const Icon(
+                  Icons.play_arrow,
+                  color: Color.fromARGB(255, 0, 80, 150),
+                ),
+              ),
+            ),
+            Visibility(
+              visible: currentUser.accessLevel! >= 3,
+              child: ListTile(
+                title: Text('Events',
+                    style: Theme.of(context).textTheme.displayMedium,
+                    textAlign: TextAlign.left),
+                onTap: () {},
+                leading: const Icon(
+                  Icons.play_arrow,
+                  color: Color.fromARGB(255, 0, 80, 150),
+                ),
               ),
             ),
             ListTile(
-              title: Text('Events',
+              title: Text('Clubs',
                   style: Theme.of(context).textTheme.displayMedium,
                   textAlign: TextAlign.left),
-              onTap: () {},
+              onTap: () {
+                Navigator.pushNamed(context, ClubListView.routeName);
+              },
               leading: const Icon(
                 Icons.play_arrow,
                 color: Color.fromARGB(255, 0, 80, 150),
@@ -65,18 +83,6 @@ class _AdministrationPageState extends State<AdministrationPage> {
                   textAlign: TextAlign.left),
               onTap: () {
                 Navigator.pushNamed(context, TeamListView.routeName);
-              },
-              leading: const Icon(
-                Icons.play_arrow,
-                color: Color.fromARGB(255, 0, 80, 150),
-              ),
-            ),
-            ListTile(
-              title: Text('Clubs',
-                  style: Theme.of(context).textTheme.displayMedium,
-                  textAlign: TextAlign.left),
-              onTap: () {
-                Navigator.pushNamed(context, ClubListView.routeName);
               },
               leading: const Icon(
                 Icons.play_arrow,
