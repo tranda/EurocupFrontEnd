@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
+import 'package:eurocup_frontend/src/model/race/discipline_crew.dart';
 import 'package:eurocup_frontend/src/model/race/race.dart';
 import 'package:eurocup_frontend/src/model/user.dart';
 import 'package:http/http.dart' as http;
@@ -176,7 +177,7 @@ Future<List<Discipline>> getDisciplinesAll() async {
 
   http.StreamedResponse response = await request.send();
 
-  // List<Discipline> disciplines = [];
+  disciplines = [];
   if (response.statusCode == 200) {
     List<dynamic> result = jsonDecode(await response.stream.bytesToString());
     // print(result);
@@ -267,6 +268,28 @@ Future<List<Race>> getTeamDisciplines(int teamId) async {
     // print(result);
     result.forEach((discipline) {
       races.add(Race.fromMap(discipline));
+    });
+  } else {
+    print(response.reasonPhrase);
+  }
+  return (races);
+}
+
+Future<List<DisciplineCrew>> getTeamsForDisciplines(int disciplineId) async {
+  var headers = {'Authorization': 'Bearer $token'};
+  var request =
+      http.Request('GET', Uri.parse('$apiURL/teamsForDiscipline?discipline_id=$disciplineId'));
+
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+
+  List<DisciplineCrew> races = [];
+  if (response.statusCode == 200) {
+    List<dynamic> result = jsonDecode(await response.stream.bytesToString());
+    // print(result);
+    result.forEach((disciplineRace) {
+      races.add(DisciplineCrew.fromMap(disciplineRace));
     });
   } else {
     print(response.reasonPhrase);

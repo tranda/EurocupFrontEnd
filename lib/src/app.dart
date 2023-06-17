@@ -7,6 +7,9 @@ import 'package:eurocup_frontend/src/crews/crew_detail_view.dart';
 import 'package:eurocup_frontend/src/crews/crew_list_view.dart';
 import 'package:eurocup_frontend/src/home_page_view.dart';
 import 'package:eurocup_frontend/src/login_view.dart';
+import 'package:eurocup_frontend/src/races/discipline_race_list_view.dart';
+import 'package:eurocup_frontend/src/races/race_crew_detail_view.dart';
+import 'package:eurocup_frontend/src/races/race_detail_view.dart';
 import 'package:eurocup_frontend/src/teams/team_list_view.dart';
 import 'package:eurocup_frontend/src/users/user_detail_view.dart';
 import 'package:eurocup_frontend/src/users/users_list_view.dart';
@@ -205,6 +208,12 @@ class MyApp extends StatelessWidget {
                         return const TeamListView();
                       case DisciplineListView.routeName:
                         return const DisciplineListView();
+                      case DisciplineRaceListView.routeName:
+                        return const DisciplineRaceListView();
+                      case RaceDetailView.routeName:
+                        return const RaceDetailView();
+                      case RaceCrewDetailView.routeName:
+                        return const RaceCrewDetailView();
                       default:
                         return LoginView();
                     }

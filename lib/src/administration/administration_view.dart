@@ -60,7 +60,7 @@ class _AdministrationPageState extends State<AdministrationPage> {
               ),
             ),
             ListTile(
-              title: Text('Disciplines',
+              title: Text('Teams',
                   style: Theme.of(context).textTheme.displayMedium,
                   textAlign: TextAlign.left),
               onTap: () {

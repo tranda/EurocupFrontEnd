@@ -8,7 +8,7 @@ import 'model/user.dart';
 String imagesPath = 'assets/images/';
 
 var TEST = true;
-var ADMINTEST = false;
+var ADMINTEST = true;
 var testUser = "test";
 var testPassword = "12345678";
 var adminUser = "tranda";

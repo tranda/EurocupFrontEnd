@@ -1,5 +1,6 @@
 import 'package:eurocup_frontend/src/athletes/athlete_list_view.dart';
 import 'package:eurocup_frontend/src/crews/crew_list_view.dart';
+import 'package:eurocup_frontend/src/races/discipline_race_list_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 
@@ -83,7 +84,7 @@ class _HomePageState extends State<HomePage> {
                     style: Theme.of(context).textTheme.displayMedium,
                     textAlign: TextAlign.left),
                 onTap: () {
-                  Navigator.pushNamed(context, AdministrationPage.routeName);
+                  Navigator.pushNamed(context, DisciplineRaceListView.routeName);
                 },
                 leading: const Icon(
                   Icons.play_arrow,
