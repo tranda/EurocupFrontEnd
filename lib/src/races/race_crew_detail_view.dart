@@ -1,4 +1,3 @@
-import 'package:eurocup_frontend/src/crews/athlete_picker_view.dart';
 import 'package:eurocup_frontend/src/model/race/crew.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';

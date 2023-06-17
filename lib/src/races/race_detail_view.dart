@@ -45,9 +45,9 @@ class ListViewState extends State<RaceDetailView> {
                 itemBuilder: (BuildContext context, int index) {
                   var competition = competitions.firstWhere(
                       (element) => element.id == discipline.eventId);
-                  var eventName = competition.name!;
-                  var eventColor =
-                      competitionColor[discipline.eventId! - 1];
+                  // var eventName = competition.name!;
+                  // var eventColor =
+                  //     competitionColor[discipline.eventId! - 1];
                   var standardSize = 22;
                   var smallSize = 12;
                   var size = (discipline.boatGroup == "Standard"
