@@ -65,28 +65,34 @@ class _AdministrationPageState extends State<AdministrationPage> {
                 ),
               ),
             ),
-            ListTile(
-              title: Text('Clubs',
-                  style: Theme.of(context).textTheme.displayMedium,
-                  textAlign: TextAlign.left),
-              onTap: () {
-                Navigator.pushNamed(context, ClubListView.routeName);
-              },
-              leading: const Icon(
-                Icons.play_arrow,
-                color: Color.fromARGB(255, 0, 80, 150),
+            Visibility(
+              visible: currentUser.accessLevel! >= 2,
+              child: ListTile(
+                title: Text('Clubs',
+                    style: Theme.of(context).textTheme.displayMedium,
+                    textAlign: TextAlign.left),
+                onTap: () {
+                  Navigator.pushNamed(context, ClubListView.routeName);
+                },
+                leading: const Icon(
+                  Icons.play_arrow,
+                  color: Color.fromARGB(255, 0, 80, 150),
+                ),
               ),
             ),
-            ListTile(
-              title: Text('Teams',
-                  style: Theme.of(context).textTheme.displayMedium,
-                  textAlign: TextAlign.left),
-              onTap: () {
-                Navigator.pushNamed(context, TeamListView.routeName);
-              },
-              leading: const Icon(
-                Icons.play_arrow,
-                color: Color.fromARGB(255, 0, 80, 150),
+            Visibility(
+              visible: currentUser.accessLevel! >= 3,
+              child: ListTile(
+                title: Text('Teams',
+                    style: Theme.of(context).textTheme.displayMedium,
+                    textAlign: TextAlign.left),
+                onTap: () {
+                  Navigator.pushNamed(context, TeamListView.routeName);
+                },
+                leading: const Icon(
+                  Icons.play_arrow,
+                  color: Color.fromARGB(255, 0, 80, 150),
+                ),
               ),
             ),
             const SizedBox(

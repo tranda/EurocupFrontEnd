@@ -26,7 +26,7 @@ class ListViewState extends State<RaceDetailView> {
     final discipline =
         disciplines.firstWhere((element) => element.id == disciplineId);
     return Scaffold(
-      appBar: appBar(title: 'Team List'),
+      appBar: appBar(title: discipline.getDisplayName()),
       body: Container(
         // decoration: const BoxDecoration(
         //     image: DecorationImage(
@@ -74,7 +74,8 @@ class ListViewState extends State<RaceDetailView> {
                                   'crewId': teams[index].crew!.id,
                                   'size': size + reserves,
                                   'helmNo': helmNo,
-                                  'title': discipline.getDisplayName()
+                                  // 'title': discipline.getDisplayName()
+                                  'title': teams[index].team!.name!
                                 });
                           },
                           trailing: const Icon(Icons.arrow_forward)),

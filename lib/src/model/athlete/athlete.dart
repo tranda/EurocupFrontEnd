@@ -115,4 +115,9 @@ class Athlete {
   String getDisplayName() {
     return ('$firstName $lastName');
   }
+
+  String getDisplayDetail() {
+    return ('$firstName $lastName ($gender)');
+  }
+
 }

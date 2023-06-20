@@ -52,7 +52,8 @@ class ListViewState extends State<ClubListView> {
                           onTap: () {
                             Navigator.pushNamed(
                                 context, ClubAthleteListView.routeName,
-                                arguments: {'clubId': clubs[index].id}).then((value) {
+                                arguments: {'clubId': clubs[index].id, 'title': clubs[index].name!
+                                }).then((value) {
                               setState(() {});
                             });
                           },

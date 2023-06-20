@@ -26,6 +26,7 @@ class _ClubAthleteListViewState extends State<ClubAthleteListView> {
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments as Map;
     int clubId = args['clubId'];
+    String title = args['title'];
 
     return Scaffold(
       appBar: appBarWithAction(
@@ -36,7 +37,7 @@ class _ClubAthleteListViewState extends State<ClubAthleteListView> {
           //   setState(() {});
           // });
         },
-        title: 'Athlete List',
+        title: title,
       ),
       body: Container(
         // decoration: const BoxDecoration(
