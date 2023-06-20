@@ -7,6 +7,7 @@ import 'package:eurocup_frontend/src/crews/crew_detail_view.dart';
 import 'package:eurocup_frontend/src/crews/crew_list_view.dart';
 import 'package:eurocup_frontend/src/home_page_view.dart';
 import 'package:eurocup_frontend/src/login_view.dart';
+import 'package:eurocup_frontend/src/qr_scanner/barcode_scanner_controller.dart';
 import 'package:eurocup_frontend/src/races/discipline_race_list_view.dart';
 import 'package:eurocup_frontend/src/races/race_crew_detail_view.dart';
 import 'package:eurocup_frontend/src/races/race_detail_view.dart';
@@ -214,6 +215,8 @@ class MyApp extends StatelessWidget {
                         return const RaceDetailView();
                       case RaceCrewDetailView.routeName:
                         return const RaceCrewDetailView();
+                      case BarCodeScannerController.routeName:
+                        return const BarCodeScannerController();
                       default:
                         return LoginView();
                     }

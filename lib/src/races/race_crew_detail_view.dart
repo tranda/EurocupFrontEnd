@@ -1,7 +1,10 @@
 import 'package:eurocup_frontend/src/model/race/crew.dart';
+import 'package:eurocup_frontend/src/qr_scanner/barcode_scanner_controller.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
+import 'package:flutter/services.dart';
+import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 
 import '../model/athlete/athlete.dart';
 
@@ -15,6 +18,8 @@ class RaceCrewDetailView extends StatefulWidget {
 
 class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
   late Crew crew;
+
+  String _scanBarcode = 'Unknown';
 
   @override
   void initState() {
@@ -40,6 +45,27 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
     return true;
   }
 
+  Future<void> scanQR() async {
+    String barcodeScanRes;
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      barcodeScanRes = await FlutterBarcodeScanner.scanBarcode(
+          '#ff6666', 'Cancel', true, ScanMode.QR);
+      print(barcodeScanRes);
+    } on PlatformException {
+      barcodeScanRes = 'Failed to get platform version.';
+    }
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    if (!mounted) return;
+
+    setState(() {
+      _scanBarcode = barcodeScanRes;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     // Map<int, Athlete> crewAthletes;
@@ -50,7 +76,10 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
     String title = args['title'];
 
     return Scaffold(
-      appBar: appBar(title: title),
+      appBar: appBarWithAction(() {
+        // Navigator.pushNamed(context, BarCodeScannerController.routeName);
+        scanQR();
+      }, title: title, icon: Icons.qr_code_scanner),
       body: Container(
         decoration: const BoxDecoration(
             image: DecorationImage(
@@ -77,7 +106,7 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
                         children: [
                           ListTile(
                             title: Text(
-                                "$no $drummerPrefix$helmPrefix$reservePrefix ${(crewAthletes[index]!['athlete']! as Athlete).getDisplayName()}",
+                                "$no $drummerPrefix$helmPrefix$reservePrefix ${(crewAthletes[index]!['athlete']! as Athlete).getDisplayDetail()}",
                                 style:
                                     Theme.of(context).textTheme.displaySmall),
                           ),
