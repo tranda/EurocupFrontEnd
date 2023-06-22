@@ -84,7 +84,8 @@ class _HomePageState extends State<HomePage> {
                     style: Theme.of(context).textTheme.displayMedium,
                     textAlign: TextAlign.left),
                 onTap: () {
-                  Navigator.pushNamed(context, DisciplineRaceListView.routeName);
+                  Navigator.pushNamed(
+                      context, DisciplineRaceListView.routeName);
                 },
                 leading: const Icon(
                   Icons.play_arrow,

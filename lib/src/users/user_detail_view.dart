@@ -144,8 +144,7 @@ class _UserDetailViewState extends State<UserDetailView> {
                         return null;
                       },
                       textCapitalization: TextCapitalization.words,
-                      decoration:
-                          buildPasswordInputDecoration('Password'),
+                      decoration: buildPasswordInputDecoration('Password'),
                       controller: passwordController,
                       enabled: editable && newUser,
                       style: Theme.of(context).textTheme.displaySmall,
@@ -164,8 +163,8 @@ class _UserDetailViewState extends State<UserDetailView> {
                         return null;
                       },
                       textCapitalization: TextCapitalization.words,
-                      decoration: buildPasswordInputDecoration(
-                          'Password Confirmation'),
+                      decoration:
+                          buildPasswordInputDecoration('Password Confirmation'),
                       controller: passwordConfirmedController,
                       enabled: editable && newUser,
                       style: Theme.of(context).textTheme.displaySmall,
@@ -200,17 +199,33 @@ class _UserDetailViewState extends State<UserDetailView> {
                           items: const [
                             DropdownMenuItem(value: 0, child: Text('No club')),
                             DropdownMenuItem(value: 1, child: Text('Motion')),
-                            DropdownMenuItem(value: 2, child: Text('Wraysbury Dragons & Waka Ama')),
-                            DropdownMenuItem(value: 3, child: Text('Haifa Lions Sea Sports Club')),
-                            DropdownMenuItem(value: 4, child: Text('Gladiators Abu Dhabi')),
-                            DropdownMenuItem(value: 5, child: Text('Britannia UK')),
-                            DropdownMenuItem(value: 6, child: Text('Clubul West Sport Arad')),
-                            DropdownMenuItem(value: 7, child: Text('Nautic Banat Timisoara')),
-                            DropdownMenuItem(value: 9, child: Text('Beodragons')),
-                            DropdownMenuItem(value: 11, child: Text('HSB Marİne Dragon Team')),
-                            DropdownMenuItem(value: 12, child: Text('Wraysbury/Britannia')),
-                            DropdownMenuItem(value: 13, child: Text('Long sprint')),
-                            DropdownMenuItem(value: 14, child: Text('Adski zmajevi')),
+                            DropdownMenuItem(
+                                value: 2,
+                                child: Text('Wraysbury Dragons & Waka Ama')),
+                            DropdownMenuItem(
+                                value: 3,
+                                child: Text('Haifa Lions Sea Sports Club')),
+                            DropdownMenuItem(
+                                value: 4, child: Text('Gladiators Abu Dhabi')),
+                            DropdownMenuItem(
+                                value: 5, child: Text('Britannia UK')),
+                            DropdownMenuItem(
+                                value: 6,
+                                child: Text('Clubul West Sport Arad')),
+                            DropdownMenuItem(
+                                value: 7,
+                                child: Text('Nautic Banat Timisoara')),
+                            DropdownMenuItem(
+                                value: 9, child: Text('Beodragons')),
+                            DropdownMenuItem(
+                                value: 11,
+                                child: Text('HSB Marİne Dragon Team')),
+                            DropdownMenuItem(
+                                value: 12, child: Text('Wraysbury/Britannia')),
+                            DropdownMenuItem(
+                                value: 13, child: Text('Long sprint')),
+                            DropdownMenuItem(
+                                value: 14, child: Text('Adski zmajevi')),
                             DropdownMenuItem(value: 15, child: Text('Vulturi')),
                           ],
                           onChanged: (value) {

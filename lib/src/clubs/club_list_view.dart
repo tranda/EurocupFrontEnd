@@ -5,7 +5,6 @@ import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
 import 'club_athlete_list_view.dart';
 
-
 class ClubListView extends StatefulWidget {
   const ClubListView({Key? key}) : super(key: key);
 
@@ -26,9 +25,9 @@ class ListViewState extends State<ClubListView> {
     return Scaffold(
       appBar: appBar(title: 'Club List'),
       body: Container(
-        // decoration: const BoxDecoration(
-        //     image: DecorationImage(
-        //         image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
+        decoration: const BoxDecoration(
+            image: DecorationImage(
+                image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
         child: FutureBuilder(
           future: api.getClubs(),
           builder: (context, snapshot) {
@@ -52,7 +51,9 @@ class ListViewState extends State<ClubListView> {
                           onTap: () {
                             Navigator.pushNamed(
                                 context, ClubAthleteListView.routeName,
-                                arguments: {'clubId': clubs[index].id, 'title': clubs[index].name!
+                                arguments: {
+                                  'clubId': clubs[index].id,
+                                  'title': clubs[index].name!
                                 }).then((value) {
                               setState(() {});
                             });

@@ -22,7 +22,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations(
       [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
-      
+
   final runnableApp = _buildRunnableApp(
     isWeb: kIsWeb,
     webAppWidth: 480.0,
@@ -31,7 +31,7 @@ void main() async {
     ),
   );
   runApp(runnableApp);
-  
+
   // runApp(MyApp(settingsController: settingsController));
 }
 

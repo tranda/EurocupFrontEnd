@@ -14,11 +14,10 @@ class BarCodeScannerController extends StatelessWidget {
       body: MobileScanner(
         fit: BoxFit.contain,
         controller: MobileScannerController(
-          detectionSpeed: DetectionSpeed.normal,
-          facing: CameraFacing.back,
-          torchEnabled: false,
-          formats: [BarcodeFormat.qrCode]
-        ),
+            detectionSpeed: DetectionSpeed.normal,
+            facing: CameraFacing.back,
+            torchEnabled: false,
+            formats: [BarcodeFormat.qrCode]),
         onDetect: (capture) {
           final List<Barcode> barcodes = capture.barcodes;
           final Uint8List? image = capture.image;

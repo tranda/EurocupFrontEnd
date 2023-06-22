@@ -28,9 +28,9 @@ class ListViewState extends State<TeamListView> {
     return Scaffold(
       appBar: appBar(title: 'Team List'),
       body: Container(
-        // decoration: const BoxDecoration(
-        //     image: DecorationImage(
-        //         image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
+        decoration: const BoxDecoration(
+            image: DecorationImage(
+                image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
         child: FutureBuilder(
           future: api.getTeamsAll(),
           builder: (context, snapshot) {

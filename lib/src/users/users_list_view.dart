@@ -30,9 +30,9 @@ class ListViewState extends State<UserListView> {
         });
       }, title: 'User List', icon: Icons.add),
       body: Container(
-        // decoration: const BoxDecoration(
-        //     image: DecorationImage(
-        //         image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
+        decoration: const BoxDecoration(
+            image: DecorationImage(
+                image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
         child: FutureBuilder(
           future: api.getUsers(),
           builder: (context, snapshot) {

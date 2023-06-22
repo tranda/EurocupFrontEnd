@@ -6,6 +6,8 @@ import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:flutter/services.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 
+import '../athletes/athlete_detail_view.dart';
+import '../common.dart';
 import '../model/athlete/athlete.dart';
 
 class RaceCrewDetailView extends StatefulWidget {
@@ -92,7 +94,7 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
             } else if (snapshot.connectionState == ConnectionState.done) {
               if (snapshot.hasData) {
                 var crewAthletes = snapshot.data!;
-                checkMix(crewAthletes, size, helmNo);
+                // checkMix(crewAthletes, size, helmNo);
                 // print (crewAthletes);
                 return ListView.builder(
                   itemCount: size,
@@ -102,6 +104,8 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
                     var helmPrefix = no == helmNo ? "(helm)" : "";
                     var reservePrefix = no > helmNo ? "(reserve)" : "";
                     if (crewAthletes.containsKey(index)) {
+                      final athlete =
+                          crewAthletes[index]!['athlete']! as Athlete;
                       return Column(
                         children: [
                           ListTile(
@@ -109,6 +113,17 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
                                 "$no $drummerPrefix$helmPrefix$reservePrefix ${(crewAthletes[index]!['athlete']! as Athlete).getDisplayDetail()}",
                                 style:
                                     Theme.of(context).textTheme.displaySmall),
+                            onTap: () {
+                              currentAthlete = athlete;
+                              Navigator.pushNamed(
+                                  context, AthleteDetailView.routeName,
+                                  arguments: {
+                                    'mode': 'r',
+                                    'allowEdit': false
+                                  }).then((value) {
+                                setState(() {});
+                              });
+                            },
                           ),
                           const Divider(
                             height: 4,

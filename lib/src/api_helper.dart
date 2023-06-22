@@ -8,6 +8,7 @@ import 'package:eurocup_frontend/src/model/user.dart';
 import 'package:http/http.dart' as http;
 import 'common.dart';
 import 'model/club/club.dart';
+import 'model/club_details.dart';
 import 'model/event/event.dart';
 import 'model/race/crew.dart';
 import 'model/race/discipline.dart';
@@ -277,8 +278,8 @@ Future<List<Race>> getTeamDisciplines(int teamId) async {
 
 Future<List<DisciplineCrew>> getTeamsForDisciplines(int disciplineId) async {
   var headers = {'Authorization': 'Bearer $token'};
-  var request =
-      http.Request('GET', Uri.parse('$apiURL/teamsForDiscipline?discipline_id=$disciplineId'));
+  var request = http.Request('GET',
+      Uri.parse('$apiURL/teamsForDiscipline?discipline_id=$disciplineId'));
 
   request.headers.addAll(headers);
 
@@ -427,10 +428,11 @@ Future<List<Athlete>> getEligibleAthletesForCrew(int crewId, int no) async {
   return (athletes);
 }
 
-Future<List<Athlete>> getEligibleAthletesForCombinedCrew(int crewId, int no) async {
+Future<List<Athlete>> getEligibleAthletesForCombinedCrew(
+    int crewId, int no) async {
   var headers = {'Authorization': 'Bearer $token'};
-  var request = http.Request(
-      'GET', Uri.parse('$apiURL/eligibleCombinedAthletes?crew_id=$crewId&no=$no'));
+  var request = http.Request('GET',
+      Uri.parse('$apiURL/eligibleCombinedAthletes?crew_id=$crewId&no=$no'));
 
   request.headers.addAll(headers);
 
@@ -614,4 +616,29 @@ Future updatePassword(User user) async {
   } else {
     print('error response: ${response.reasonPhrase}');
   }
+}
+
+Future<ClubDetails> getClubDetails(int clubId) async {
+  var dummy = Random().nextInt(10000000);
+  var headers = {'Authorization': 'Bearer $token', 'Cache-Control': 'no-cache'};
+  var request =
+      http.Request('GET', Uri.parse('$apiURL/clubDetails?club_id=$clubId'));
+
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+
+  var clubDetails = ClubDetails();
+
+  if (response.statusCode == 200) {
+    var responseString = await response.stream.bytesToString();
+    var result = jsonDecode(responseString);
+    print(result);
+    var data = result;
+    clubDetails = ClubDetails.fromMap(data);
+  } else {
+    print(response.reasonPhrase);
+  }
+  // print("http response: $crewAthletes");
+  return (clubDetails);
 }

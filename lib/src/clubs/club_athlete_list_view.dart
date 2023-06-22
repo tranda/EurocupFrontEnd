@@ -1,4 +1,5 @@
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
+import 'package:eurocup_frontend/src/clubs/club_details_view.dart';
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
@@ -31,19 +32,19 @@ class _ClubAthleteListViewState extends State<ClubAthleteListView> {
     return Scaffold(
       appBar: appBarWithAction(
         () {
-          // currentAthlete = Athlete();
-          // Navigator.pushNamed(context, AthleteDetailView.routeName,
-          //     arguments: {'mode': 'm'}).then((value) {
-          //   setState(() {});
-          // });
+          Navigator.pushNamed(
+            context,
+            ClubDetailView.routeName,  arguments: {'clubId': clubId, 'title': title}
+          );
         },
         title: title,
+        icon: Icons.info,
       ),
       body: Container(
-        // decoration: const BoxDecoration(
-        //     image: DecorationImage(
-        //         image: AssetImage('assets/images/bck.jpg'),
-        //         fit: BoxFit.cover)),
+        decoration: const BoxDecoration(
+            image: DecorationImage(
+                image: AssetImage('assets/images/bck.jpg'),
+                fit: BoxFit.cover)),
         child: FutureBuilder<List<Athlete>>(
           future: api.getAthletesForClub(clubId),
           builder: (context, snapshot) {
@@ -52,7 +53,7 @@ class _ClubAthleteListViewState extends State<ClubAthleteListView> {
             }
             if (snapshot.hasData) {
               final athletes = snapshot.data!;
-              
+
               return ListView.builder(
                 itemCount: athletes.length,
                 itemBuilder: (BuildContext context, int index) {
@@ -69,12 +70,15 @@ class _ClubAthleteListViewState extends State<ClubAthleteListView> {
                                     Theme.of(context).textTheme.displaySmall),
                           ),
                           onTap: () {
-                          currentAthlete = athlete;
-                          Navigator.pushNamed(
-                              context, AthleteDetailView.routeName,
-                              arguments: {'mode': 'r', 'allowEdit':false}).then((value) {
-                            setState(() {});
-                          });
+                            currentAthlete = athlete;
+                            Navigator.pushNamed(
+                                context, AthleteDetailView.routeName,
+                                arguments: {
+                                  'mode': 'r',
+                                  'allowEdit': false
+                                }).then((value) {
+                              setState(() {});
+                            });
                           },
                           trailing: const Icon(Icons.arrow_forward)),
                       const Divider(

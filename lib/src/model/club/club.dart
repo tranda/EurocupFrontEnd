@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-
 class Club {
   final int? id;
   final String? name;

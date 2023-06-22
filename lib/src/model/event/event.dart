@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-
 class Competition {
   final int? id;
   final String? name;
