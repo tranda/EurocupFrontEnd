@@ -465,7 +465,7 @@ Future<List<Competition>> getCompetitions() async {
     result.forEach((competition) {
       competitions.add(Competition.fromMap(competition));
     });
-    print(result);
+    // print(result);
   } else {
     print(response.reasonPhrase);
   }
@@ -487,7 +487,7 @@ Future<List<Club>> getClubs() async {
     result.forEach((club) {
       clubs.add(Club.fromMap(club));
     });
-    print(result);
+    // print(result);
   } else {
     print(response.reasonPhrase);
   }
@@ -510,7 +510,7 @@ Future<List<User>> getUsers() async {
     result.forEach((user) {
       users.add(User.fromMap(user));
     });
-    print(result);
+    // print(result);
   } else {
     print(response.reasonPhrase);
   }
@@ -633,7 +633,7 @@ Future<ClubDetails> getClubDetails(int clubId) async {
   if (response.statusCode == 200) {
     var responseString = await response.stream.bytesToString();
     var result = jsonDecode(responseString);
-    print(result);
+    // print(result);
     var data = result;
     clubDetails = ClubDetails.fromMap(data);
   } else {
