@@ -16,19 +16,20 @@ class Athlete {
   DateTime? updatedAt;
   String photoBase64 = '';
   String? category;
+  String? eurocup;
 
-  Athlete({
-    this.id,
-    this.clubId,
-    this.firstName,
-    this.lastName,
-    this.birthDate,
-    this.gender,
-    this.category,
-    this.photo,
-    this.createdAt,
-    this.updatedAt,
-  });
+  Athlete(
+      {this.id,
+      this.clubId,
+      this.firstName,
+      this.lastName,
+      this.birthDate,
+      this.gender,
+      this.category,
+      this.photo,
+      this.createdAt,
+      this.updatedAt,
+      this.eurocup});
 
   @override
   String toString() {
@@ -50,6 +51,7 @@ class Athlete {
         updatedAt: data['updated_at'] == null
             ? null
             : DateTime.parse(data['updated_at'] as String),
+        eurocup: data['eurocup'] as String?
       );
 
   Map<String, dynamic> toMap() => {
@@ -63,6 +65,7 @@ class Athlete {
         'photo': photo,
         'created_at': createdAt?.toIso8601String(),
         'updated_at': updatedAt?.toIso8601String(),
+        'eurocup': eurocup
       };
 
   /// `dart:convert`
