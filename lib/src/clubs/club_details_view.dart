@@ -31,8 +31,7 @@ class _ClubDetailViewState extends State<ClubDetailView> {
       body: Container(
         decoration: const BoxDecoration(
             image: DecorationImage(
-                image: AssetImage('assets/images/bck.jpg'),
-                fit: BoxFit.cover)),
+                image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
         child: FutureBuilder<ClubDetails>(
           future: api.getClubDetails(clubId),
           builder: (context, snapshot) {

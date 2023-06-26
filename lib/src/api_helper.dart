@@ -459,9 +459,10 @@ Future<List<Competition>> getCompetitions() async {
   request.headers.addAll(headers);
 
   http.StreamedResponse response = await request.send();
-  // List<Competition> competitions = [];
+  competitions = [];
   if (response.statusCode == 200) {
-    List<dynamic> result = jsonDecode(await response.stream.bytesToString());
+    var responseString = await response.stream.bytesToString();
+    List<dynamic> result = jsonDecode(responseString);
     result.forEach((competition) {
       competitions.add(Competition.fromMap(competition));
     });

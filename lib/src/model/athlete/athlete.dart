@@ -37,22 +37,21 @@ class Athlete {
   }
 
   factory Athlete.fromMap(Map<String, dynamic> data) => Athlete(
-        id: data['id'] as int?,
-        clubId: data['club_id'] as int?,
-        firstName: data['first_name'] as String?,
-        lastName: data['last_name'] as String?,
-        birthDate: data['birth_date'] as String?,
-        gender: data['gender'] as String?,
-        category: data['category'] as String?,
-        photo: data['photo'] as String?,
-        createdAt: data['created_at'] == null
-            ? null
-            : DateTime.parse(data['created_at'] as String),
-        updatedAt: data['updated_at'] == null
-            ? null
-            : DateTime.parse(data['updated_at'] as String),
-        eurocup: data['eurocup'] as String?
-      );
+      id: data['id'] as int?,
+      clubId: data['club_id'] as int?,
+      firstName: data['first_name'] as String?,
+      lastName: data['last_name'] as String?,
+      birthDate: data['birth_date'] as String?,
+      gender: data['gender'] as String?,
+      category: data['category'] as String?,
+      photo: data['photo'] as String?,
+      createdAt: data['created_at'] == null
+          ? null
+          : DateTime.parse(data['created_at'] as String),
+      updatedAt: data['updated_at'] == null
+          ? null
+          : DateTime.parse(data['updated_at'] as String),
+      eurocup: data['eurocup'] as String?);
 
   Map<String, dynamic> toMap() => {
         'id': id,

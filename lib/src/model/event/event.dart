@@ -11,6 +11,9 @@ class Competition {
   final int? smallReserves;
   final int? smallMinGender;
   final int? smallMaxGender;
+  final DateTime? raceEntriesLock;
+  final DateTime? nameEntriesLock;
+  final DateTime? crewEntriesLock;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -25,6 +28,9 @@ class Competition {
     this.smallReserves,
     this.smallMinGender,
     this.smallMaxGender,
+    this.raceEntriesLock,
+    this.nameEntriesLock,
+    this.crewEntriesLock,
     this.createdAt,
     this.updatedAt,
   });
@@ -45,6 +51,12 @@ class Competition {
         smallReserves: data['small_reserves'] as int?,
         smallMinGender: data['small_min_gender'] as int?,
         smallMaxGender: data['small_max_gender'] as int?,
+        raceEntriesLock: data['race_entries_lock'] =
+            DateTime.parse(data['race_entries_lock'] as String),
+        nameEntriesLock: data['name_entries_lock'] =
+            DateTime.parse(data['name_entries_lock'] as String),
+        crewEntriesLock: data['crew_entries_lock'] =
+            DateTime.parse(data['crew_entries_lock'] as String),
         createdAt: data['created_at'] == null
             ? null
             : DateTime.parse(data['created_at'] as String),
@@ -64,6 +76,9 @@ class Competition {
         'small_reserves': smallReserves,
         'small_min_gender': smallMinGender,
         'small_max_gender': smallMaxGender,
+        'race_entries_lock': raceEntriesLock,
+        'name_entries_lock': nameEntriesLock,
+        'crew_entries_lock': crewEntriesLock,
         'created_at': createdAt?.toIso8601String(),
         'updated_at': updatedAt?.toIso8601String(),
       };

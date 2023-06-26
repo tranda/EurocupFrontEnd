@@ -4,7 +4,9 @@ import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
+import '../clubs/club_details_view.dart';
 import '../model/athlete/athlete.dart';
+import 'crew_detail_print.dart';
 
 class CrewDetailView extends StatefulWidget {
   const CrewDetailView({Key? key}) : super(key: key);
@@ -49,9 +51,22 @@ class _CrewDetailViewState extends State<CrewDetailView> {
     int crewId = args['crewId'];
     int helmNo = args['helmNo'];
     String title = args['title'];
+    bool locked = args['locked'];
 
     return Scaffold(
       appBar: appBar(title: title),
+      // appBar: appBarWithAction(
+      //   () {
+      //     Navigator.pushNamed(context, CrewDetailPrint.routeName, arguments: {
+      //       'crewId': crewId,
+      //       'size': size, // + reserves,
+      //       'helmNo': helmNo,
+      //       'title': title
+      //     });
+      //   },
+      //   title: title,
+      //   icon: Icons.print,
+      // ),
       body: Container(
         decoration: const BoxDecoration(
             image: DecorationImage(
@@ -86,14 +101,16 @@ class _CrewDetailViewState extends State<CrewDetailView> {
                                 Icons.delete,
                                 color: Colors.red,
                               ),
-                              onPressed: () {
-                                api
-                                    .deleteCrewAthlete(
-                                        crewAthletes[index]!['id'])
-                                    .then((value) {
-                                  setState(() {});
-                                });
-                              },
+                              onPressed: locked
+                                  ? () {}
+                                  : () {
+                                      api
+                                          .deleteCrewAthlete(
+                                              crewAthletes[index]!['id'])
+                                          .then((value) {
+                                        setState(() {});
+                                      });
+                                    },
                             ),
                           ),
                           const Divider(
@@ -109,16 +126,18 @@ class _CrewDetailViewState extends State<CrewDetailView> {
                                 "$no $drummerPrefix$helmPrefix$reservePrefix",
                                 style:
                                     Theme.of(context).textTheme.displaySmall),
-                            onTap: () {
-                              Navigator.of(context).pushNamed(
-                                  AthletePickerView.routeName,
-                                  arguments: {
-                                    'crewId': crewId,
-                                    'no': index
-                                  }).then((value) {
-                                setState(() {});
-                              });
-                            },
+                            onTap: locked
+                                ? () {}
+                                : () {
+                                    Navigator.of(context).pushNamed(
+                                        AthletePickerView.routeName,
+                                        arguments: {
+                                          'crewId': crewId,
+                                          'no': index
+                                        }).then((value) {
+                                      setState(() {});
+                                    });
+                                  },
                           ),
                           const Divider(
                             height: 4,

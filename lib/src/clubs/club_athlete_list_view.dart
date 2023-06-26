@@ -32,10 +32,8 @@ class _ClubAthleteListViewState extends State<ClubAthleteListView> {
     return Scaffold(
       appBar: appBarWithAction(
         () {
-          Navigator.pushNamed(
-            context,
-            ClubDetailView.routeName,  arguments: {'clubId': clubId, 'title': title}
-          );
+          Navigator.pushNamed(context, ClubDetailView.routeName,
+              arguments: {'clubId': clubId, 'title': title});
         },
         title: title,
         icon: Icons.info,
@@ -43,8 +41,7 @@ class _ClubAthleteListViewState extends State<ClubAthleteListView> {
       body: Container(
         decoration: const BoxDecoration(
             image: DecorationImage(
-                image: AssetImage('assets/images/bck.jpg'),
-                fit: BoxFit.cover)),
+                image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
         child: FutureBuilder<List<Athlete>>(
           future: api.getAthletesForClub(clubId),
           builder: (context, snapshot) {
@@ -62,7 +59,10 @@ class _ClubAthleteListViewState extends State<ClubAthleteListView> {
                   return Column(
                     children: [
                       ListTile(
-                        leading: Text(athlete.eurocup ?? "", style: Theme.of(context).textTheme.labelMedium,),
+                          leading: Text(
+                            athlete.eurocup ?? "",
+                            style: Theme.of(context).textTheme.labelMedium,
+                          ),
                           title: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Text(

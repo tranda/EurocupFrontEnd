@@ -2,6 +2,7 @@ import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:eurocup_frontend/src/athletes/athlete_detail_view.dart';
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
+import 'package:eurocup_frontend/src/model/event/event.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 
@@ -17,23 +18,30 @@ class AthleteListView extends StatefulWidget {
 
 class _AthleteListViewState extends State<AthleteListView> {
   @override
+  bool locked = false;
+
+  @override
   void initState() {
     super.initState();
-    // setState(() {
-    //   getAthletes();
-    // });
+    var competition = competitions.first;
+    locked = DateTime.now().isAfter(competition.nameEntriesLock!);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appBarWithAction(() {
-        currentAthlete = Athlete();
-        Navigator.pushNamed(context, AthleteDetailView.routeName,
-            arguments: {'mode': 'm'}).then((value) {
-          setState(() {});
-        });
-      }, title: 'Athlete List', icon: Icons.add),
+      appBar: appBarWithAction(
+          locked
+              ? () {}
+              : () {
+                  currentAthlete = Athlete();
+                  Navigator.pushNamed(context, AthleteDetailView.routeName,
+                      arguments: {'mode': 'm'}).then((value) {
+                    setState(() {});
+                  });
+                },
+          title: 'Athlete List',
+          icon: Icons.add),
       body: Container(
         // decoration: const BoxDecoration(
         //     image: DecorationImage(
@@ -68,7 +76,10 @@ class _AthleteListViewState extends State<AthleteListView> {
                             currentAthlete = athlete;
                             Navigator.pushNamed(
                                 context, AthleteDetailView.routeName,
-                                arguments: {'mode': 'r'}).then((value) {
+                                arguments: {
+                                  'mode': 'r',
+                                  'allowEdit': !locked
+                                }).then((value) {
                               setState(() {});
                             });
                           },
