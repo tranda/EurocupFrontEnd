@@ -24,7 +24,7 @@ class _AthleteListViewState extends State<AthleteListView> {
   void initState() {
     super.initState();
     var competition = competitions.first;
-    locked = DateTime.now().isAfter(competition.nameEntriesLock!);
+    // locked = DateTime.now().isAfter(competition.nameEntriesLock!);
   }
 
   @override
@@ -34,9 +34,8 @@ class _AthleteListViewState extends State<AthleteListView> {
           locked
               ? () {}
               : () {
-                  currentAthlete = Athlete();
                   Navigator.pushNamed(context, AthleteDetailView.routeName,
-                      arguments: {'mode': 'm'}).then((value) {
+                      arguments: {'mode': 'm', 'athlete': Athlete()}).then((value) {
                     setState(() {});
                   });
                 },
@@ -73,12 +72,12 @@ class _AthleteListViewState extends State<AthleteListView> {
                                     Theme.of(context).textTheme.displaySmall),
                           ),
                           onTap: () {
-                            currentAthlete = athlete;
                             Navigator.pushNamed(
                                 context, AthleteDetailView.routeName,
                                 arguments: {
                                   'mode': 'r',
-                                  'allowEdit': !locked
+                                  'allowEdit': !locked,
+                                  'athlete': athlete
                                 }).then((value) {
                               setState(() {});
                             });

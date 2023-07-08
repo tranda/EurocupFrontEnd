@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
@@ -642,4 +643,36 @@ Future<ClubDetails> getClubDetails(int clubId) async {
   }
   // print("http response: $crewAthletes");
   return (clubDetails);
+}
+
+Future<void> uploadFile(int id, List<int> fileBytes) async {
+  var headers = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Authorization': 'Bearer $token'
+  };
+  var uri = Uri.parse('$apiURL/athleteCertificates/$id');
+  var request = http.MultipartRequest('POST', uri);
+  request.headers.addAll(headers);
+
+  // var fileStream = http.ByteStream(file.openRead());
+  // var length = await file.length();
+  // var multipartFile = http.MultipartFile('pdf', fileStream, length,
+  //     filename: file.path.split('/').last);
+  // request.files.add(multipartFile);
+     request.files.add(
+    http.MultipartFile.fromBytes(
+      'file',
+      fileBytes,
+      filename: 'certificate_$id',
+    ),
+  );
+
+  var response = await request.send();
+
+  if (response.statusCode == 200) {
+    var responseString = await response.stream.bytesToString();
+    print(responseString);
+  } else {
+    print('error response: ${response.reasonPhrase}');
+  }
 }

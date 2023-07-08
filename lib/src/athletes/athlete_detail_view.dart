@@ -1,13 +1,18 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
+import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher_string.dart';
+import 'package:file_picker/file_picker.dart';
 
 class AthleteDetailView extends StatefulWidget {
   const AthleteDetailView({super.key});
@@ -27,11 +32,12 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
   bool editable = false;
   String? mode;
   bool allowEdit = true;
+  late Athlete currentAthlete;
 
   @override
   Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)!.settings.arguments;
     if (mode == null) {
-      final args = ModalRoute.of(context)!.settings.arguments;
       mode = args == null ? 'r' : (args as Map)['mode'];
       allowEdit = args == null ? true : (args as Map)['allowEdit'] ?? true;
     }
@@ -43,12 +49,14 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
         editable = true;
         break;
     }
-
+    currentAthlete = (args as Map)['athlete'] as Athlete;
     firstNameController.text = currentAthlete.firstName ?? '';
     lastNameController.text = currentAthlete.lastName ?? '';
     dateOfBirthController.text = currentAthlete.birthDate ?? '';
     genderController.text = currentAthlete.gender ?? '';
     var photoUrl = "https://$imagePrefix/${currentAthlete.photo}";
+    var certificateUrl =
+        "https://$certificatePrefix/${currentAthlete.certificate}";
     // print('photo url: $photoUrl');
 
     return Scaffold(
@@ -69,12 +77,9 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
             ),
           ],
         ),
-        body: SingleChildScrollView(
-          child: Container(
-            decoration: const BoxDecoration(
-                image: DecorationImage(
-                    image: AssetImage('assets/images/bck.jpg'),
-                    fit: BoxFit.cover)),
+        body: Column(children: [
+          Container(
+            decoration: bckDecoration(),
             child: Form(
               key: _formKey,
               child: Column(
@@ -82,7 +87,7 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                 children: [
                   Center(
                       child: GestureDetector(
-                    child: imagePreview(photoUrl: photoUrl),
+                    child: imagePreview(photoUrl: photoUrl,  currentAthlete: currentAthlete),
                     onTap: () {
                       if (editable) {
                         selectImageSource();
@@ -212,37 +217,46 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                       ),
                     ),
                   ),
+                  const SizedBox(
+                    height: bigSpace,
+                  ),
                   Visibility(
-                    visible: false, // editable,
+                    visible: currentAthlete.id != null,
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        SizedBox(
-                            width: 128,
-                            height: 44,
-                            child: ElevatedButton(
+                        Text(
+                          'Antidoping certificate: ',
+                          style: Theme.of(context).textTheme.displaySmall,
+                        ),
+                        editable
+                            ? ElevatedButton(
                                 onPressed: () {
-                                  if (_formKey.currentState!.validate()) {
-                                    setState(() {
-                                      mode = 'r';
-                                      api
-                                          .updateAthlete(currentAthlete)
-                                          .then((value) => Navigator.pop(
-                                                context,
-                                              ));
-                                    });
-                                  }
+                                  selectFile(context);
                                 },
-                                child: const Text('SAVE'))),
+                                child: const Text('Upload'))
+                            : currentAthlete.certificate == null
+                                ? Text(
+                                    'missing',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .displaySmall,
+                                  )
+                                : ElevatedButton(
+                                    onPressed: () => _launchUrl(certificateUrl),
+                                    child: const Text('Open')),
                       ],
                     ),
+                  ),
+                  const SizedBox(
+                    height: bigSpace,
                   ),
                 ],
               ),
             ),
           ),
-        ),
+          // ElevatedButton(
+          //     onPressed: () => _launchUrl(certificateUrl), child: Text('Open')),
+        ]),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         floatingActionButton: Visibility(
           visible: editable,
@@ -298,6 +312,12 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
         ));
   }
 
+  Future<void> _launchUrl(String url) async {
+    if (!await launchUrlString(url)) {
+      throw Exception('Could not launch $url');
+    }
+  }
+
   void selectImageSource() {
     showModalBottomSheet(
         backgroundColor: Colors.blue,
@@ -340,15 +360,29 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
       });
     }
   }
+
+  void selectFile(BuildContext context) async {
+    FilePickerResult? result = await FilePicker.platform
+        .pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
+
+    if (result != null) {
+      List<int> fileBytes = result.files.single.bytes!;
+      await api.uploadFile(currentAthlete.id!, fileBytes);
+      setState(() {});
+    } else {
+      // User canceled the file selection
+      print('File selection canceled.');
+    }
+  }
 }
 
+// ignore: camel_case_types
 class imagePreview extends StatelessWidget {
-  const imagePreview({
-    super.key,
-    required this.photoUrl,
-  });
+  const imagePreview(
+      {super.key, required this.photoUrl, required this.currentAthlete});
 
   final String photoUrl;
+  final Athlete currentAthlete;
 
   @override
   Widget build(BuildContext context) {
@@ -397,6 +431,7 @@ class imagePreview extends StatelessWidget {
   }
 }
 
+// ignore: camel_case_types
 class imageFromUrl extends StatelessWidget {
   const imageFromUrl({
     super.key,
@@ -415,6 +450,7 @@ class imageFromUrl extends StatelessWidget {
   }
 }
 
+// ignore: camel_case_types
 class imageUnknown extends StatelessWidget {
   const imageUnknown({
     super.key,

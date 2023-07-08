@@ -8,7 +8,7 @@ import 'model/user.dart';
 String imagesPath = 'assets/images/';
 
 var TEST = true;
-var ADMINTEST = true;
+var ADMINTEST = false;
 var testUser = "test";
 var testPassword = "12345678";
 var adminUser = "tranda";
@@ -21,8 +21,8 @@ String? token = '';
 List<Competition> competitions = [];
 List<Discipline> disciplines = [];
 
-Athlete currentAthlete = Athlete();
 const String imagePrefix = 'events.motion.rs/photos';
+const String certificatePrefix = 'events.motion.rs/certificates';
 
 const double horizontalPadding = 24.0;
 const double verticalPadding = 8.0;

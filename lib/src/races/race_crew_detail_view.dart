@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:eurocup_frontend/src/model/race/crew.dart';
 import 'package:eurocup_frontend/src/qr_scanner/barcode_scanner_controller.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
@@ -5,9 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:flutter/services.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:qrscan/qrscan.dart' as scanner;
 
 import '../athletes/athlete_detail_view.dart';
 import '../common.dart';
+import '../model/athlere_qr_code.dart';
 import '../model/athlete/athlete.dart';
 
 class RaceCrewDetailView extends StatefulWidget {
@@ -22,11 +27,13 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
   late Crew crew;
 
   String _scanBarcode = 'Unknown';
+  late TextEditingController _outputController;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    this._outputController = new TextEditingController();
   }
 
   bool checkMix(
@@ -68,9 +75,21 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
     });
   }
 
+  Future _scan() async {
+    await Permission.camera.request();
+    String? barcode = await scanner.scan();
+    if (barcode == null) {
+      print('nothing return.');
+    } else {
+      print(barcode);
+      // this._outputController.text = barcode;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Map<int, Athlete> crewAthletes;
+    List<int> listAthleteIds = [];
+    List<Athlete> listAthlete = [];
     final args = ModalRoute.of(context)!.settings.arguments as Map;
     int size = args['size'];
     int crewId = args['crewId'];
@@ -79,13 +98,21 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
 
     return Scaffold(
       appBar: appBarWithAction(() {
-        // Navigator.pushNamed(context, BarCodeScannerController.routeName);
-        scanQR();
+        Navigator.pushNamed(context, BarCodeScannerController.routeName,
+                arguments: {'listIds': listAthleteIds, 'list': listAthlete})
+        //     .then((value) {
+        //   if (value == true) {
+        //     showInfoDialog(context, 'PASSED', '');
+        //   } else {
+        //     showInfoDialog(context, 'FAILED', 'NOT IN THIS CREW!');
+        //   }
+        // })
+        ;
+        // scanQR();
+        // _scan();
       }, title: title, icon: Icons.qr_code_scanner),
       body: Container(
-        decoration: const BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
+        decoration: bckDecoration(),
         child: FutureBuilder(
           future: api.getCrewAthletesForCrew(crewId),
           builder: (context, snapshot) {
@@ -94,6 +121,11 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
             } else if (snapshot.connectionState == ConnectionState.done) {
               if (snapshot.hasData) {
                 var crewAthletes = snapshot.data!;
+                listAthlete = crewAthletes.values
+                    .map<Athlete>((innerMap) => innerMap['athlete'] as Athlete)
+                    .toList();
+                listAthleteIds = listAthlete.map((e) => e.id as int).toList();
+                // print(listAthleteIds);
                 // checkMix(crewAthletes, size, helmNo);
                 // print (crewAthletes);
                 return ListView.builder(
@@ -114,12 +146,12 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
                                 style:
                                     Theme.of(context).textTheme.displaySmall),
                             onTap: () {
-                              currentAthlete = athlete;
                               Navigator.pushNamed(
                                   context, AthleteDetailView.routeName,
                                   arguments: {
                                     'mode': 'r',
-                                    'allowEdit': false
+                                    'allowEdit': false,
+                                    'athlete': athlete
                                   }).then((value) {
                                 setState(() {});
                               });

@@ -39,9 +39,7 @@ class _ClubAthleteListViewState extends State<ClubAthleteListView> {
         icon: Icons.info,
       ),
       body: Container(
-        decoration: const BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
+        decoration: bckDecoration(),
         child: FutureBuilder<List<Athlete>>(
           future: api.getAthletesForClub(clubId),
           builder: (context, snapshot) {
@@ -71,12 +69,12 @@ class _ClubAthleteListViewState extends State<ClubAthleteListView> {
                                     Theme.of(context).textTheme.displaySmall),
                           ),
                           onTap: () {
-                            currentAthlete = athlete;
                             Navigator.pushNamed(
                                 context, AthleteDetailView.routeName,
                                 arguments: {
                                   'mode': 'r',
-                                  'allowEdit': false
+                                  'allowEdit': false,
+                                  'athlete': athlete
                                 }).then((value) {
                               setState(() {});
                             });
