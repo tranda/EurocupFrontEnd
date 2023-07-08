@@ -23,16 +23,13 @@ class ListViewState extends State<UserListView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: appBarWithAction(() {
-        // currentAthlete = Athlete();
         Navigator.pushNamed(context, UserDetailView.routeName, arguments: null)
             .then((value) {
           setState(() {});
         });
       }, title: 'User List', icon: Icons.add),
       body: Container(
-        decoration: const BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
+        decoration: bckDecoration(),
         child: FutureBuilder(
           future: api.getUsers(),
           builder: (context, snapshot) {
@@ -50,11 +47,10 @@ class ListViewState extends State<UserListView> {
                           // tileColor: Colors.blue,
                           // leading: Text(users[index].clubId.toString()),
                           title: Text(
-                            '${users[index].name!} (access level: ${users[index].accessLevel})',
+                            '${users[index].name!} (${users[index].username}, access level: ${users[index].accessLevel})',
                             style: Theme.of(context).textTheme.displaySmall,
                           ),
                           onTap: () {
-                            // currentAthlete = athlete;
                             Navigator.pushNamed(
                                     context, UserDetailView.routeName,
                                     arguments: users[index])

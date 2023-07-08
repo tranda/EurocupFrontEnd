@@ -25,9 +25,7 @@ class ListViewState extends State<ClubListView> {
     return Scaffold(
       appBar: appBar(title: 'Club List'),
       body: Container(
-        decoration: const BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
+        decoration: bckDecoration(),
         child: FutureBuilder(
           future: api.getClubs(),
           builder: (context, snapshot) {

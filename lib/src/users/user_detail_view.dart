@@ -75,10 +75,7 @@ class _UserDetailViewState extends State<UserDetailView> {
         ),
         body: SingleChildScrollView(
           child: Container(
-            decoration: const BoxDecoration(
-                image: DecorationImage(
-                    image: AssetImage('assets/images/bck.jpg'),
-                    fit: BoxFit.cover)),
+            decoration: bckDecoration(),
             child: Form(
               key: _formKey,
               child: Column(

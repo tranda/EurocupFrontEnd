@@ -84,11 +84,7 @@ class _LoginViewState extends State<LoginView> {
     return Scaffold(
       appBar: appBar(title: 'Events Platform'),
       body: Container(
-        decoration: const BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage('assets/images/naslovna-bck.jpg'),
-                fit: BoxFit.cover,
-                alignment: Alignment.bottomCenter)),
+        decoration: naslovnaDecoration(),
         child: SizedBox(
           child: Form(
             key: _formKey,

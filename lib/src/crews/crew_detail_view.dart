@@ -68,9 +68,7 @@ class _CrewDetailViewState extends State<CrewDetailView> {
       //   icon: Icons.print,
       // ),
       body: Container(
-        decoration: const BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
+        decoration: bckDecoration(),
         child: FutureBuilder(
           future: api.getCrewAthletesForCrew(crewId),
           builder: (context, snapshot) {

@@ -28,9 +28,7 @@ class ListViewState extends State<TeamListView> {
     return Scaffold(
       appBar: appBar(title: 'Team List'),
       body: Container(
-        decoration: const BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
+        decoration: bckDecoration(),
         child: FutureBuilder(
           future: api.getTeamsAll(),
           builder: (context, snapshot) {
@@ -52,7 +50,6 @@ class ListViewState extends State<TeamListView> {
                             style: Theme.of(context).textTheme.displaySmall,
                           ),
                           onTap: () {
-                            // currentAthlete = athlete;
                             Navigator.pushNamed(
                                 context, DisciplineListView.routeName,
                                 arguments: {

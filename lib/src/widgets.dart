@@ -163,7 +163,8 @@ Widget busyOverlay(BuildContext context) {
   );
 }
 
-void showInfoDialog(BuildContext context, String title, String description) {
+void showInfoDialog(BuildContext context, String title, String description,
+    void Function()? callback) {
   showDialog(
       context: context,
       barrierDismissible: false,
@@ -173,7 +174,12 @@ void showInfoDialog(BuildContext context, String title, String description) {
             actions: <Widget>[
               TextButton(
                 child: const Text('OK'),
-                onPressed: () => {Navigator.of(context).pop()},
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  if (callback != null) {
+                    callback();
+                  }
+                },
               ),
             ],
           ));
@@ -181,4 +187,22 @@ void showInfoDialog(BuildContext context, String title, String description) {
 
 BoxDecoration sectionDecoration() {
   return BoxDecoration(border: Border.all());
+}
+
+BoxDecoration bckDecoration() {
+  return const BoxDecoration(
+    image: DecorationImage(
+        image: AssetImage('assets/images/bck.jpg'),
+        fit: BoxFit.cover,
+        ),
+  );
+}
+
+BoxDecoration naslovnaDecoration() {
+  return const BoxDecoration(
+    image: DecorationImage(
+        image: AssetImage('assets/images/naslovna-bck.jpg'),
+        fit: BoxFit.cover,
+        alignment: Alignment.bottomCenter),
+  );
 }

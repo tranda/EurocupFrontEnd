@@ -28,9 +28,7 @@ class ListViewState extends State<RaceDetailView> {
     return Scaffold(
       appBar: appBar(title: discipline.getDisplayName()),
       body: Container(
-        decoration: const BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
+        decoration: bckDecoration(),
         child: FutureBuilder(
           future: api.getTeamsForDisciplines(disciplineId),
           builder: (context, snapshot) {

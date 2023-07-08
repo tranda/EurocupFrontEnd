@@ -33,12 +33,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: appBar(title: 'Events Platform'),
       body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-              image: AssetImage('assets/images/naslovna-bck.jpg'),
-              fit: BoxFit.cover,
-              alignment: Alignment.bottomCenter),
-        ),
+        decoration: naslovnaDecoration(),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           crossAxisAlignment: CrossAxisAlignment.center,
