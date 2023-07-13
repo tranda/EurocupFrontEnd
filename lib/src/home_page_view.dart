@@ -1,8 +1,17 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:csv/csv.dart';
 import 'package:eurocup_frontend/src/athletes/athlete_list_view.dart';
 import 'package:eurocup_frontend/src/crews/crew_list_view.dart';
+import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
 import 'package:eurocup_frontend/src/races/discipline_race_list_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:excel/excel.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_launcher_icons/utils.dart';
 
 import 'administration/administration_view.dart';
 import 'model/user.dart';
@@ -46,6 +55,21 @@ class _HomePageState extends State<HomePage> {
                     textAlign: TextAlign.left),
                 onTap: () {
                   Navigator.pushNamed(context, AthleteListView.routeName);
+                },
+                leading: const Icon(
+                  Icons.play_arrow,
+                  color: Color.fromARGB(255, 0, 80, 150),
+                ),
+              ),
+            ),
+            Visibility(
+              visible: (currentUser.accessLevel! == 0),
+              child: ListTile(
+                title: Text('Import Athletes',
+                    style: Theme.of(context).textTheme.displayLarge,
+                    textAlign: TextAlign.left),
+                onTap: () {
+                  selectAndParseCSV();
                 },
                 leading: const Icon(
                   Icons.play_arrow,
@@ -129,5 +153,73 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  void selectAndParseCSV() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+
+    if (result != null) {
+      String csvString = decodeUnicode(result.files.single.bytes!);
+      String delimiter = '\t';
+
+      List<String> lines = csvString.split('\n');
+
+      List<List<String>> csvTable =
+          lines.map((line) => line.split(delimiter)).toList();
+
+      var headers = csvTable[0];
+
+      List<Athlete> athletes = [];
+      for (var i = 1; i < csvTable.length; i++) {
+        if (csvTable[i][0] != '') {
+          var athlete = Athlete.edbf(headers, csvTable[i]);
+          athletes.add(athlete);
+        }
+      }
+      print('Finished parsing csv');
+
+      await api.sendAthletes(athletes);
+      print('Finished sending athletes');
+
+      showInfoDialog(context, 'Message', 'Athletes imported', () {});
+    } else {
+      // User canceled the file selection
+      print('File selection canceled.');
+    }
+  }
+
+  String decodeUnicode(List<int> bytes) {
+    var decodedString = '';
+
+    for (int i = 0; i < bytes.length - 1; i += 2) {
+      int charCode = bytes[i] + (bytes[i + 1] << 8);
+      decodedString += String.fromCharCode(charCode);
+    }
+
+    return decodedString;
+  }
+
+  void selectAndParseExcel() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+
+    if (result != null) {
+      // String excelFilePath = result.files.single.path!;
+      var bytes = result.files.single.bytes!;
+      // File(excelFilePath).readAsBytesSync();
+      var excel = Excel.decodeBytes(bytes);
+
+      // Access the first sheet in the Excel file
+      var sheet = excel.tables[excel.tables.keys.first];
+
+      // Process the Excel data as needed
+      for (var row in sheet!.rows) {
+        for (var cell in row) {
+          print(cell?.value);
+        }
+      }
+    } else {
+      // User canceled the file selection
+      print('File selection canceled.');
+    }
   }
 }

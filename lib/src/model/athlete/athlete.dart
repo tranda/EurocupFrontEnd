@@ -18,6 +18,13 @@ class Athlete {
   String? category;
   String? eurocup;
   String? certificate;
+  bool? checked;
+  int? edbfId;
+  String? documentNo;
+  bool? leftSide;
+  bool? rightSide;
+  bool? helm;
+  bool? drummer;
 
   Athlete(
       {this.id,
@@ -31,7 +38,40 @@ class Athlete {
       this.createdAt,
       this.updatedAt,
       this.eurocup,
-      this.certificate});
+      this.certificate,
+      this.checked,
+      this.edbfId,
+      this.documentNo,
+      this.leftSide,
+      this.rightSide,
+      this.helm,
+      this.drummer});
+
+  Athlete.edbf(List<String> headers, List<String> data) {
+    // var index = (headers).indexOf('_checked_');
+    checked = data[0] == '1'
+        ? true
+        : false; //data[(headers).indexOf('_checked_')] as bool;
+    edbfId = int.parse(data[(headers).indexOf('id')]);
+    lastName = trimQuotes(data[(headers).indexOf('last_name')]);
+    firstName = trimQuotes(data[(headers).indexOf('first_name')]);
+    gender = data[(headers).indexOf('gender')] == 'M' ? "Male" : 'Female';
+    birthDate = trimQuotes(data[(headers).indexOf('birth_date')]);
+    documentNo = trimQuotes(data[(headers).indexOf('document_no')]);
+    leftSide = data[(headers).indexOf('left_side')] == 'x' ? true : false;
+    rightSide = data[(headers).indexOf('right_side')] == 'x' ? true : false;
+    helm = data[(headers).indexOf('helm')] == 'x' ? true : false;
+    drummer = data[(headers).indexOf('drummer')] == 'x' ? true : false;
+    category = trimQuotes(data[(headers).indexOf('divs')]);
+  }
+
+  String? trimQuotes(String? s) {
+    if ((s != null && s != '')) {
+      return s.replaceAll("\"", "").trim();
+    } else {
+      return s;
+    }
+  }
 
   @override
   String toString() {
@@ -39,22 +79,30 @@ class Athlete {
   }
 
   factory Athlete.fromMap(Map<String, dynamic> data) => Athlete(
-      id: data['id'] as int?,
-      clubId: data['club_id'] as int?,
-      firstName: data['first_name'] as String?,
-      lastName: data['last_name'] as String?,
-      birthDate: data['birth_date'] as String?,
-      gender: data['gender'] as String?,
-      category: data['category'] as String?,
-      photo: data['photo'] as String?,
-      createdAt: data['created_at'] == null
-          ? null
-          : DateTime.parse(data['created_at'] as String),
-      updatedAt: data['updated_at'] == null
-          ? null
-          : DateTime.parse(data['updated_at'] as String),
-      eurocup: data['eurocup'] as String?,
-      certificate: data['certificate'] as String?);
+        id: data['id'] as int?,
+        clubId: data['club_id'] as int?,
+        firstName: data['first_name'] as String?,
+        lastName: data['last_name'] as String?,
+        birthDate: data['birth_date'] as String?,
+        gender: data['gender'] as String?,
+        category: data['category'] as String?,
+        photo: data['photo'] as String?,
+        createdAt: data['created_at'] == null
+            ? null
+            : DateTime.parse(data['created_at'] as String),
+        updatedAt: data['updated_at'] == null
+            ? null
+            : DateTime.parse(data['updated_at'] as String),
+        eurocup: data['eurocup'] as String?,
+        certificate: data['certificate'] as String?,
+        checked: data['_checked_'] as bool?,
+        edbfId: data['edbf_id'] as int?,
+        documentNo: data['document_no'] as String?,
+        leftSide: data['left_side'] == '1' ? true : false,
+        rightSide: data['left_side'] == '1' ? true : false,
+        helm: data['left_side'] == '1' ? true : false,
+        drummer: data['left_side'] == '1' ? true : false
+      );
 
   Map<String, dynamic> toMap() => {
         'id': id,
@@ -68,7 +116,14 @@ class Athlete {
         'created_at': createdAt?.toIso8601String(),
         'updated_at': updatedAt?.toIso8601String(),
         'eurocup': eurocup,
-        'certificate': certificate
+        'certificate': certificate,
+        '_checked_': checked ?? false,
+        'edbf_id': edbfId,
+        'document_no': documentNo,
+        'left_side': leftSide,
+        'right_side': rightSide,
+        'helm': helm,
+        'drummer': drummer
       };
 
   /// `dart:convert`

@@ -134,6 +134,31 @@ Future createAthlete(Athlete athlete) async {
   }
 }
 
+Future sendAthletes(List<Athlete> athletes) async {
+  var headers = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Authorization': 'Bearer $token'
+  };
+  var request = http.Request('POST', Uri.parse('$apiURL/athletesImport'));
+
+  List<Map<String, dynamic>> jsonAthletes = athletes
+      .map((athlete) => athlete.toMap())
+      .cast<Map<String, dynamic>>()
+      .toList();
+  String jsonData = jsonEncode(jsonAthletes);
+
+  request.body = jsonData;
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+
+  if (response.statusCode == 200) {
+    print(await response.stream.bytesToString());
+  } else {
+    print(response.reasonPhrase);
+  }
+}
+
 Future deleteAthlete(Athlete athlete) async {
   var headers = {'Authorization': 'Bearer $token'};
   var request =
@@ -659,7 +684,7 @@ Future<void> uploadFile(int id, List<int> fileBytes) async {
   // var multipartFile = http.MultipartFile('pdf', fileStream, length,
   //     filename: file.path.split('/').last);
   // request.files.add(multipartFile);
-     request.files.add(
+  request.files.add(
     http.MultipartFile.fromBytes(
       'file',
       fileBytes,
