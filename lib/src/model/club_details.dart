@@ -14,6 +14,7 @@ class ClubDetails {
   final int? bcp;
   final int? eurocup;
   final int? festival;
+  final int? withCertificate;
 
   const ClubDetails({
     this.total,
@@ -29,6 +30,7 @@ class ClubDetails {
     this.bcp,
     this.eurocup,
     this.festival,
+    this.withCertificate
   });
 
   @override
@@ -50,6 +52,7 @@ class ClubDetails {
         bcp: data['BCP'] as int?,
         eurocup: data['Eurocup'] as int?,
         festival: data['Festival'] as int?,
+        withCertificate: data['withCertificate'] as int?
       );
 
   Map<String, dynamic> toMap() => {
@@ -66,6 +69,7 @@ class ClubDetails {
         'BCP': bcp,
         'Eurocup': eurocup,
         'Festival': festival,
+        'withCertificate': withCertificate
       };
 
   /// `dart:convert`

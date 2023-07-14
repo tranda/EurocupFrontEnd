@@ -57,10 +57,11 @@ class _ClubAthleteListViewState extends State<ClubAthleteListView> {
                   return Column(
                     children: [
                       ListTile(
-                          leading: Text(
-                            athlete.eurocup ?? "",
-                            style: Theme.of(context).textTheme.labelMedium,
-                          ),
+                        leading: Icon(athlete.certificate == null ? Icons.not_interested : Icons.verified_user),
+                          // leading: Text(
+                          //   athlete.eurocup ?? "",
+                          //   style: Theme.of(context).textTheme.labelMedium,
+                          // ),
                           title: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Text(

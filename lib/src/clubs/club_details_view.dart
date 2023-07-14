@@ -96,6 +96,11 @@ class _ClubDetailViewState extends State<ClubDetailView> {
                           style: Theme.of(context).textTheme.displayLarge,
                           textAlign: TextAlign.left),
                     ),
+                    ListTile(
+                      title: Text('with AD certificate: ${details.withCertificate}',
+                          style: Theme.of(context).textTheme.displayLarge,
+                          textAlign: TextAlign.left),
+                    ),
                   ],
                 ),
               );
