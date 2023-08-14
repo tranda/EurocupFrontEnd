@@ -64,6 +64,9 @@ class _AthleteListViewState extends State<AthleteListView> {
                   return Column(
                     children: [
                       ListTile(
+                        leading: Icon(athlete.certificate == null
+                              ? Icons.not_interested
+                              : Icons.verified_user),
                           title: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Text(
