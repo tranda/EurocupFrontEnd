@@ -220,29 +220,32 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                   ),
                   Visibility(
                     visible: currentAthlete.id != null,
-                    child: Row(
-                      children: [
-                        Text(
-                          'Antidoping certificate: ',
-                          style: Theme.of(context).textTheme.displaySmall,
-                        ),
-                        editable
-                            ? ElevatedButton(
-                                onPressed: () {
-                                  selectFile(context);
-                                },
-                                child: const Text('Upload'))
-                            : currentAthlete.certificate == null
-                                ? Text(
-                                    'missing',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .displaySmall,
-                                  )
-                                : ElevatedButton(
-                                    onPressed: () => _launchUrl(certificateUrl),
-                                    child: const Text('Open')),
-                      ],
+                    child: Padding(
+                      padding:  const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+                      child: Row(
+                        children: [
+                          Text(
+                            'Antidoping certificate: ',
+                            style: Theme.of(context).textTheme.displaySmall,
+                          ),
+                          editable
+                              ? ElevatedButton(
+                                  onPressed: () {
+                                    selectFile(context);
+                                  },
+                                  child: const Text('Upload'))
+                              : currentAthlete.certificate == null
+                                  ? Text(
+                                      'missing',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .displaySmall,
+                                    )
+                                  : ElevatedButton(
+                                      onPressed: () => _launchUrl(certificateUrl),
+                                      child: const Text('Open')),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(
