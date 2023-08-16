@@ -80,6 +80,10 @@ class _ClubAthleteListViewState extends State<ClubAthleteListView> {
                               setState(() {});
                             });
                           },
+                          subtitle: Padding(
+                            padding: const EdgeInsetsDirectional.symmetric(horizontal: (8.0), vertical: 0),
+                            child: Text(athlete.category ?? ""),
+                          ),
                           trailing: const Icon(Icons.arrow_forward)),
                       const Divider(
                         height: 4,
