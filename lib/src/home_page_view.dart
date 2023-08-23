@@ -178,10 +178,13 @@ class _HomePageState extends State<HomePage> {
       }
       print('Finished parsing csv');
 
-      await api.sendAthletes(athletes);
+      var success = await api.sendAthletes(athletes);
       print('Finished sending athletes');
-
-      showInfoDialog(context, 'Message', 'Athletes imported', () {});
+      if (success) {
+        showInfoDialog(context, 'Message', 'Athletes imported', () {});
+      } else {
+        showInfoDialog(context, 'Server error', 'Please try again later.', () {});
+      }
     } else {
       // User canceled the file selection
       print('File selection canceled.');

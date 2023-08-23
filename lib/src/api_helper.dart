@@ -134,7 +134,7 @@ Future createAthlete(Athlete athlete) async {
   }
 }
 
-Future sendAthletes(List<Athlete> athletes) async {
+Future<bool> sendAthletes(List<Athlete> athletes) async {
   var headers = {
     'Content-Type': 'application/x-www-form-urlencoded',
     'Authorization': 'Bearer $token'
@@ -152,10 +152,12 @@ Future sendAthletes(List<Athlete> athletes) async {
 
   http.StreamedResponse response = await request.send();
 
-  if (response.statusCode == 200) {
+  if (response.statusCode >= 200 && response.statusCode < 300) {
     print(await response.stream.bytesToString());
+    return (true);
   } else {
     print(response.reasonPhrase);
+    return (false);
   }
 }
 
@@ -499,11 +501,11 @@ Future<List<Competition>> getCompetitions() async {
   return (competitions);
 }
 
-Future<List<Club>> getClubs() async {
+Future<List<Club>> getClubs(int active) async {
   var headers = {
     'Authorization': 'Bearer $token',
   };
-  var request = http.Request('GET', Uri.parse('$apiURL/clubs'));
+  var request = http.Request('GET', Uri.parse('$apiURL/clubs?active=$active'));
   request.bodyFields = {};
   request.headers.addAll(headers);
 

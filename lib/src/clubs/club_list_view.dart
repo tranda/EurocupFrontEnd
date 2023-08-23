@@ -27,7 +27,7 @@ class ListViewState extends State<ClubListView> {
       body: Container(
         decoration: bckDecoration(),
         child: FutureBuilder(
-          future: api.getClubs(),
+          future: api.getClubs(1),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());

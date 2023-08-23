@@ -23,6 +23,7 @@ List<Discipline> disciplines = [];
 
 const String imagePrefix = 'events.motion.rs/photos';
 const String certificatePrefix = 'events.motion.rs/certificates';
+const String registrationFormURL = 'https://docs.google.com/forms/d/e/1FAIpQLScTR69w5F4TI9siL4nKp-8ecJmsknoYtoZ5McJqoUlApI5WNQ/viewform?usp=sf_link';
 
 const double horizontalPadding = 24.0;
 const double verticalPadding = 8.0;
