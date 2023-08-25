@@ -243,7 +243,7 @@ class _UserDetailViewState extends State<UserDetailView> {
                             return null;
                           },
                           decoration:
-                              buildStandardInputDecorationWithLabel('Club'),
+                              buildStandardInputDecorationWithLabel('Event'),
                           controller: eventController,
                           enabled: false,
                           style: Theme.of(context).textTheme.displaySmall,

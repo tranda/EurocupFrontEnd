@@ -203,7 +203,7 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                               const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
                         ),
                   const SizedBox(
-                    height: bigSpace,
+                    height: smallSpace,
                   ),
                   Visibility(
                     visible: !editable,
@@ -216,7 +216,7 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                     ),
                   ),
                   const SizedBox(
-                    height: bigSpace,
+                    height: smallSpace,
                   ),
                   Visibility(
                     visible: currentAthlete.id != null,
