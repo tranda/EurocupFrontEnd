@@ -97,7 +97,15 @@ Future updateAthlete(Athlete athlete) async {
     'last_name': athlete.lastName as String,
     'birth_date': athlete.birthDate as String,
     'gender': athlete.gender as String,
-    'photo': athlete.photoBase64
+    'photo': athlete.photoBase64,
+    'coach': athlete.coach == true ? '1' : '0',
+    'media': athlete.media == true ? '1' : '0',
+    'official': athlete.official == true ? '1' : '0',
+    'supporter': athlete.supporter == true ? '1' : '0',
+    'left_side': athlete.leftSide == true ? '1' : '0',
+    'right_side': athlete.rightSide == true ? '1' : '0',
+    'helm': athlete.helm == true ? '1' : '0',
+    'drummer': athlete.drummer == true ? '1' : '0'
   };
   request.headers.addAll(headers);
 
@@ -121,7 +129,15 @@ Future createAthlete(Athlete athlete) async {
     'last_name': athlete.lastName as String,
     'birth_date': athlete.birthDate as String,
     'gender': athlete.gender as String,
-    'photo': athlete.photoBase64
+    'photo': athlete.photoBase64,
+    'coach': athlete.coach == true ? '1' : '0',
+    'media': athlete.media == true ? '1' : '0',
+    'official': athlete.official == true ? '1' : '0',
+    'supporter': athlete.supporter == true ? '1' : '0',
+    'left_side': athlete.leftSide == true ? '1' : '0',
+    'right_side': athlete.rightSide == true ? '1' : '0',
+    'helm': athlete.helm == true ? '1' : '0',
+    'drummer': athlete.drummer == true ? '1' : '0'
   };
   request.headers.addAll(headers);
 

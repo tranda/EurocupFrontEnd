@@ -53,11 +53,13 @@ class _ClubAthleteListViewState extends State<ClubAthleteListView> {
                 itemCount: athletes.length,
                 itemBuilder: (BuildContext context, int index) {
                   final athlete = athletes[index];
-
+                  final coach = athlete.coach! ? ' (Coach)' : "";
                   return Column(
                     children: [
                       ListTile(
-                        leading: Icon(athlete.certificate == null ? Icons.not_interested : Icons.verified_user),
+                          leading: Icon(athlete.certificate == null
+                              ? Icons.not_interested
+                              : Icons.verified_user),
                           // leading: Text(
                           //   athlete.eurocup ?? "",
                           //   style: Theme.of(context).textTheme.labelMedium,
@@ -65,7 +67,7 @@ class _ClubAthleteListViewState extends State<ClubAthleteListView> {
                           title: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Text(
-                                '${athlete.firstName} ${athlete.lastName}',
+                                '${athlete.firstName} ${athlete.lastName} $coach',
                                 style:
                                     Theme.of(context).textTheme.displaySmall),
                           ),
@@ -81,7 +83,8 @@ class _ClubAthleteListViewState extends State<ClubAthleteListView> {
                             });
                           },
                           subtitle: Padding(
-                            padding: const EdgeInsetsDirectional.symmetric(horizontal: (8.0), vertical: 0),
+                            padding: const EdgeInsetsDirectional.symmetric(
+                                horizontal: (8.0), vertical: 0),
                             child: Text(athlete.category ?? ""),
                           ),
                           trailing: const Icon(Icons.arrow_forward)),

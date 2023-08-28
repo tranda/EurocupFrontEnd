@@ -25,6 +25,10 @@ class Athlete {
   bool? rightSide;
   bool? helm;
   bool? drummer;
+  bool? coach;
+  bool? media;
+  bool? supporter;
+  bool? official;
 
   Athlete(
       {this.id,
@@ -45,7 +49,12 @@ class Athlete {
       this.leftSide,
       this.rightSide,
       this.helm,
-      this.drummer});
+      this.drummer,
+      this.coach,
+      this.media,
+      this.official,
+      this.supporter
+      });
 
   Athlete.edbf(List<String> headers, List<String> data) {
     // var index = (headers).indexOf('_checked_');
@@ -62,6 +71,10 @@ class Athlete {
     rightSide = data[(headers).indexOf('right_side')] == 'x' ? true : false;
     helm = data[(headers).indexOf('helm')] == 'x' ? true : false;
     drummer = data[(headers).indexOf('drummer')] == 'x' ? true : false;
+    coach = data[(headers).indexOf('coach')] == 'x' ? true : false;
+    media = data[(headers).indexOf('media')] == 'x' ? true : false;
+    official = data[(headers).indexOf('official')] == 'x' ? true : false;
+    supporter = data[(headers).indexOf('supporter')] == 'x' ? true : false;
     category = trimQuotes(data[(headers).indexOf('divs')]);
   }
 
@@ -79,30 +92,34 @@ class Athlete {
   }
 
   factory Athlete.fromMap(Map<String, dynamic> data) => Athlete(
-        id: data['id'] as int?,
-        clubId: data['club_id'] as int?,
-        firstName: data['first_name'] as String?,
-        lastName: data['last_name'] as String?,
-        birthDate: data['birth_date'] as String?,
-        gender: data['gender'] as String?,
-        category: data['category'] as String?,
-        photo: data['photo'] as String?,
-        createdAt: data['created_at'] == null
-            ? null
-            : DateTime.parse(data['created_at'] as String),
-        updatedAt: data['updated_at'] == null
-            ? null
-            : DateTime.parse(data['updated_at'] as String),
-        eurocup: data['eurocup'] as String?,
-        certificate: data['certificate'] as String?,
-        checked: data['_checked_'] as bool?,
-        edbfId: data['edbf_id'] as int?,
-        documentNo: data['document_no'] as String?,
-        leftSide: data['left_side'] == '1' ? true : false,
-        rightSide: data['left_side'] == '1' ? true : false,
-        helm: data['left_side'] == '1' ? true : false,
-        drummer: data['left_side'] == '1' ? true : false
-      );
+      id: data['id'] as int?,
+      clubId: data['club_id'] as int?,
+      firstName: data['first_name'] as String?,
+      lastName: data['last_name'] as String?,
+      birthDate: data['birth_date'] as String?,
+      gender: data['gender'] as String?,
+      category: data['category'] as String?,
+      photo: data['photo'] as String?,
+      createdAt: data['created_at'] == null
+          ? null
+          : DateTime.parse(data['created_at'] as String),
+      updatedAt: data['updated_at'] == null
+          ? null
+          : DateTime.parse(data['updated_at'] as String),
+      eurocup: data['eurocup'] as String?,
+      certificate: data['certificate'] as String?,
+      checked: data['_checked_'] as bool?,
+      edbfId: data['edbf_id'] as int?,
+      documentNo: data['document_no'] as String?,
+      leftSide: data['left_side'] == 1 ? true : false,
+      rightSide: data['right_side'] == 1 ? true : false,
+      helm: data['helm'] == 1 ? true : false,
+      drummer: data['drummer'] == 1 ? true : false,
+      coach: data['coach'] == 1 ? true : false,
+      media: data['media'] == 1 ? true : false,
+      official: data['official'] == 1 ? true : false,
+      supporter: data['supporter'] == 1 ? true : false
+    );
 
   Map<String, dynamic> toMap() => {
         'id': id,
@@ -123,7 +140,11 @@ class Athlete {
         'left_side': leftSide,
         'right_side': rightSide,
         'helm': helm,
-        'drummer': drummer
+        'drummer': drummer,
+        'coach': coach,
+        'media': media,
+        'official': official,
+        'supporter': supporter,
       };
 
   /// `dart:convert`

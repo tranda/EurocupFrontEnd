@@ -3,6 +3,7 @@ import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
+import '../model/club/club.dart';
 import 'club_athlete_list_view.dart';
 
 class ClubListView extends StatefulWidget {
@@ -15,19 +16,37 @@ class ClubListView extends StatefulWidget {
 }
 
 class ListViewState extends State<ClubListView> {
+  late Future<List<Club>> dataFuture;
+
   @override
   void initState() {
     super.initState();
+    dataFuture = api.getClubs(1);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appBar(title: 'Club List'),
+      appBar: AppBar(
+        title: Center(
+          child: FutureBuilder(
+            future: dataFuture, // api.getClubs(1),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasData) {
+                return Text('Club List (${snapshot.data!.length})');
+              }
+              return const Text('Club list');
+            },
+          ),
+        ),
+      ),
       body: Container(
         decoration: bckDecoration(),
         child: FutureBuilder(
-          future: api.getClubs(1),
+          future: dataFuture, // api.getClubs(1),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());

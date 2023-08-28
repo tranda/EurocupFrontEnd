@@ -31,7 +31,7 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
   String? mode;
   bool allowEdit = true;
   late Athlete currentAthlete;
-
+ 
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments;
@@ -85,7 +85,8 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                 children: [
                   Center(
                       child: GestureDetector(
-                    child: imagePreview(photoUrl: photoUrl,  currentAthlete: currentAthlete),
+                    child: imagePreview(
+                        photoUrl: photoUrl, currentAthlete: currentAthlete),
                     onTap: () {
                       if (editable) {
                         selectImageSource();
@@ -202,6 +203,241 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                           padding:
                               const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
                         ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                                20.0, 10.0, 20.0, 0.0),
+                            child: Checkbox(
+                              value: currentAthlete.coach ?? false,
+                              onChanged: (editable)
+                                  ? (value) {
+                                      setState(() {
+                                        currentAthlete.coach = value ?? false;
+                                      });
+                                    }
+                                  : null,
+                            ),
+                          ),
+                          Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
+                            child: Text(
+                              'Coach',
+                              style: Theme.of(context).textTheme.displaySmall,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                                20.0, 10.0, 20.0, 0.0),
+                            child: Text(
+                              'Official',
+                              style: Theme.of(context).textTheme.displaySmall,
+                            ),
+                          ),
+                          Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
+                            child: Checkbox(
+                              value: currentAthlete.official ?? false,
+                              onChanged: (editable)
+                                  ? (value) {
+                                      setState(() {
+                                        currentAthlete.official =
+                                            value ?? false;
+                                      });
+                                    }
+                                  : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                                20.0, 10.0, 20.0, 0.0),
+                            child: Checkbox(
+                              value: currentAthlete.media ?? false,
+                              onChanged: (editable)
+                                  ? (value) {
+                                      setState(() {
+                                        currentAthlete.media = value ?? false;
+                                      });
+                                    }
+                                  : null,
+                            ),
+                          ),
+                          Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
+                            child: Text(
+                              'Media',
+                              style: Theme.of(context).textTheme.displaySmall,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                                20.0, 10.0, 20.0, 0.0),
+                            child: Text(
+                              'Supporter',
+                              style: Theme.of(context).textTheme.displaySmall,
+                            ),
+                          ),
+                          Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
+                            child: Checkbox(
+                              value: currentAthlete.supporter ?? false,
+                              onChanged: (editable)
+                                  ? (value) {
+                                      setState(() {
+                                        currentAthlete.supporter =
+                                            value ?? false;
+                                      });
+                                    }
+                                  : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(
+                    height: smallSpace,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                                20.0, 10.0, 20.0, 0.0),
+                            child: Checkbox(
+                              value: currentAthlete.leftSide ?? false,
+                              onChanged: (editable)
+                                  ? (value) {
+                                      setState(() {
+                                        currentAthlete.leftSide =
+                                            value ?? false;
+                                      });
+                                    }
+                                  : null,
+                            ),
+                          ),
+                          Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
+                            child: Text(
+                              'Left Side',
+                              style: Theme.of(context).textTheme.displaySmall,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                                20.0, 10.0, 20.0, 0.0),
+                            child: Text(
+                              'Right Side',
+                              style: Theme.of(context).textTheme.displaySmall,
+                            ),
+                          ),
+                          Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
+                            child: Checkbox(
+                              value: currentAthlete.rightSide ?? false,
+                              onChanged: (editable)
+                                  ? (value) {
+                                      setState(() {
+                                        currentAthlete.rightSide =
+                                            value ?? false;
+                                      });
+                                    }
+                                  : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                                20.0, 10.0, 20.0, 0.0),
+                            child: Checkbox(
+                              value: currentAthlete.helm ?? false,
+                              onChanged: (editable)
+                                  ? (value) {
+                                      setState(() {
+                                        currentAthlete.helm = value ?? false;
+                                      });
+                                    }
+                                  : null,
+                            ),
+                          ),
+                          Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
+                            child: Text(
+                              'Helm',
+                              style: Theme.of(context).textTheme.displaySmall,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                                20.0, 10.0, 20.0, 0.0),
+                            child: Text(
+                              'Drummer',
+                              style: Theme.of(context).textTheme.displaySmall,
+                            ),
+                          ),
+                          Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
+                            child: Checkbox(
+                              value: currentAthlete.drummer ?? false,
+                              onChanged: (editable)
+                                  ? (value) {
+                                      setState(() {
+                                        currentAthlete.drummer = value ?? false;
+                                      });
+                                    }
+                                  : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                   const SizedBox(
                     height: smallSpace,
                   ),
@@ -221,7 +457,8 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                   Visibility(
                     visible: currentAthlete.id != null,
                     child: Padding(
-                      padding:  const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+                      padding:
+                          const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
                       child: Row(
                         children: [
                           Text(
@@ -242,7 +479,8 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                                           .displaySmall,
                                     )
                                   : ElevatedButton(
-                                      onPressed: () => _launchUrl(certificateUrl),
+                                      onPressed: () =>
+                                          _launchUrl(certificateUrl),
                                       child: const Text('Open')),
                         ],
                       ),
