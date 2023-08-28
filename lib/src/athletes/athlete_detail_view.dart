@@ -75,427 +75,429 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
             ),
           ],
         ),
-        body: Column(children: [
-          Container(
-            decoration: bckDecoration(),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                      child: GestureDetector(
-                    child: imagePreview(
-                        photoUrl: photoUrl, currentAthlete: currentAthlete),
-                    onTap: () {
-                      if (editable) {
-                        selectImageSource();
-                      }
-                    },
-                  )),
-                  TextFormField(
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Required';
-                      }
-                      return null;
-                    },
-                    textCapitalization: TextCapitalization.words,
-                    decoration:
-                        buildStandardInputDecorationWithLabel('First Name'),
-                    controller: firstNameController,
-                    enabled: editable,
-                    style: Theme.of(context).textTheme.displaySmall,
-                    onChanged: (value) {
-                      currentAthlete.firstName = value;
-                    },
-                  ),
-                  TextFormField(
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Required';
-                      }
-                      return null;
-                    },
-                    textCapitalization: TextCapitalization.words,
-                    decoration:
-                        buildStandardInputDecorationWithLabel('Last Name'),
-                    controller: lastNameController,
-                    enabled: editable,
-                    style: Theme.of(context).textTheme.displaySmall,
-                    onChanged: (value) {
-                      currentAthlete.lastName = value;
-                    },
-                  ),
-                  TextFormField(
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Required';
-                      }
-                      return null;
-                    },
-                    decoration:
-                        buildStandardInputDecorationWithLabel('Date of Birth'),
-                    controller: dateOfBirthController,
-                    readOnly: true,
-                    enabled: editable,
-                    style: Theme.of(context).textTheme.displaySmall,
-                    onTap: () async {
-                      if (!editable) {
-                        return;
-                      }
-                      DateTime? pickedDate = await showDatePicker(
-                        context: context,
-                        initialDate:
-                            DateTime.tryParse(dateOfBirthController.text) ??
-                                DateTime.now(),
-                        firstDate: DateTime(1900),
-                        lastDate: DateTime.now(),
-                        initialDatePickerMode: DatePickerMode.year,
-                      );
-
-                      if (pickedDate != null) {
-                        String formattedDate =
-                            DateFormat('yyyy-MM-dd').format(pickedDate);
-
-                        setState(() {
-                          dateOfBirthController.text = formattedDate;
-                          currentAthlete.birthDate = dateOfBirthController.text;
-                        });
-                      }
-                    },
-                  ),
-                  (!editable)
-                      ? TextFormField(
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Required!';
-                            }
-                            return null;
-                          },
-                          decoration:
-                              buildStandardInputDecorationWithLabel('Gender'),
-                          controller: genderController,
-                          enabled: false,
-                          style: Theme.of(context).textTheme.displaySmall,
-                        )
-                      : DropdownButtonFormField(
-                          hint: const Text('Select Gender'),
-                          value: currentAthlete.gender,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Required';
-                            }
-                            return null;
-                          },
-                          items: const [
-                            DropdownMenuItem(
-                                value: 'Male', child: Text('Male')),
-                            DropdownMenuItem(
-                                value: 'Female', child: Text('Female'))
-                          ],
-                          onChanged: (value) {
-                            setState(() {
-                              currentAthlete.gender = value;
-                            });
-                          },
-                          style: Theme.of(context).textTheme.displaySmall,
-                          padding:
-                              const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-                        ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                                20.0, 10.0, 20.0, 0.0),
-                            child: Checkbox(
-                              value: currentAthlete.coach ?? false,
-                              onChanged: (editable)
-                                  ? (value) {
-                                      setState(() {
-                                        currentAthlete.coach = value ?? false;
-                                      });
-                                    }
-                                  : null,
-                            ),
-                          ),
-                          Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
-                            child: Text(
-                              'Coach',
-                              style: Theme.of(context).textTheme.displaySmall,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                                20.0, 10.0, 20.0, 0.0),
-                            child: Text(
-                              'Official',
-                              style: Theme.of(context).textTheme.displaySmall,
-                            ),
-                          ),
-                          Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
-                            child: Checkbox(
-                              value: currentAthlete.official ?? false,
-                              onChanged: (editable)
-                                  ? (value) {
-                                      setState(() {
-                                        currentAthlete.official =
-                                            value ?? false;
-                                      });
-                                    }
-                                  : null,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                                20.0, 10.0, 20.0, 0.0),
-                            child: Checkbox(
-                              value: currentAthlete.media ?? false,
-                              onChanged: (editable)
-                                  ? (value) {
-                                      setState(() {
-                                        currentAthlete.media = value ?? false;
-                                      });
-                                    }
-                                  : null,
-                            ),
-                          ),
-                          Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
-                            child: Text(
-                              'Media',
-                              style: Theme.of(context).textTheme.displaySmall,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                                20.0, 10.0, 20.0, 0.0),
-                            child: Text(
-                              'Supporter',
-                              style: Theme.of(context).textTheme.displaySmall,
-                            ),
-                          ),
-                          Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
-                            child: Checkbox(
-                              value: currentAthlete.supporter ?? false,
-                              onChanged: (editable)
-                                  ? (value) {
-                                      setState(() {
-                                        currentAthlete.supporter =
-                                            value ?? false;
-                                      });
-                                    }
-                                  : null,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: smallSpace,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                                20.0, 10.0, 20.0, 0.0),
-                            child: Checkbox(
-                              value: currentAthlete.leftSide ?? false,
-                              onChanged: (editable)
-                                  ? (value) {
-                                      setState(() {
-                                        currentAthlete.leftSide =
-                                            value ?? false;
-                                      });
-                                    }
-                                  : null,
-                            ),
-                          ),
-                          Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
-                            child: Text(
-                              'Left Side',
-                              style: Theme.of(context).textTheme.displaySmall,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                                20.0, 10.0, 20.0, 0.0),
-                            child: Text(
-                              'Right Side',
-                              style: Theme.of(context).textTheme.displaySmall,
-                            ),
-                          ),
-                          Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
-                            child: Checkbox(
-                              value: currentAthlete.rightSide ?? false,
-                              onChanged: (editable)
-                                  ? (value) {
-                                      setState(() {
-                                        currentAthlete.rightSide =
-                                            value ?? false;
-                                      });
-                                    }
-                                  : null,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                                20.0, 10.0, 20.0, 0.0),
-                            child: Checkbox(
-                              value: currentAthlete.helm ?? false,
-                              onChanged: (editable)
-                                  ? (value) {
-                                      setState(() {
-                                        currentAthlete.helm = value ?? false;
-                                      });
-                                    }
-                                  : null,
-                            ),
-                          ),
-                          Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
-                            child: Text(
-                              'Helm',
-                              style: Theme.of(context).textTheme.displaySmall,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                                20.0, 10.0, 20.0, 0.0),
-                            child: Text(
-                              'Drummer',
-                              style: Theme.of(context).textTheme.displaySmall,
-                            ),
-                          ),
-                          Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
-                            child: Checkbox(
-                              value: currentAthlete.drummer ?? false,
-                              onChanged: (editable)
-                                  ? (value) {
-                                      setState(() {
-                                        currentAthlete.drummer = value ?? false;
-                                      });
-                                    }
-                                  : null,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: smallSpace,
-                  ),
-                  Visibility(
-                    visible: !editable,
-                    child: ListTile(
-                      title: Text(
-                        currentAthlete.category ?? "",
-                        style: Theme.of(context).textTheme.displayLarge,
-                        textAlign: TextAlign.center,
-                      ),
+        body: SingleChildScrollView(
+          child: Column(children: [
+            Container(
+              decoration: bckDecoration(),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                        child: GestureDetector(
+                      child: imagePreview(
+                          photoUrl: photoUrl, currentAthlete: currentAthlete),
+                      onTap: () {
+                        if (editable) {
+                          selectImageSource();
+                        }
+                      },
+                    )),
+                    TextFormField(
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Required';
+                        }
+                        return null;
+                      },
+                      textCapitalization: TextCapitalization.words,
+                      decoration:
+                          buildStandardInputDecorationWithLabel('First Name'),
+                      controller: firstNameController,
+                      enabled: editable,
+                      style: Theme.of(context).textTheme.displaySmall,
+                      onChanged: (value) {
+                        currentAthlete.firstName = value;
+                      },
                     ),
-                  ),
-                  const SizedBox(
-                    height: smallSpace,
-                  ),
-                  Visibility(
-                    visible: currentAthlete.id != null,
-                    child: Padding(
-                      padding:
-                          const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-                      child: Row(
-                        children: [
-                          Text(
-                            'Antidoping certificate: ',
+                    TextFormField(
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Required';
+                        }
+                        return null;
+                      },
+                      textCapitalization: TextCapitalization.words,
+                      decoration:
+                          buildStandardInputDecorationWithLabel('Last Name'),
+                      controller: lastNameController,
+                      enabled: editable,
+                      style: Theme.of(context).textTheme.displaySmall,
+                      onChanged: (value) {
+                        currentAthlete.lastName = value;
+                      },
+                    ),
+                    TextFormField(
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Required';
+                        }
+                        return null;
+                      },
+                      decoration:
+                          buildStandardInputDecorationWithLabel('Date of Birth'),
+                      controller: dateOfBirthController,
+                      readOnly: true,
+                      enabled: editable,
+                      style: Theme.of(context).textTheme.displaySmall,
+                      onTap: () async {
+                        if (!editable) {
+                          return;
+                        }
+                        DateTime? pickedDate = await showDatePicker(
+                          context: context,
+                          initialDate:
+                              DateTime.tryParse(dateOfBirthController.text) ??
+                                  DateTime.now(),
+                          firstDate: DateTime(1900),
+                          lastDate: DateTime.now(),
+                          initialDatePickerMode: DatePickerMode.year,
+                        );
+        
+                        if (pickedDate != null) {
+                          String formattedDate =
+                              DateFormat('yyyy-MM-dd').format(pickedDate);
+        
+                          setState(() {
+                            dateOfBirthController.text = formattedDate;
+                            currentAthlete.birthDate = dateOfBirthController.text;
+                          });
+                        }
+                      },
+                    ),
+                    (!editable)
+                        ? TextFormField(
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Required!';
+                              }
+                              return null;
+                            },
+                            decoration:
+                                buildStandardInputDecorationWithLabel('Gender'),
+                            controller: genderController,
+                            enabled: false,
                             style: Theme.of(context).textTheme.displaySmall,
+                          )
+                        : DropdownButtonFormField(
+                            hint: const Text('Select Gender'),
+                            value: currentAthlete.gender,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Required';
+                              }
+                              return null;
+                            },
+                            items: const [
+                              DropdownMenuItem(
+                                  value: 'Male', child: Text('Male')),
+                              DropdownMenuItem(
+                                  value: 'Female', child: Text('Female'))
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                currentAthlete.gender = value;
+                              });
+                            },
+                            style: Theme.of(context).textTheme.displaySmall,
+                            padding:
+                                const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
                           ),
-                          editable
-                              ? ElevatedButton(
-                                  onPressed: () {
-                                    selectFile(context);
-                                  },
-                                  child: const Text('Upload'))
-                              : currentAthlete.certificate == null
-                                  ? Text(
-                                      'missing',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .displaySmall,
-                                    )
-                                  : ElevatedButton(
-                                      onPressed: () =>
-                                          _launchUrl(certificateUrl),
-                                      child: const Text('Open')),
-                        ],
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                  20.0, 10.0, 20.0, 0.0),
+                              child: Checkbox(
+                                value: currentAthlete.coach ?? false,
+                                onChanged: (editable)
+                                    ? (value) {
+                                        setState(() {
+                                          currentAthlete.coach = value ?? false;
+                                        });
+                                      }
+                                    : null,
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
+                              child: Text(
+                                'Coach',
+                                style: Theme.of(context).textTheme.displaySmall,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                  20.0, 10.0, 20.0, 0.0),
+                              child: Text(
+                                'Official',
+                                style: Theme.of(context).textTheme.displaySmall,
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
+                              child: Checkbox(
+                                value: currentAthlete.official ?? false,
+                                onChanged: (editable)
+                                    ? (value) {
+                                        setState(() {
+                                          currentAthlete.official =
+                                              value ?? false;
+                                        });
+                                      }
+                                    : null,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                  20.0, 10.0, 20.0, 0.0),
+                              child: Checkbox(
+                                value: currentAthlete.media ?? false,
+                                onChanged: (editable)
+                                    ? (value) {
+                                        setState(() {
+                                          currentAthlete.media = value ?? false;
+                                        });
+                                      }
+                                    : null,
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
+                              child: Text(
+                                'Media',
+                                style: Theme.of(context).textTheme.displaySmall,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                  20.0, 10.0, 20.0, 0.0),
+                              child: Text(
+                                'Supporter',
+                                style: Theme.of(context).textTheme.displaySmall,
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
+                              child: Checkbox(
+                                value: currentAthlete.supporter ?? false,
+                                onChanged: (editable)
+                                    ? (value) {
+                                        setState(() {
+                                          currentAthlete.supporter =
+                                              value ?? false;
+                                        });
+                                      }
+                                    : null,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: smallSpace,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                  20.0, 10.0, 20.0, 0.0),
+                              child: Checkbox(
+                                value: currentAthlete.leftSide ?? false,
+                                onChanged: (editable)
+                                    ? (value) {
+                                        setState(() {
+                                          currentAthlete.leftSide =
+                                              value ?? false;
+                                        });
+                                      }
+                                    : null,
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
+                              child: Text(
+                                'Left Side',
+                                style: Theme.of(context).textTheme.displaySmall,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                  20.0, 10.0, 20.0, 0.0),
+                              child: Text(
+                                'Right Side',
+                                style: Theme.of(context).textTheme.displaySmall,
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
+                              child: Checkbox(
+                                value: currentAthlete.rightSide ?? false,
+                                onChanged: (editable)
+                                    ? (value) {
+                                        setState(() {
+                                          currentAthlete.rightSide =
+                                              value ?? false;
+                                        });
+                                      }
+                                    : null,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                  20.0, 10.0, 20.0, 0.0),
+                              child: Checkbox(
+                                value: currentAthlete.helm ?? false,
+                                onChanged: (editable)
+                                    ? (value) {
+                                        setState(() {
+                                          currentAthlete.helm = value ?? false;
+                                        });
+                                      }
+                                    : null,
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
+                              child: Text(
+                                'Helm',
+                                style: Theme.of(context).textTheme.displaySmall,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                  20.0, 10.0, 20.0, 0.0),
+                              child: Text(
+                                'Drummer',
+                                style: Theme.of(context).textTheme.displaySmall,
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
+                              child: Checkbox(
+                                value: currentAthlete.drummer ?? false,
+                                onChanged: (editable)
+                                    ? (value) {
+                                        setState(() {
+                                          currentAthlete.drummer = value ?? false;
+                                        });
+                                      }
+                                    : null,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: smallSpace,
+                    ),
+                    Visibility(
+                      visible: !editable,
+                      child: ListTile(
+                        title: Text(
+                          currentAthlete.category ?? "",
+                          style: Theme.of(context).textTheme.displayLarge,
+                          textAlign: TextAlign.center,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(
-                    height: bigSpace,
-                  ),
-                ],
+                    const SizedBox(
+                      height: smallSpace,
+                    ),
+                    Visibility(
+                      visible: currentAthlete.id != null,
+                      child: Padding(
+                        padding:
+                            const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+                        child: Row(
+                          children: [
+                            Text(
+                              'Antidoping certificate: ',
+                              style: Theme.of(context).textTheme.displaySmall,
+                            ),
+                            editable
+                                ? ElevatedButton(
+                                    onPressed: () {
+                                      selectFile(context);
+                                    },
+                                    child: const Text('Upload'))
+                                : currentAthlete.certificate == null
+                                    ? Text(
+                                        'missing',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .displaySmall,
+                                      )
+                                    : ElevatedButton(
+                                        onPressed: () =>
+                                            _launchUrl(certificateUrl),
+                                        child: const Text('Open')),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: bigSpace,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          // ElevatedButton(
-          //     onPressed: () => _launchUrl(certificateUrl), child: Text('Open')),
-        ]),
+            // ElevatedButton(
+            //     onPressed: () => _launchUrl(certificateUrl), child: Text('Open')),
+          ]),
+        ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         floatingActionButton: Visibility(
           visible: editable,
