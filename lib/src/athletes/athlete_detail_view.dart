@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
@@ -554,7 +555,8 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
   }
 
   Future<void> _launchUrl(String url) async {
-    if (!await launchUrlString(url)) {
+    var random = new Random().nextInt(1000000);
+    if (!await launchUrlString("$url?random=$random")) {
       throw Exception('Could not launch $url');
     }
   }
