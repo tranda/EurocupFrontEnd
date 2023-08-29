@@ -7,6 +7,7 @@ import 'model/user.dart';
 
 String imagesPath = 'assets/images/';
 
+String DATEFORMAT = "d/M/yyyy";
 var TEST = true;
 var ADMINTEST = false;
 var testUser = "test";

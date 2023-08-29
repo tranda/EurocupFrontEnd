@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:collection/collection.dart';
 import 'package:http/http.dart' as http;
 import 'package:eurocup_frontend/src/common.dart';
+import 'package:intl/intl.dart';
 
 class Athlete {
   int? id;
@@ -53,10 +54,9 @@ class Athlete {
       this.coach,
       this.media,
       this.official,
-      this.supporter
-      });
+      this.supporter});
 
-  Athlete.edbf(List<String> headers, List<String> data) {
+  Athlete.edbf(List<String> headers, List<String> data, String dateFormat) {
     // var index = (headers).indexOf('_checked_');
     checked = data[0] == '1'
         ? true
@@ -66,6 +66,11 @@ class Athlete {
     firstName = trimQuotes(data[(headers).indexOf('first_name')]);
     gender = data[(headers).indexOf('gender')] == 'M' ? "Male" : 'Female';
     birthDate = trimQuotes(data[(headers).indexOf('birth_date')]);
+    var d1 = birthDate;
+    var d2 = DateFormat(dateFormat);
+    var d3 = d2.parse(d1!);
+    var d4 = d3.toString();
+    birthDate = d4;
     documentNo = trimQuotes(data[(headers).indexOf('document_no')]);
     leftSide = data[(headers).indexOf('left_side')] == 'x' ? true : false;
     rightSide = data[(headers).indexOf('right_side')] == 'x' ? true : false;
@@ -118,8 +123,7 @@ class Athlete {
       coach: data['coach'] == 1 ? true : false,
       media: data['media'] == 1 ? true : false,
       official: data['official'] == 1 ? true : false,
-      supporter: data['supporter'] == 1 ? true : false
-    );
+      supporter: data['supporter'] == 1 ? true : false);
 
   Map<String, dynamic> toMap() => {
         'id': id,

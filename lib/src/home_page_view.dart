@@ -172,7 +172,7 @@ class _HomePageState extends State<HomePage> {
       List<Athlete> athletes = [];
       for (var i = 1; i < csvTable.length; i++) {
         if (csvTable[i][0] != '') {
-          var athlete = Athlete.edbf(headers, csvTable[i]);
+          var athlete = Athlete.edbf(headers, csvTable[i], DATEFORMAT);
           athletes.add(athlete);
         }
       }
