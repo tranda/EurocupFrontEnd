@@ -1,6 +1,7 @@
 import 'package:eurocup_frontend/src/administration/administration_view.dart';
 import 'package:eurocup_frontend/src/athletes/athlete_detail_view.dart';
 import 'package:eurocup_frontend/src/athletes/athlete_list_view.dart';
+import 'package:eurocup_frontend/src/clubs/club_adel_list_view.dart';
 import 'package:eurocup_frontend/src/clubs/club_details_view.dart';
 import 'package:eurocup_frontend/src/clubs/club_list_view.dart';
 import 'package:eurocup_frontend/src/crews/athlete_picker_view.dart';
@@ -223,6 +224,8 @@ class MyApp extends StatelessWidget {
                         return const ClubDetailView();
                       case CrewDetailPrint.routeName:
                         return const CrewDetailPrint();
+                      case ClubAdelListView.routeName:
+                        return const ClubAdelListView();
                       default:
                         return LoginView();
                     }

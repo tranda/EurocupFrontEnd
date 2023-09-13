@@ -7,11 +7,9 @@ import 'model/user.dart';
 
 String imagesPath = 'assets/images/';
 
-String DATEFORMAT = "d/M/yyyy";
+String DATEFORMAT = "yyyy-mm-dd";
+
 var TEST = true;
-var ADMINTEST = false;
-var testUser = "test";
-var testPassword = "12345678";
 var adminUser = "tranda";
 var adminPassword = "12345678";
 String? lastUser;

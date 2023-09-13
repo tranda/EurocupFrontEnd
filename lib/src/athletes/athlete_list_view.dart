@@ -60,6 +60,7 @@ class _AthleteListViewState extends State<AthleteListView> {
                 itemBuilder: (BuildContext context, int index) {
                   final athlete = athletes[index];
                   // print(athlete);
+                  final coach = athlete.coach! ? ' (Coach)' : "";
 
                   return Column(
                     children: [
@@ -70,7 +71,7 @@ class _AthleteListViewState extends State<AthleteListView> {
                           title: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Text(
-                                '${athlete.firstName} ${athlete.lastName}',
+                                '${athlete.firstName} ${athlete.lastName} $coach',
                                 style:
                                     Theme.of(context).textTheme.displaySmall),
                           ),

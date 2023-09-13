@@ -4,6 +4,7 @@ class Club {
   final int? id;
   final String? name;
   final String? country;
+  final bool? req_adel;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -11,6 +12,7 @@ class Club {
     this.id,
     this.name,
     this.country,
+    this.req_adel,
     this.createdAt,
     this.updatedAt,
   });
@@ -24,6 +26,7 @@ class Club {
         id: data['id'] as int?,
         name: data['name'] as String?,
         country: data['country'] as String?,
+        req_adel: data['req_adel'] == 1 ? true : false,
         createdAt: data['created_at'] == null
             ? null
             : DateTime.parse(data['created_at'] as String),
@@ -36,6 +39,7 @@ class Club {
         'id': id,
         'name': name,
         'country': country,
+        'req_adel': req_adel,
         'created_at': createdAt?.toIso8601String(),
         'updated_at': updatedAt?.toIso8601String(),
       };

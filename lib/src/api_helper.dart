@@ -517,11 +517,37 @@ Future<List<Competition>> getCompetitions() async {
   return (competitions);
 }
 
-Future<List<Club>> getClubs(int active) async {
+Future<List<Club>> getClubs({bool activeOnly = false}) async {
   var headers = {
     'Authorization': 'Bearer $token',
   };
-  var request = http.Request('GET', Uri.parse('$apiURL/clubs?active=$active'));
+  var q = "";
+  if (activeOnly) q = "?active=1";
+  var request = http.Request('GET', Uri.parse('$apiURL/clubs$q'));
+  request.bodyFields = {};
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+  List<Club> clubs = [];
+  if (response.statusCode == 200) {
+    List<dynamic> result = jsonDecode(await response.stream.bytesToString());
+    result.forEach((club) {
+      clubs.add(Club.fromMap(club));
+    });
+    // print(result);
+  } else {
+    print(response.reasonPhrase);
+  }
+  return (clubs);
+}
+
+Future<List<Club>> getClubsForAdel({bool adelOnly = false}) async {
+  var headers = {
+    'Authorization': 'Bearer $token',
+  };
+  var q = "";
+  if (adelOnly) q = "?req_adel=1";
+  var request = http.Request('GET', Uri.parse('$apiURL/clubsAdel$q'));
   request.bodyFields = {};
   request.headers.addAll(headers);
 

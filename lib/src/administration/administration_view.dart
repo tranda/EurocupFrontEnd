@@ -2,6 +2,7 @@ import 'package:eurocup_frontend/src/users/users_list_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 
+import '../clubs/club_adel_list_view.dart';
 import '../clubs/club_list_view.dart';
 import '../common.dart';
 import '../model/user.dart';
@@ -83,6 +84,21 @@ class _AdministrationPageState extends State<AdministrationPage> {
                     textAlign: TextAlign.left),
                 onTap: () {
                   Navigator.pushNamed(context, TeamListView.routeName);
+                },
+                leading: const Icon(
+                  Icons.play_arrow,
+                  color: Color.fromARGB(255, 0, 80, 150),
+                ),
+              ),
+            ),
+            Visibility(
+              visible: currentUser.accessLevel! >= 2,
+              child: ListTile(
+                title: Text('Clubs req ADEL',
+                    style: Theme.of(context).textTheme.displayMedium,
+                    textAlign: TextAlign.left),
+                onTap: () {
+                  Navigator.pushNamed(context, ClubAdelListView.routeName);
                 },
                 leading: const Icon(
                   Icons.play_arrow,

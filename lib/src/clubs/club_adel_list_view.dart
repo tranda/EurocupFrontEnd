@@ -6,22 +6,22 @@ import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import '../model/club/club.dart';
 import 'club_athlete_list_view.dart';
 
-class ClubListView extends StatefulWidget {
-  const ClubListView({Key? key}) : super(key: key);
+class ClubAdelListView extends StatefulWidget {
+  const ClubAdelListView({Key? key}) : super(key: key);
 
-  static const routeName = '/club_list';
+  static const routeName = '/club_adel_list';
 
   @override
-  State<ClubListView> createState() => ListViewState();
+  State<ClubAdelListView> createState() => ListViewState();
 }
 
-class ListViewState extends State<ClubListView> {
+class ListViewState extends State<ClubAdelListView> {
   late Future<List<Club>> dataFuture;
 
   @override
   void initState() {
     super.initState();
-    dataFuture = api.getClubs(activeOnly: true);
+    dataFuture = api.getClubsForAdel(adelOnly: true);
   }
 
   @override
