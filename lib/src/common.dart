@@ -9,7 +9,12 @@ String imagesPath = 'assets/images/';
 
 String DATEFORMAT = "yyyy-mm-dd";
 
+int EVENTID = 5;
+
 var TEST = true;
+var ADMINTEST = true;
+var testUser = "Nena";
+var testPassword = "Roki1234";
 var adminUser = "tranda";
 var adminPassword = "12345678";
 String? lastUser;
@@ -34,6 +39,9 @@ const double iconSize = 24;
 
 const List<Color> competitionColor = [
   Color.fromARGB(255, 15, 91, 169),
-  Color.fromARGB(255, 32, 188, 237)
+  Color.fromARGB(255, 32, 188, 237),
+  Color.fromARGB(128, 128, 128, 128),
+  Color.fromARGB(128, 128, 128, 128),
+  Color.fromARGB(255, 15, 91, 200),
 ];
 const Color inactiveColor = Color.fromARGB(255, 176, 176, 176);

@@ -88,7 +88,7 @@ class _AthleteListViewState extends State<AthleteListView> {
                           },
                           subtitle: Padding(
                             padding: const EdgeInsetsDirectional.symmetric(
-                                horizontal: (8.0), vertical: 0),
+                                horizontal: (8.0), vertical: 8.0),
                             child: Text(athlete.category ?? ""),
                           ),
                           trailing: const Icon(Icons.arrow_forward)),

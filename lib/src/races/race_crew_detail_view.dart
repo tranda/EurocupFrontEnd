@@ -145,6 +145,11 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
                                 "$no $drummerPrefix$helmPrefix$reservePrefix ${(crewAthletes[index]!['athlete']! as Athlete).getDisplayDetail()}",
                                 style:
                                     Theme.of(context).textTheme.displaySmall),
+                                                              subtitle: Padding(
+                              padding: const EdgeInsetsDirectional.symmetric(
+                                  horizontal: (8.0), vertical: 8.0),
+                              child: Text(athlete.category ?? ""),
+                            ),
                             onTap: () {
                               Navigator.pushNamed(
                                   context, AthleteDetailView.routeName,

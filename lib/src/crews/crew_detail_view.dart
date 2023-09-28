@@ -94,6 +94,11 @@ class _CrewDetailViewState extends State<CrewDetailView> {
                                 "$no $drummerPrefix$helmPrefix$reservePrefix ${(crewAthletes[index]!['athlete']! as Athlete).getDisplayName()}",
                                 style:
                                     Theme.of(context).textTheme.displaySmall),
+                            subtitle: Padding(
+                              padding: const EdgeInsetsDirectional.symmetric(
+                                  horizontal: (8.0), vertical: 8.0),
+                              child: Text("${(crewAthletes[index]!['athlete']! as Athlete).category}"),
+                            ),
                             trailing: IconButton(
                               icon: const Icon(
                                 Icons.delete,

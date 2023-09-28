@@ -193,9 +193,11 @@ Future deleteAthlete(Athlete athlete) async {
   }
 }
 
-Future<List<Team>> getTeamsAll() async {
+Future<List<Team>> getTeamsAll({bool activeOnly = false}) async {
   var headers = {'Authorization': 'Bearer $token'};
-  var request = http.Request('GET', Uri.parse('$apiURL/teamsAll'));
+  var q = "";
+  if (activeOnly) q = "?active=1";
+  var request = http.Request('GET', Uri.parse('$apiURL/teamsAll$q'));
 
   request.headers.addAll(headers);
 
@@ -214,9 +216,10 @@ Future<List<Team>> getTeamsAll() async {
   return (teams);
 }
 
-Future<List<Discipline>> getDisciplinesAll() async {
+Future<List<Discipline>> getDisciplinesAll({int? eventId}) async {
   var headers = {'Authorization': 'Bearer $token'};
-  var request = http.Request('GET', Uri.parse('$apiURL/disciplinesAll'));
+  var request = http.Request(
+      'GET', Uri.parse('$apiURL/disciplinesAll?event_id=$eventId'));
 
   request.headers.addAll(headers);
 
@@ -277,9 +280,9 @@ Future<List<Race>> getDisciplines() async {
   return (races);
 }
 
-Future<List<Race>> getDisciplinesCombined() async {
+Future<List<Race>> getDisciplinesCombined(int eventId) async {
   var headers = {'Authorization': 'Bearer $token'};
-  var request = http.Request('GET', Uri.parse('$apiURL/disciplinesCombined'));
+  var request = http.Request('GET', Uri.parse('$apiURL/disciplinesCombined?event_id=$eventId'));
 
   request.headers.addAll(headers);
 
@@ -298,10 +301,10 @@ Future<List<Race>> getDisciplinesCombined() async {
   return (races);
 }
 
-Future<List<Race>> getTeamDisciplines(int teamId) async {
+Future<List<Race>> getTeamDisciplines(int teamId, int eventId) async {
   var headers = {'Authorization': 'Bearer $token'};
   var request =
-      http.Request('GET', Uri.parse('$apiURL/teamDisciplines?team_id=$teamId'));
+      http.Request('GET', Uri.parse('$apiURL/teamDisciplines?team_id=$teamId&event_id=$eventId'));
 
   request.headers.addAll(headers);
 

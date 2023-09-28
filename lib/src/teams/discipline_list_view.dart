@@ -33,7 +33,7 @@ class _CrewListViewState extends State<DisciplineListView> {
         //     image: DecorationImage(
         //         image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
         child: FutureBuilder(
-          future: api.getTeamDisciplines(teamId),
+          future: api.getTeamDisciplines(teamId, EVENTID),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -50,7 +50,7 @@ class _CrewListViewState extends State<DisciplineListView> {
                       discipline.status == "inactive" ? "(INACTIVE)" : "";
                   var competition = competitions.firstWhere(
                       (element) => element.id == discipline.eventId);
-                  var eventName = competition.name!;
+                  var eventName = '${competition.name!} ${competition.year}';
                   var eventColor = competitionColor[discipline.eventId! - 1];
                   var registered = false;
                   for (var element in teamDisciplines) {

@@ -32,7 +32,7 @@ class _CrewListViewState extends State<CrewListView> {
         //     image: DecorationImage(
         //         image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
         child: FutureBuilder(
-          future: api.getDisciplinesCombined(),
+          future: api.getDisciplinesCombined(EVENTID),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -47,7 +47,7 @@ class _CrewListViewState extends State<CrewListView> {
                   // print(race);
                   var competition = competitions.firstWhere(
                       (element) => element.id == race.discipline?.eventId);
-                  var eventName = competition.name!;
+                  var eventName = '${competition.name!} ${competition.year}';
                   var eventColor =
                       competitionColor[race.discipline!.eventId! - 1];
                   var standardSize = 22;
@@ -62,7 +62,7 @@ class _CrewListViewState extends State<CrewListView> {
                           race.discipline!.getDisplayName(),
                           style: Theme.of(context).textTheme.bodyLarge,
                         ),
-                        trailing: Text(
+                        leading: Text(
                           eventName,
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
