@@ -76,7 +76,7 @@ class _HomePageState extends State<HomePage> {
             Visibility(
               visible: (currentUser.accessLevel! == 0),
               child: ListTile(
-                title: Text('Teams',
+                title: Text('Teams/Races',
                     style: Theme.of(context).textTheme.displayLarge,
                     textAlign: TextAlign.left),
                 onTap: () {
