@@ -1,17 +1,13 @@
-import 'dart:convert';
-import 'dart:io';
 
-import 'package:csv/csv.dart';
 import 'package:eurocup_frontend/src/athletes/athlete_list_view.dart';
 import 'package:eurocup_frontend/src/crews/crew_list_view.dart';
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
 import 'package:eurocup_frontend/src/races/discipline_race_list_view.dart';
+import 'package:eurocup_frontend/src/teams/team_list_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:excel/excel.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_launcher_icons/utils.dart';
 
 import 'administration/administration_view.dart';
 import 'model/user.dart';
@@ -33,7 +29,7 @@ class _HomePageState extends State<HomePage> {
     competitions = [];
     disciplines = [];
     api.getCompetitions();
-    api.getDisciplinesAll();
+    api.getDisciplinesAll(eventId: EVENTID);
     super.initState();
   }
 
@@ -70,6 +66,21 @@ class _HomePageState extends State<HomePage> {
                     textAlign: TextAlign.left),
                 onTap: () {
                   selectAndParseCSV();
+                },
+                leading: const Icon(
+                  Icons.play_arrow,
+                  color: Color.fromARGB(255, 0, 80, 150),
+                ),
+              ),
+            ),
+            Visibility(
+              visible: (currentUser.accessLevel! == 0),
+              child: ListTile(
+                title: Text('Teams',
+                    style: Theme.of(context).textTheme.displayLarge,
+                    textAlign: TextAlign.left),
+                onTap: () {
+                  Navigator.pushNamed(context, TeamListView.routeName);
                 },
                 leading: const Icon(
                   Icons.play_arrow,

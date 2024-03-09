@@ -216,6 +216,32 @@ Future<List<Team>> getTeamsAll({bool activeOnly = false}) async {
   return (teams);
 }
 
+Future<List<Team>> getTeams(int accessLevel, {bool activeOnly = false}) async {
+  var headers = {'Authorization': 'Bearer $token'};
+  var q = "";
+  if (activeOnly) q = "?active=1";
+  http.Request request = http.Request('GET', Uri.parse('$apiURL/teams$q'));
+  if (accessLevel > 0) {
+    request = http.Request('GET', Uri.parse('$apiURL/teamsAll$q'));
+  }
+
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+
+  List<Team> teams = [];
+  if (response.statusCode == 200) {
+    List<dynamic> result = jsonDecode(await response.stream.bytesToString());
+    // print(result);
+    result.forEach((race) {
+      teams.add(Team.fromMap(race));
+    });
+  } else {
+    print(response.reasonPhrase);
+  }
+  return (teams);
+}
+
 Future<List<Discipline>> getDisciplinesAll({int? eventId}) async {
   var headers = {'Authorization': 'Bearer $token'};
   var request = http.Request(

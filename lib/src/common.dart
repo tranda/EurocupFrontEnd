@@ -9,10 +9,10 @@ String imagesPath = 'assets/images/';
 
 String DATEFORMAT = "yyyy-mm-dd";
 
-int EVENTID = 5;
+int EVENTID = 6;
 
 var TEST = true;
-var ADMINTEST = true;
+var ADMINTEST = false;
 var testUser = "Nena";
 var testPassword = "Roki1234";
 var adminUser = "tranda";
@@ -43,5 +43,6 @@ const List<Color> competitionColor = [
   Color.fromARGB(128, 128, 128, 128),
   Color.fromARGB(128, 128, 128, 128),
   Color.fromARGB(255, 15, 91, 200),
+  Color.fromARGB(255, 15, 91, 169),
 ];
 const Color inactiveColor = Color.fromARGB(255, 176, 176, 176);

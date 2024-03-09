@@ -30,7 +30,7 @@ class ListViewState extends State<TeamListView> {
       body: Container(
         decoration: bckDecoration(),
         child: FutureBuilder(
-          future: api.getTeamsAll(),
+          future: api.getTeams(currentUser.accessLevel!),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
