@@ -295,6 +295,8 @@ class _UserDetailViewState extends State<UserDetailView> {
                           },
                           items: const [
                             DropdownMenuItem(
+                                value: -1, child: Text('N/A')),
+                            DropdownMenuItem(
                                 value: 0, child: Text('Club Manager')),
                             DropdownMenuItem(value: 1, child: Text('Judge')),
                             DropdownMenuItem(
