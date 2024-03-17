@@ -44,5 +44,6 @@ const List<Color> competitionColor = [
   Color.fromARGB(128, 128, 128, 128),
   Color.fromARGB(255, 15, 91, 200),
   Color.fromARGB(255, 15, 91, 169),
+  Color.fromARGB(255, 32, 188, 237),
 ];
 const Color inactiveColor = Color.fromARGB(255, 176, 176, 176);
