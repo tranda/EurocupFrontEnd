@@ -242,6 +242,29 @@ Future<List<Team>> getTeams(int accessLevel, {bool activeOnly = false}) async {
   return (teams);
 }
 
+Future createTeam(String name) async {
+  var headers = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Authorization': 'Bearer $token'
+  };
+  var request = http.Request('POST', Uri.parse('$apiURL/team'));
+  request.bodyFields = {
+    'name': name,
+  };
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+
+  print('response.statusCode: ${response.statusCode}');
+  var responseString = await response.stream.bytesToString();
+  print(responseString);
+  if (response.statusCode == 200) {
+    print(responseString);
+  } else {
+    print('error response: ${response.reasonPhrase}');
+  }
+}
+
 Future<List<Discipline>> getDisciplinesAll({int? eventId}) async {
   var headers = {'Authorization': 'Bearer $token'};
   var request = http.Request(
@@ -308,7 +331,8 @@ Future<List<Race>> getDisciplines() async {
 
 Future<List<Race>> getDisciplinesCombined(int eventId) async {
   var headers = {'Authorization': 'Bearer $token'};
-  var request = http.Request('GET', Uri.parse('$apiURL/disciplinesCombined?event_id=$eventId'));
+  var request = http.Request(
+      'GET', Uri.parse('$apiURL/disciplinesCombined?event_id=$eventId'));
 
   request.headers.addAll(headers);
 
@@ -329,8 +353,8 @@ Future<List<Race>> getDisciplinesCombined(int eventId) async {
 
 Future<List<Race>> getTeamDisciplines(int teamId, int eventId) async {
   var headers = {'Authorization': 'Bearer $token'};
-  var request =
-      http.Request('GET', Uri.parse('$apiURL/teamDisciplines?team_id=$teamId&event_id=$eventId'));
+  var request = http.Request('GET',
+      Uri.parse('$apiURL/teamDisciplines?team_id=$teamId&event_id=$eventId'));
 
   request.headers.addAll(headers);
 
@@ -433,6 +457,31 @@ Future registerCrew(int teamId, int disciplineId) async {
     'team_id': teamId.toString(),
     'discipline_id': disciplineId.toString()
   };
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+
+  if (response.statusCode == 200) {
+    print(await response.stream.bytesToString());
+  } else {
+    print(response.reasonPhrase);
+  }
+}
+
+Future registerCrews(int teamId, List<int> disciplineIds) async {
+  var headers = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Authorization': 'Bearer $token'
+  };
+  var request = http.Request('POST', Uri.parse('$apiURL/registercrews'));
+
+  List<String> repeatedParameters =
+      disciplineIds.map((number) => 'discipline_ids[]=$number').toList();
+  String body = repeatedParameters.join('&');
+  body += '&team_id=$teamId';
+
+  request.body = body;
+
   request.headers.addAll(headers);
 
   http.StreamedResponse response = await request.send();
