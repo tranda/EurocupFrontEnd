@@ -127,7 +127,9 @@ class ListViewState extends State<TeamListView> {
                 actions: <Widget>[
                   TextButton(onPressed: cancel, child: const Text("Cancel")),
                   TextButton(onPressed: submit, child: const Text("OK")),
-                ]));
+                ],
+              actionsAlignment: MainAxisAlignment.spaceBetween,
+            ));
   }
 
   void cancel() {
