@@ -16,7 +16,7 @@ var ADMINTEST = false;
 var testUser = "Nena";
 var testPassword = "Roki1234";
 var adminUser = "tranda";
-var adminPassword = "12345678";
+var adminPassword = "Roki1234";
 String? lastUser;
 String? lastPassword;
 
