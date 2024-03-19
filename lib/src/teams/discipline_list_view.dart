@@ -32,8 +32,8 @@ class _CrewListViewState extends State<DisciplineListView> {
             : await showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: null, // const Text('Are you sure?'),
-                  content: Text(
+                  content: null,
+                  title: Text(
                     "You will loose Your changes!",
                     style: Theme.of(context).textTheme.displaySmall,
                   ),
@@ -47,6 +47,7 @@ class _CrewListViewState extends State<DisciplineListView> {
                       child: const Text('OK'),
                     ),
                   ],
+                  actionsAlignment: MainAxisAlignment.spaceBetween,
                 ),
               )) ??
         false;
@@ -106,10 +107,10 @@ class _CrewListViewState extends State<DisciplineListView> {
                         (element) => element.id == discipline.eventId);
                     var eventName = '${competition.name!} ${competition.year}';
                     var eventColor = competitionColor[discipline.eventId! - 1];
-                    var registered = false;
+                    // var registered = false;
                     for (var element in teamDisciplines) {
                       if (element.discipline!.id == discipline.id) {
-                        registered = true;
+                        // registered = true;
                         registeredDisciplines.add(discipline.id!);
                       }
                     }
@@ -191,15 +192,17 @@ class _CrewListViewState extends State<DisciplineListView> {
     return await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-                title: null, // const Text(""),
-                content: Text(
+                content: null,
+                title: Text(
                   "Save Your changes?",
                   style: Theme.of(context).textTheme.displaySmall,
                 ),
                 actions: <Widget>[
                   TextButton(onPressed: cancel, child: const Text("Cancel")),
                   TextButton(onPressed: submit, child: const Text("OK")),
-                ]));
+                ],
+              actionsAlignment: MainAxisAlignment.spaceBetween,
+            ));
   }
 
   void cancel() {
