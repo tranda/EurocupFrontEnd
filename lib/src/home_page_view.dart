@@ -104,13 +104,13 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(
-              height: bigSpace,
+              height: smallSpace,
             ),
             Visibility(
-              visible: (currentUser.accessLevel! >= 1),
+              visible: (currentUser.accessLevel! >= 0),
               child: ListTile(
                 enabled: true,
-                title: Text('Races Overview',
+                title: Text('Current Entries',
                     style: Theme.of(context).textTheme.displayMedium,
                     textAlign: TextAlign.left),
                 onTap: () {

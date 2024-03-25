@@ -10,6 +10,7 @@ class Discipline {
   String? status;
   DateTime? createdAt;
   DateTime? updatedAt;
+  int? teamsCount;
 
   Discipline({
     this.id,
@@ -21,6 +22,7 @@ class Discipline {
     this.status,
     this.createdAt,
     this.updatedAt,
+    this.teamsCount,
   });
 
   factory Discipline.fromMap(Map<String, dynamic> data) => Discipline(
@@ -37,6 +39,7 @@ class Discipline {
         updatedAt: data['updated_at'] == null
             ? null
             : DateTime.parse(data['updated_at'] as String),
+        teamsCount: data['teams_count'] as int?,
       );
 
   Map<String, dynamic> toMap() => {
@@ -49,6 +52,7 @@ class Discipline {
         'status': status,
         'created_at': createdAt?.toIso8601String(),
         'updated_at': updatedAt?.toIso8601String(),
+        'teams_count': teamsCount,
       };
 
   /// `dart:convert`

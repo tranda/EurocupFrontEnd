@@ -65,18 +65,23 @@ class ListViewState extends State<RaceDetailView> {
                             teams[index].team!.name!,
                             style: Theme.of(context).textTheme.displaySmall,
                           ),
-                          onTap: () {
-                            Navigator.pushNamed(
-                                context, RaceCrewDetailView.routeName,
-                                arguments: {
-                                  'crewId': teams[index].crew!.id,
-                                  'size': size + reserves,
-                                  'helmNo': helmNo,
-                                  // 'title': discipline.getDisplayName()
-                                  'title': teams[index].team!.name!
-                                });
-                          },
-                          trailing: const Icon(Icons.arrow_forward)),
+                          onTap: currentUser.accessLevel! > 0
+                              ? () {
+                                  Navigator.pushNamed(
+                                      context, RaceCrewDetailView.routeName,
+                                      arguments: {
+                                        'crewId': teams[index].crew!.id,
+                                        'size': size + reserves,
+                                        'helmNo': helmNo,
+                                        // 'title': discipline.getDisplayName()
+                                        'title': teams[index].team!.name!
+                                      });
+                                }
+                              : () {},
+                          trailing: currentUser.accessLevel! > 0
+                          ?const Icon(Icons.arrow_forward)
+                          : null
+                      ),
                       const Divider(
                         height: 4,
                       ),
