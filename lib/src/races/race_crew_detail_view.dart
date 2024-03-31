@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:eurocup_frontend/src/model/race/crew.dart';
-import 'package:eurocup_frontend/src/qr_scanner/barcode_scanner_controller.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
@@ -11,9 +10,10 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:qrscan/qrscan.dart' as scanner;
 
 import '../athletes/athlete_detail_view.dart';
-import '../common.dart';
-import '../model/athlere_qr_code.dart';
 import '../model/athlete/athlete.dart';
+import '../qr_scanner/ai_barcode_scanner.dart';
+
+import 'package:collection/collection.dart';
 
 class RaceCrewDetailView extends StatefulWidget {
   const RaceCrewDetailView({Key? key}) : super(key: key);
@@ -98,18 +98,11 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
 
     return Scaffold(
       appBar: appBarWithAction(() {
-        Navigator.pushNamed(context, BarCodeScannerController.routeName,
-                arguments: {'listIds': listAthleteIds, 'list': listAthlete})
-        //     .then((value) {
-        //   if (value == true) {
-        //     showInfoDialog(context, 'PASSED', '');
-        //   } else {
-        //     showInfoDialog(context, 'FAILED', 'NOT IN THIS CREW!');
-        //   }
-        // })
-        ;
-        // scanQR();
-        // _scan();
+        Navigator.pushNamed(context, AiBarcodeScanner.routeName)
+            .then((value) async {
+          checkForPresence(value.toString(), listAthlete)
+              .then((value) => print(value));
+        });
       }, title: title, icon: Icons.qr_code_scanner),
       body: Container(
         decoration: bckDecoration(),
@@ -145,7 +138,7 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
                                 "$no $drummerPrefix$helmPrefix$reservePrefix ${(crewAthletes[index]!['athlete']! as Athlete).getDisplayDetail()}",
                                 style:
                                     Theme.of(context).textTheme.displaySmall),
-                                                              subtitle: Padding(
+                            subtitle: Padding(
                               padding: const EdgeInsetsDirectional.symmetric(
                                   horizontal: (8.0), vertical: 8.0),
                               child: Text(athlete.category ?? ""),
@@ -191,5 +184,46 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
         ),
       ),
     );
+  }
+
+  Future<bool> checkForPresence(String? code, List<Athlete> listAthlete) async {
+    var result = false;
+    if (code != null && code.isNotEmpty) {
+      print(code);
+      final qrcode = jsonDecode(code);
+      final id = qrcode['id'];
+      print(id);
+      Athlete? athlete = findAthleteById(listAthlete, id);
+      if (athlete != null) {
+        result = true;
+        print('PASSED');
+        showInfoDialog(context, 'PASSED', '', () {
+        });
+      } else {
+        print('FAILED');
+        showInfoDialog(context, 'FAILED', 'NOT IN THIS CREW!', () {
+        });
+      }
+    }
+    return Future.value(result);
+  }
+
+  Athlete? findAthleteById(List<Athlete> list, int searchId) {
+    return list.firstWhereOrNull((athlete) => athlete.id == searchId);
+  }
+
+  Future<bool?> openDialog() async {
+    return await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+              content: null,
+              title: Text(
+                "Save Your changes?",
+                style: Theme.of(context).textTheme.displaySmall,
+              ),
+              actions: <Widget>[
+                TextButton(onPressed: () {}, child: const Text("OK")),
+              ],
+            ));
   }
 }

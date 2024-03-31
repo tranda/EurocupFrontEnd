@@ -72,30 +72,30 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
         },
         onDetect: (capture) {
           setState(() {
-            barcode = capture;
+            // barcode = capture;
+          final List<Barcode> barcodes = capture.barcodes;
+          final Uint8List? image = capture.image;
+          final barcode = barcodes.first;
+          print(barcode.rawValue.toString());
+          final qrcode = jsonDecode(barcode.rawValue.toString());
+          final id = qrcode['id'];
+          print(id);
+          Athlete? athlete = findAthleteById(listAthlete, id);
+          // if (listAthleteIds.contains(id)) {
+          if (athlete != null) {
+            print('OK');
+            // showInfoDialog(context, 'PASSED', '', () {
+            //   Navigator.pop(context, true);
+            // });
+            // Navigator.pop(context, true);
+          } else {
+            print('FAILED');
+            // showInfoDialog(context, 'FAILED', 'NOT IN THIS CREW!', () {
+            //   Navigator.pop(context, true);
+            // });
+            // Navigator.pop(context, false);
+          }
           });
-          // final List<Barcode> barcodes = capture.barcodes;
-          // final Uint8List? image = capture.image;
-          // final barcode = barcodes.first;
-          // print(barcode.rawValue.toString());
-          // final qrcode = jsonDecode(barcode.rawValue.toString());
-          // final id = qrcode['id'];
-          // // print(id);
-          // Athlete? athlete = findAthleteById(listAthlete, id);
-          // // if (listAthleteIds.contains(id)) {
-          // if (athlete != null) {
-          //   // print('OK');
-          //   showInfoDialog(context, 'PASSED', '', () {
-          //     Navigator.pop(context, true);
-          //   });
-          //   // Navigator.pop(context, true);
-          // } else {
-          //   // print('FAILED');
-          //   showInfoDialog(context, 'FAILED', 'NOT IN THIS CREW!', () {
-          //     Navigator.pop(context, true);
-          //   });
-          //   // Navigator.pop(context, false);
-          // }
         },
       ),
     );

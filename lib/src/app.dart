@@ -22,6 +22,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'clubs/club_athlete_list_view.dart';
 import 'crews/crew_detail_print.dart';
+import 'qr_scanner/ai_barcode_scanner.dart';
+import 'qr_scanner/ai_barcode_scanner_view.dart';
 import 'settings/settings_controller.dart';
 import 'settings/settings_view.dart';
 import 'teams/discipline_list_view.dart';
@@ -218,14 +220,16 @@ class MyApp extends StatelessWidget {
                         return const RaceDetailView();
                       case RaceCrewDetailView.routeName:
                         return const RaceCrewDetailView();
-                      case BarCodeScannerController.routeName:
-                        return const BarCodeScannerController();
+                      // case BarCodeScannerController.routeName:
+                      //   return const BarCodeScannerController();
                       case ClubDetailView.routeName:
                         return const ClubDetailView();
                       case CrewDetailPrint.routeName:
                         return const CrewDetailPrint();
                       case ClubAdelListView.routeName:
                         return const ClubAdelListView();
+                      case AiBarcodeScanner.routeName:
+                        return const AiBarcodeScanner();
                       default:
                         return LoginView();
                     }
