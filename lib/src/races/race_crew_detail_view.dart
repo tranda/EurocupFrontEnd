@@ -100,8 +100,10 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
       appBar: appBarWithAction(() {
         Navigator.pushNamed(context, AiBarcodeScanner.routeName)
             .then((value) async {
-          checkForPresence(value.toString(), listAthlete)
-              .then((value) => print(value));
+          if (value != null) {
+            await checkForPresence(value.toString(), listAthlete)
+                .then((value) => print(value));
+          }
         });
       }, title: title, icon: Icons.qr_code_scanner),
       body: Container(
@@ -197,12 +199,10 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
       if (athlete != null) {
         result = true;
         print('PASSED');
-        showInfoDialog(context, 'PASSED', '', () {
-        });
+        showInfoDialog(context, 'PASSED', '', () {});
       } else {
         print('FAILED');
-        showInfoDialog(context, 'FAILED', 'NOT IN THIS CREW!', () {
-        });
+        showInfoDialog(context, 'FAILED', 'NOT IN THIS CREW!', () {});
       }
     }
     return Future.value(result);

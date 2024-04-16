@@ -1,10 +1,7 @@
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
-import 'overlay.dart';
 
 /// Barcode scanner widget
 class AiBarcodeScanner extends StatefulWidget {
@@ -194,6 +191,56 @@ class _AiBarcodeScannerState extends State<AiBarcodeScanner> {
     return OrientationBuilder(
       builder: (context, orientation) {
         return Scaffold(
+              bottomNavigationBar: orientation == Orientation.portrait
+              ? widget.bottomBar ??
+                  ListTile(
+                    leading: Builder(
+                      builder: (context) {
+                        return IconButton(
+                          tooltip: "Switch Camera",
+                          onPressed: () => controller.switchCamera(),
+                          icon: ValueListenableBuilder<CameraFacing>(
+                            valueListenable: controller.cameraFacingState,
+                            builder: (context, state, child) {
+                              switch (state) {
+                                case CameraFacing.front:
+                                  return const Icon(Icons.camera_front);
+                                case CameraFacing.back:
+                                  return const Icon(Icons.camera_rear);
+                              }
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                    title: Text(
+                      widget.bottomBarText,
+                      textAlign: TextAlign.center,
+                      style: widget.bottomBarTextStyle,
+                    ),
+                    trailing: Builder(
+                      builder: (context) {
+                        return IconButton(
+                          tooltip: "Torch",
+                          onPressed: () => controller.toggleTorch(),
+                          icon: ValueListenableBuilder<TorchState>(
+                            valueListenable: controller.torchState,
+                            builder: (context, state, child) {
+                              switch (state) {
+                                case TorchState.off:
+                                  return const Icon(Icons.flash_off);
+                                case TorchState.on:
+                                  return const Icon(Icons.flash_on);
+                              }
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  )
+              : null,
+          appBar: widget.appBar,
+
           body: MobileScanner(
             controller: controller,
             fit: widget.fit,
