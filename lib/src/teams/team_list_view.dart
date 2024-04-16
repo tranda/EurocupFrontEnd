@@ -5,6 +5,7 @@ import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
+import '../model/race/team.dart';
 import 'discipline_list_view.dart';
 
 class TeamListView extends StatefulWidget {
@@ -19,6 +20,8 @@ class TeamListView extends StatefulWidget {
 class ListViewState extends State<TeamListView> {
   bool locked = false;
   late TextEditingController controller;
+  late Future<List<Team>> dataFuture;
+  List<Team> list = [];
 
   String teamName = "";
 
@@ -26,10 +29,8 @@ class ListViewState extends State<TeamListView> {
   void initState() {
     super.initState();
     controller = TextEditingController();
-    // setState(() {
-    //   getAthletes();
-    // });
     locked = currentUser.accessLevel != 0;
+    dataFuture = api.getTeams(currentUser.accessLevel!, activeOnly: true);
   }
 
   @override
@@ -60,12 +61,12 @@ class ListViewState extends State<TeamListView> {
                     print('Error opening dialog: $error');
                   });
                 },
-          title: 'Team List',
+          title: "Team List",
           icon: Icons.add),
       body: Container(
         decoration: bckDecoration(),
         child: FutureBuilder(
-          future: api.getTeams(currentUser.accessLevel!),
+          future: dataFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
