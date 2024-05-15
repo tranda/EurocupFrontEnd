@@ -141,6 +141,11 @@ class MyApp extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                       color: Color.fromARGB(255, 0, 80, 150),
                       height: 1.0),
+                  labelSmall: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.normal,
+                      color: Color.fromARGB(192, 255, 255, 255),
+                      height: 1.0),
                 ),
                 textButtonTheme: TextButtonThemeData(
                   style: ButtonStyle(

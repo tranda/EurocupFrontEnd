@@ -475,10 +475,10 @@ Future registerCrews(int teamId, List<int> disciplineIds) async {
   };
   var request = http.Request('POST', Uri.parse('$apiURL/registercrews'));
 
+  String body = 'team_id=$teamId&';
   List<String> repeatedParameters =
       disciplineIds.map((number) => 'discipline_ids[]=$number').toList();
-  String body = repeatedParameters.join('&');
-  body += '&team_id=$teamId';
+  body += repeatedParameters.join('&');
 
   request.body = body;
 

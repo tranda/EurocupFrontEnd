@@ -9,10 +9,10 @@ class DisciplineListView extends StatefulWidget {
   static const routeName = '/discipline_list';
 
   @override
-  State<DisciplineListView> createState() => _CrewListViewState();
+  State<DisciplineListView> createState() => _DisciplineListViewState();
 }
 
-class _CrewListViewState extends State<DisciplineListView> {
+class _DisciplineListViewState extends State<DisciplineListView> {
   bool locked = false;
   List<int> registeredDisciplines = [];
   bool changes = false;
@@ -61,28 +61,29 @@ class _CrewListViewState extends State<DisciplineListView> {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        appBar: appBarWithAction(
-            locked
-                ? () {}
-                : () {
-                    if (changes) {
-                      openDialog().then((value) {
-                        if (value == true) {
-                          api
-                              .registerCrews(teamId, registeredDisciplines)
-                              .then((v) {
-                            Navigator.of(context).pop();
-                          }).catchError((error) {
-                            print('Error creating team: $error');
-                          });
-                        } else {}
-                      }).catchError((error) {
-                        print('Error opening dialog: $error');
-                      });
-                    }
-                  },
-            title: teamName,
-            icon: Icons.save),
+        appBar: appBar(title: teamName),
+        // appBar: appBarWithAction(
+        //     locked
+        //         ? () {}
+        //         : () {
+        //             if (changes) {
+        //               openDialog().then((value) {
+        //                 if (value == true) {
+        //                   api
+        //                       .registerCrews(teamId, registeredDisciplines)
+        //                       .then((v) {
+        //                     Navigator.of(context).pop();
+        //                   }).catchError((error) {
+        //                     print('Error creating team: $error');
+        //                   });
+        //                 } else {}
+        //               }).catchError((error) {
+        //                 print('Error opening dialog: $error');
+        //               });
+        //             }
+        //           },
+        //     title: teamName,
+        //     icon: Icons.save),
         body: Container(
           // decoration: const BoxDecoration(
           //     image: DecorationImage(
@@ -107,10 +108,10 @@ class _CrewListViewState extends State<DisciplineListView> {
                         (element) => element.id == discipline.eventId);
                     var eventName = '${competition.name!} ${competition.year}';
                     var eventColor = competitionColor[discipline.eventId! - 1];
-                    // var registered = false;
+                    var registered = false;
                     for (var element in teamDisciplines) {
                       if (element.discipline!.id == discipline.id) {
-                        // registered = true;
+                        registered = true;
                         registeredDisciplines.add(discipline.id!);
                       }
                     }
@@ -118,7 +119,9 @@ class _CrewListViewState extends State<DisciplineListView> {
                       children: [
                         ListTile(
                             tileColor: eventColor,
-                            leading: Text(eventName),
+                            leading: Text(eventName, 
+                            style: Theme.of(context).textTheme.labelSmall,
+                            ),
                             title: Text(
                               "${discipline.getDisplayName()} $inactiveStatus",
                               style: Theme.of(context).textTheme.bodyLarge,
@@ -126,48 +129,54 @@ class _CrewListViewState extends State<DisciplineListView> {
                             trailing: Visibility(
                               visible: true, // discipline.status == "active",
                               child:
-                                StatefulBuilder(builder: (context, setter) {
-                                return Checkbox(
-                                    value: registeredDisciplines.contains(
-                                        discipline.id!), // registered,
-                                    onChanged: (value) {
-                                      if (value != null && !locked) {
-                                        if (value) {
-                                          registeredDisciplines
-                                              .add(discipline.id!);
-                                          changes = true;
-                                        } else {
-                                          registeredDisciplines
-                                              .remove(discipline.id!);
-                                          changes = true;
+                                  Checkbox(
+                                      // value: registeredDisciplines.contains(
+                                          // discipline.id!), // registered,
+                                          value:  registered,
+
+                                      onChanged:
+                                          // (value) {
+                                          //   if (value != null && !locked) {
+                                          //     if (value) {
+                                          //       registeredDisciplines
+                                          //           .add(discipline.id!);
+                                          //       changes = true;
+                                          //     } else {
+                                          //       registeredDisciplines
+                                          //           .remove(discipline.id!);
+                                          //       changes = true;
+                                          //     }
+                                          //     setter(() {
+                                          //       print(registeredDisciplines);
+                                          //       teamDisciplines.removeWhere(
+                                          //           (element) =>
+                                          //               element.discipline!.id ==
+                                          //               discipline.id!);
+                                          //     });
+                                          //   }
+                                          // }
+                                          (value) {
+                                        if (value != null) {
+                                          if (value) {
+                                            print('register for ${discipline.id}');
+                                            api
+                                                .registerCrew(
+                                                    teamId, discipline.id!)
+                                                .then((value) {
+                                              setState(() {});
+                                            });
+                                          } else {
+                                            print('unregister for ${discipline.id}');
+                                            api
+                                                .unregisterCrew(
+                                                    teamId, discipline.id!)
+                                                .then((value) {
+                                              setState(() {});
+                                            });
+                                          }
+                                          setState(() {});
                                         }
-                                        setter(() {});
-                                      }
-                                    }
-                                    // (value) {
-                                    //         if (value != null) {
-                                    //           if (value) {
-                                    //             print('register for ');
-                                    //             api
-                                    //                 .registerCrew(
-                                    //                     teamId, discipline.id!)
-                                    //                 .then((value) {
-                                    //               setState(() {});
-                                    //             });
-                                    //           } else {
-                                    //             print('unregister for ');
-                                    //             api
-                                    //                 .unregisterCrew(
-                                    //                     teamId, discipline.id!)
-                                    //                 .then((value) {
-                                    //               setState(() {});
-                                    //             });
-                                    //           }
-                                    //           setState(() {});
-                                    //         }
-                                    //       }
-                                    );
-                              }),
+                                      }),
                             )),
                         const Divider(
                           height: 4,
@@ -192,15 +201,15 @@ class _CrewListViewState extends State<DisciplineListView> {
     return await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-                content: null,
-                title: Text(
-                  "Save Your changes?",
-                  style: Theme.of(context).textTheme.displaySmall,
-                ),
-                actions: <Widget>[
-                  TextButton(onPressed: cancel, child: const Text("Cancel")),
-                  TextButton(onPressed: submit, child: const Text("OK")),
-                ],
+              content: null,
+              title: Text(
+                "Save Your changes?",
+                style: Theme.of(context).textTheme.displaySmall,
+              ),
+              actions: <Widget>[
+                TextButton(onPressed: cancel, child: const Text("Cancel")),
+                TextButton(onPressed: submit, child: const Text("OK")),
+              ],
               actionsAlignment: MainAxisAlignment.spaceBetween,
             ));
   }

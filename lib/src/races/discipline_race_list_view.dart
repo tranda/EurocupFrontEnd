@@ -61,7 +61,8 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
                                     arguments: {'disciplineId': discipline.id});
                               },
                               tileColor: eventColor,
-                              leading: Text(eventName),
+                              leading: Text(eventName,
+                              style: Theme.of(context).textTheme.labelSmall,),
                               title: Text(
                                 "${discipline.getDisplayName()} $inactiveStatus (${discipline.teamsCount})",
                                 style: Theme.of(context).textTheme.bodyLarge,
