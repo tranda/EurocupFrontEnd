@@ -3,7 +3,7 @@ import 'package:eurocup_frontend/src/races/race_detail_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
-
+import 'package:eurocup_frontend/src/model/race/discipline_crew.dart';
 class DisciplineRaceListView extends StatefulWidget {
   const DisciplineRaceListView({Key? key}) : super(key: key);
 
@@ -47,6 +47,7 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
                       (element) => element.id == discipline.eventId);
                   var eventName = '${competition.name!} ${competition.year}';
                   var eventColor = competitionColor[discipline.eventId! - 1];
+                  var teams = discipline.teams;
 
                   return Column(
                     children: [
@@ -55,14 +56,16 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
                         child: Column(
                           children: [
                             ListTile(
-                              onTap: () {
+                              onTap: (teams != null && teams.isEmpty) ? () {} : () {
                                 Navigator.pushNamed(
                                     context, RaceDetailView.routeName,
                                     arguments: {'disciplineId': discipline.id});
                               },
                               tileColor: eventColor,
-                              leading: Text(eventName,
-                              style: Theme.of(context).textTheme.labelSmall,),
+                              leading: Text(
+                                eventName,
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
                               title: Text(
                                 "${discipline.getDisplayName()} $inactiveStatus (${discipline.teamsCount})",
                                 style: Theme.of(context).textTheme.bodyLarge,
@@ -71,6 +74,18 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
                             ),
                             const Divider(
                               height: 4,
+                            ),
+                            Column(
+                            children: discipline.teams?.map((team) {
+                          return ListTile(
+                            title:  Text(
+                              team.team?.name ?? '',
+                             style: Theme.of(context)
+                                            .textTheme
+                                            .displaySmall,
+                            ),
+                          );
+                        }).toList() ?? [],    
                             ),
                             const Divider(
                               height: smallSpace,

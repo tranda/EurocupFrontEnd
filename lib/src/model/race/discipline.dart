@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:eurocup_frontend/src/model/race/discipline_crew.dart';
+
 class Discipline {
   int? id;
   int? eventId;
@@ -11,6 +13,7 @@ class Discipline {
   DateTime? createdAt;
   DateTime? updatedAt;
   int? teamsCount;
+  List<DisciplineCrew>? teams;
 
   Discipline({
     this.id,
@@ -23,6 +26,7 @@ class Discipline {
     this.createdAt,
     this.updatedAt,
     this.teamsCount,
+    this.teams
   });
 
   factory Discipline.fromMap(Map<String, dynamic> data) => Discipline(
@@ -40,6 +44,10 @@ class Discipline {
             ? null
             : DateTime.parse(data['updated_at'] as String),
         teamsCount: data['teams_count'] as int?,
+        teams: data['teams'] == null
+            ? null
+            : List<DisciplineCrew>.from(
+                data['teams'].map((x) => DisciplineCrew.fromMap(x))),
       );
 
   Map<String, dynamic> toMap() => {
@@ -53,6 +61,7 @@ class Discipline {
         'created_at': createdAt?.toIso8601String(),
         'updated_at': updatedAt?.toIso8601String(),
         'teams_count': teamsCount,
+        'teams': teams?.map((x) => x.toMap()).toList(),
       };
 
   /// `dart:convert`
