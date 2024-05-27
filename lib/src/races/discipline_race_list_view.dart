@@ -52,7 +52,7 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
                   return Column(
                     children: [
                       Visibility(
-                        visible: active,
+                        visible: !(teams != null && teams.isEmpty),
                         child: Column(
                           children: [
                             ListTile(
@@ -70,7 +70,7 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
                                 "${discipline.getDisplayName()} $inactiveStatus (${discipline.teamsCount})",
                                 style: Theme.of(context).textTheme.bodyLarge,
                               ),
-                              trailing: const Icon(Icons.arrow_forward),
+                              trailing: (teams != null && teams.isEmpty) ? null : const Icon(Icons.arrow_forward),
                             ),
                             const Divider(
                               height: 4,

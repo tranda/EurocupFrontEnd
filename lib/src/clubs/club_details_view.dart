@@ -47,59 +47,80 @@ class _ClubDetailViewState extends State<ClubDetailView> {
                           textAlign: TextAlign.left),
                     ),
                     ListTile(
+                      title: Text(
+                          'with AD certificate: ${details.withCertificate}',
+                          style: Theme.of(context).textTheme.displayLarge,
+                          textAlign: TextAlign.left),
+                    ),
+                    const Divider(
+                      height: 4,
+                    ),
+                    ListTile(
                       title: Text('Eurocup: ${details.eurocup}',
                           style: Theme.of(context).textTheme.displayLarge,
                           textAlign: TextAlign.left),
                     ),
                     ListTile(
-                      title: Text('Festival: ${details.festival}',
+                      title: Text(
+                          'Festival: ${details.pfestival! - details.eurocup!}',
+                          style: Theme.of(context).textTheme.displayLarge,
+                          textAlign: TextAlign.left),
+                    ),
+                    const Divider(
+                      height: 4,
+                    ),
+                    Text('Eurocup + Festival',
+                        style: Theme.of(context).textTheme.displaySmall,
+                        textAlign: TextAlign.left),
+                    ListTile(
+                      title: Text(
+                          'Junior: ${details.juniorEC} / ${details.junior! - details.juniorEC!}',
                           style: Theme.of(context).textTheme.displayLarge,
                           textAlign: TextAlign.left),
                     ),
                     ListTile(
-                      title: Text('Junior: ${details.junior}',
+                      title: Text(
+                          'U24: ${details.u24EC} / ${details.u24! - details.u24EC!}',
                           style: Theme.of(context).textTheme.displayLarge,
                           textAlign: TextAlign.left),
                     ),
                     ListTile(
-                      title: Text('U24: ${details.u24}',
+                      title: Text(
+                          'Premier: ${details.premierEC} / ${details.premier! - details.premierEC!}',
                           style: Theme.of(context).textTheme.displayLarge,
                           textAlign: TextAlign.left),
                     ),
                     ListTile(
-                      title: Text('Premier: ${details.premier}',
+                      title: Text(
+                          'Senior A: ${details.seniorAEC} / ${details.seniorA! - details.seniorAEC!}',
                           style: Theme.of(context).textTheme.displayLarge,
                           textAlign: TextAlign.left),
                     ),
                     ListTile(
-                      title: Text('Senior A: ${details.seniorA}',
+                      title: Text(
+                          'Senior B: ${details.seniorBEC} / ${details.seniorB! - details.seniorBEC!}',
                           style: Theme.of(context).textTheme.displayLarge,
                           textAlign: TextAlign.left),
                     ),
                     ListTile(
-                      title: Text('Senior B: ${details.seniorB}',
+                      title: Text(
+                          'Senior C: ${details.seniorCEC} / ${details.seniorC! - details.seniorCEC!}',
                           style: Theme.of(context).textTheme.displayLarge,
                           textAlign: TextAlign.left),
                     ),
                     ListTile(
-                      title: Text('Senior C: ${details.seniorC}',
+                      title: Text(
+                          'Senior D: ${details.seniorDEC} / ${details.seniorD! - details.seniorDEC!}',
                           style: Theme.of(context).textTheme.displayLarge,
                           textAlign: TextAlign.left),
                     ),
-                    ListTile(
-                      title: Text('Senior D: ${details.seniorD}',
-                          style: Theme.of(context).textTheme.displayLarge,
-                          textAlign: TextAlign.left),
-                    ),
-                    ListTile(
-                      title: Text('BCP: ${details.bcp}',
-                          style: Theme.of(context).textTheme.displayLarge,
-                          textAlign: TextAlign.left),
-                    ),
-                    ListTile(
-                      title: Text('with AD certificate: ${details.withCertificate}',
-                          style: Theme.of(context).textTheme.displayLarge,
-                          textAlign: TextAlign.left),
+                    // ListTile(
+                    //   title: Text('BCP: ${details.bcp}',
+                    //       style: Theme.of(context).textTheme.displayLarge,
+                    //       textAlign: TextAlign.left),
+                    // ),
+                    const Divider(
+                      height: 4,
                     ),
                   ],
                 ),
