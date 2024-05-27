@@ -69,7 +69,7 @@ class _ClubDetailViewState extends State<ClubDetailView> {
                     const Divider(
                       height: 4,
                     ),
-                    Text('Eurocup + Festival',
+                    Text('Eurocup / Festival',
                         style: Theme.of(context).textTheme.displaySmall,
                         textAlign: TextAlign.left),
                     ListTile(
