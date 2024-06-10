@@ -32,8 +32,8 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
   @override
   void initState() {
     // TODO: implement initState
-    super.initState();
     this._outputController = new TextEditingController();
+    super.initState();
   }
 
   bool checkMix(
@@ -100,9 +100,9 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
       appBar: appBarWithAction(() {
         Navigator.pushNamed(context, AiBarcodeScanner.routeName)
             .then((value) async {
-          if (value != null) {
-            await checkForPresence(value.toString(), listAthlete)
-                .then((value) => print(value));
+          print(value);
+          if (value != null && value.toString().isNotEmpty) {
+            checkForPresence(value.toString(), listAthlete);
           }
         });
       }, title: title, icon: Icons.qr_code_scanner),
@@ -188,7 +188,7 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
     );
   }
 
-  Future<bool> checkForPresence(String? code, List<Athlete> listAthlete) async {
+  bool checkForPresence(String? code, List<Athlete> listAthlete) {
     var result = false;
     if (code != null && code.isNotEmpty) {
       print(code);
@@ -198,14 +198,14 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
       Athlete? athlete = findAthleteById(listAthlete, id);
       if (athlete != null) {
         result = true;
-        print('PASSED');
+        // print('PASSED');
         showInfoDialog(context, 'PASSED', '', () {});
       } else {
-        print('FAILED');
-        showInfoDialog(context, 'FAILED', 'NOT IN THIS CREW!', () {});
+        // print('FAILED');
+        showInfoDialog(context, 'NOT IN THIS CREW!', '', () {});
       }
     }
-    return Future.value(result);
+    return (result);
   }
 
   Athlete? findAthleteById(List<Athlete> list, int searchId) {
