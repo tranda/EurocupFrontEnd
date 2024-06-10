@@ -23,7 +23,10 @@ class _DisciplineListViewState extends State<DisciplineListView> {
     // setState(() {
     //   getAthletes();
     // });
-    locked = (currentUser.accessLevel! > 0) && (currentUser.accessLevel! < 3);
+    var competition = competitions
+        .firstWhere((element) => element.id == EVENTID);
+    locked = (currentUser.accessLevel! > 0) && (currentUser.accessLevel! < 3) || ((currentUser.accessLevel! < 3) && DateTime.now().isAfter(competition.raceEntriesLock!) );
+    ;
   }
 
   Future<bool> _onWillPop() async {
@@ -127,7 +130,7 @@ class _DisciplineListViewState extends State<DisciplineListView> {
                               style: Theme.of(context).textTheme.bodyLarge,
                             ),
                             trailing: Visibility(
-                              visible: true, // discipline.status == "active",
+                              visible: true && !locked, // discipline.status == "active",
                               child:
                                   Checkbox(
                                       // value: registeredDisciplines.contains(

@@ -56,7 +56,7 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
                         child: Column(
                           children: [
                             ListTile(
-                              onTap: (teams != null && teams.isEmpty) ? () {} : () {
+                              onTap: (teams != null && teams.isEmpty || currentUser.accessLevel! < 1) ? () {} : () {
                                 Navigator.pushNamed(
                                     context, RaceDetailView.routeName,
                                     arguments: {'disciplineId': discipline.id});
@@ -70,7 +70,8 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
                                 "${discipline.getDisplayName()} $inactiveStatus (${discipline.teamsCount})",
                                 style: Theme.of(context).textTheme.bodyLarge,
                               ),
-                              trailing: (teams != null && teams.isEmpty) ? null : const Icon(Icons.arrow_forward),
+                              trailing: (teams != null && teams.isEmpty ||
+                                      currentUser.accessLevel! < 1) ? null : const Icon(Icons.arrow_forward),
                             ),
                             const Divider(
                               height: 4,
