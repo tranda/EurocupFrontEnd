@@ -1,7 +1,7 @@
-
+import 'package:ai_barcode_scanner/ai_barcode_scanner.dart';
 import 'package:flutter/material.dart';
+// import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-
 
 /// Barcode scanner widget
 class AiBarcodeScanner extends StatefulWidget {
@@ -165,6 +165,7 @@ class AiBarcodeScanner extends StatefulWidget {
 class _AiBarcodeScannerState extends State<AiBarcodeScanner> {
   /// bool to check if barcode is valid or not
   bool? _isSuccess;
+  bool isDetected = false;
 
   /// Scanner controller
   late MobileScannerController controller;
@@ -191,14 +192,15 @@ class _AiBarcodeScannerState extends State<AiBarcodeScanner> {
     return OrientationBuilder(
       builder: (context, orientation) {
         return Scaffold(
-              bottomNavigationBar: orientation == Orientation.portrait
+          bottomNavigationBar: orientation == Orientation.portrait
               ? widget.bottomBar ??
                   ListTile(
                     leading: Builder(
                       builder: (context) {
                         return IconButton(
                           tooltip: "Switch Camera",
-                          onPressed: () => controller.switchCamera(),
+                          onPressed: () =>
+                              controller.switchToCamera(CameraFacing.back),
                           icon: ValueListenableBuilder<CameraFacing>(
                             valueListenable: controller.cameraFacingState,
                             builder: (context, state, child) {
@@ -240,7 +242,6 @@ class _AiBarcodeScannerState extends State<AiBarcodeScanner> {
                   )
               : null,
           appBar: widget.appBar,
-
           body: MobileScanner(
             controller: controller,
             fit: widget.fit,
@@ -251,6 +252,8 @@ class _AiBarcodeScannerState extends State<AiBarcodeScanner> {
             startDelay: widget.startDelay ?? false,
             key: widget.key,
             onDetect: (BarcodeCapture barcode) async {
+              if (isDetected) return;
+              isDetected = true;
               widget.onDetect?.call(barcode);
 
               // if (barcode.barcodes.isEmpty) {
@@ -275,8 +278,8 @@ class _AiBarcodeScannerState extends State<AiBarcodeScanner> {
               //   widget.onScan?.call(code);
               // });
               // if (widget.canPop && mounted && Navigator.canPop(context)) {
-                Navigator.of(context).pop(code);
-                // return;
+              Navigator.of(context).pop(code);
+              // return;
               // }
             },
           ),
