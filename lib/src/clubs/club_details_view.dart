@@ -114,11 +114,11 @@ class _ClubDetailViewState extends State<ClubDetailView> {
                           style: Theme.of(context).textTheme.displayLarge,
                           textAlign: TextAlign.left),
                     ),
-                    // ListTile(
-                    //   title: Text('BCP: ${details.bcp}',
-                    //       style: Theme.of(context).textTheme.displayLarge,
-                    //       textAlign: TextAlign.left),
-                    // ),
+                    ListTile(
+                      title: Text('BCP: ${details.bcp}',
+                          style: Theme.of(context).textTheme.displayLarge,
+                          textAlign: TextAlign.left),
+                    ),
                     const Divider(
                       height: 4,
                     ),
