@@ -150,58 +150,53 @@ class _DisciplineListViewState extends State<DisciplineListView> {
                               "${discipline.getDisplayName()} $inactiveStatus",
                               style: Theme.of(context).textTheme.bodyLarge,
                             ),
-                            trailing: Visibility(
-                              visible: true && !locked, // discipline.status == "active",
-                              child:
-                                  Checkbox(
-                                      // value: registeredDisciplines.contains(
-                                          // discipline.id!), // registered,
-                                          value:  registered,
-
-                                      onChanged:
-                                          // (value) {
-                                          //   if (value != null && !locked) {
-                                          //     if (value) {
-                                          //       registeredDisciplines
-                                          //           .add(discipline.id!);
-                                          //       changes = true;
-                                          //     } else {
-                                          //       registeredDisciplines
-                                          //           .remove(discipline.id!);
-                                          //       changes = true;
-                                          //     }
-                                          //     setter(() {
-                                          //       print(registeredDisciplines);
-                                          //       teamDisciplines.removeWhere(
-                                          //           (element) =>
-                                          //               element.discipline!.id ==
-                                          //               discipline.id!);
-                                          //     });
-                                          //   }
-                                          // }
-                                          (value) {
-                                        if (value != null) {
-                                          if (value) {
-                                            print('register for ${discipline.id}');
-                                            api
-                                                .registerCrew(
-                                                    teamId, discipline.id!)
-                                                .then((value) {
-                                              setState(() {});
-                                            });
-                                          } else {
-                                            print('unregister for ${discipline.id}');
-                                            api
-                                                .unregisterCrew(
-                                                    teamId, discipline.id!)
-                                                .then((value) {
-                                              setState(() {});
-                                            });
-                                          }
+                            trailing: locked
+                                // When locked, show check marks for registered disciplines
+                                ? (registered
+                                    ? Icon(
+                                        Icons.check_circle_outline,
+                                        color: Colors.green.shade600,
+                                        size: 28,
+                                      )
+                                    : const Icon(
+                                        Icons.radio_button_unchecked,
+                                        color: Colors.grey,
+                                        size: 28,
+                                      ))
+                                // When not locked, show interactive check mark icons
+                                : GestureDetector(
+                                    onTap: () {
+                                      if (registered) {
+                                        print('unregister for ${discipline.id}');
+                                        api
+                                            .unregisterCrew(
+                                                teamId, discipline.id!)
+                                            .then((value) {
                                           setState(() {});
-                                        }
-                                      }),
-                            )),
+                                        });
+                                      } else {
+                                        print('register for ${discipline.id}');
+                                        api
+                                            .registerCrew(
+                                                teamId, discipline.id!)
+                                            .then((value) {
+                                          setState(() {});
+                                        });
+                                      }
+                                      setState(() {});
+                                    },
+                                    child: registered
+                                        ? Icon(
+                                            Icons.check_circle_outline,
+                                            color: Colors.green.shade600,
+                                            size: 28,
+                                          )
+                                        : const Icon(
+                                            Icons.radio_button_unchecked,
+                                            color: Colors.grey,
+                                            size: 28,
+                                          ),
+                                  )),
                         const Divider(
                           height: 4,
                         ),
