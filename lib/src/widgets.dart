@@ -25,11 +25,11 @@ AppBar appBarWithImageAndTitle(String? image, String? title) {
     mainAxisAlignment: MainAxisAlignment.center,
     children: [
       (image != null) ? Image.asset(imagesPath + image) : Container(),
-      SizedBox(width: horizontalPadding),
+      const SizedBox(width: horizontalPadding),
       Expanded(
           child:
               FittedBox(fit: BoxFit.scaleDown, child: Text(title ?? appTitle))),
-      SizedBox(width: horizontalPadding),
+      const SizedBox(width: horizontalPadding),
     ],
   ));
 }
@@ -67,7 +67,7 @@ AppBar appBarWithImageAndTitleAndAction(void Function()? onTap,
           child:
               FittedBox(fit: BoxFit.scaleDown, child: Text(title ?? appTitle)),
         ),
-        SizedBox(width: horizontalPadding),
+        const SizedBox(width: horizontalPadding),
       ],
     ),
     actions: [IconButton(onPressed: onTap, icon: Icon(icon))],
@@ -76,9 +76,9 @@ AppBar appBarWithImageAndTitleAndAction(void Function()? onTap,
 
 InputDecoration buildInputDecoration(String hintText, IconData icon) {
   return InputDecoration(
-    prefixIcon: Icon(icon, color: Color.fromRGBO(50, 62, 72, 1.0)),
+    prefixIcon: Icon(icon, color: const Color.fromRGBO(50, 62, 72, 1.0)),
     hintText: hintText,
-    contentPadding: EdgeInsets.fromLTRB(20.0, 0.0, 0.0, 0.0),
+    contentPadding: const EdgeInsets.fromLTRB(20.0, 0.0, 0.0, 0.0),
     border:
         OutlineInputBorder(borderRadius: BorderRadius.circular(cornerRadius)),
   );
@@ -87,10 +87,10 @@ InputDecoration buildInputDecoration(String hintText, IconData icon) {
 InputDecoration buildInputDecorationWithSuffix(
     String hintText, IconData icon, IconButton iconButton) {
   return InputDecoration(
-    prefixIcon: Icon(icon, color: Color.fromRGBO(50, 62, 72, 1.0)),
+    prefixIcon: Icon(icon, color: const Color.fromRGBO(50, 62, 72, 1.0)),
     suffixIcon: iconButton,
     hintText: hintText,
-    contentPadding: EdgeInsets.fromLTRB(20.0, 0.0, 0.0, 0.0),
+    contentPadding: const EdgeInsets.fromLTRB(20.0, 0.0, 0.0, 0.0),
     border:
         OutlineInputBorder(borderRadius: BorderRadius.circular(cornerRadius)),
   );
@@ -101,7 +101,7 @@ InputDecoration buildStandardInputDecoration(String? hint) {
     fillColor: Colors.white,
     filled: true,
     hintText: hint,
-    contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+    contentPadding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
     border:
         OutlineInputBorder(borderRadius: BorderRadius.circular(cornerRadius)),
   );
@@ -110,7 +110,19 @@ InputDecoration buildStandardInputDecoration(String? hint) {
 InputDecoration buildStandardInputDecorationWithLabel(String? label) {
   return InputDecoration(
     labelText: label,
-    contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+    labelStyle: const TextStyle(
+      color: Color.fromARGB(255, 0, 80, 150),
+      fontWeight: FontWeight.w500,
+    ),
+    contentPadding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+    fillColor: Colors.white,
+    filled: true,
+    enabledBorder: UnderlineInputBorder(
+      borderSide: BorderSide(color: Colors.grey.shade400),
+    ),
+    focusedBorder: const UnderlineInputBorder(
+      borderSide: BorderSide(color: Color.fromARGB(255, 0, 80, 150), width: 2),
+    ),
     // border:
     //     OutlineInputBorder(borderRadius: BorderRadius.circular(cornerRadius)),
   );
@@ -121,14 +133,14 @@ InputDecoration buildPasswordInputDecoration(String? hint) {
     fillColor: Colors.white,
     filled: true,
     hintText: hint,
-    contentPadding: EdgeInsets.fromLTRB(20.0, 0.0, 20.0, 0.0),
+    contentPadding: const EdgeInsets.fromLTRB(20.0, 0.0, 20.0, 0.0),
     border:
         OutlineInputBorder(borderRadius: BorderRadius.circular(cornerRadius)),
   );
 }
 
 MaterialButton longButtons(String title, Function() fun,
-    {Color color: Colors.blue, Color textColor = Colors.white}) {
+    {Color color = Colors.blue, Color textColor = Colors.white}) {
   return MaterialButton(
     onPressed: fun,
     textColor: textColor,

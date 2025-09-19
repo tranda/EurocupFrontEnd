@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
 class UserListView extends StatefulWidget {
-  const UserListView({Key? key}) : super(key: key);
+  const UserListView({super.key});
 
   static const routeName = '/users_list';
 

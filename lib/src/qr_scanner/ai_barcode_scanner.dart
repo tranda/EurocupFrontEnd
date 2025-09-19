@@ -200,7 +200,7 @@ class _AiBarcodeScannerState extends State<AiBarcodeScanner> {
                         return IconButton(
                           tooltip: "Switch Camera",
                           onPressed: () =>
-                              controller.switchToCamera(CameraFacing.back),
+                              controller.switchCamera(),
                           icon: ValueListenableBuilder<CameraFacing>(
                             valueListenable: controller.cameraFacingState,
                             builder: (context, state, child) {

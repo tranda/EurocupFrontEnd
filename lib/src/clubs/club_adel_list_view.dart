@@ -7,7 +7,7 @@ import '../model/club/club.dart';
 import 'club_athlete_list_view.dart';
 
 class ClubAdelListView extends StatefulWidget {
-  const ClubAdelListView({Key? key}) : super(key: key);
+  const ClubAdelListView({super.key});
 
   static const routeName = '/club_adel_list';
 

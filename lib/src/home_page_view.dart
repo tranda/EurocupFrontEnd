@@ -3,6 +3,7 @@ import 'package:eurocup_frontend/src/athletes/athlete_list_view.dart';
 import 'package:eurocup_frontend/src/crews/crew_list_view.dart';
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
 import 'package:eurocup_frontend/src/races/discipline_race_list_view.dart';
+import 'package:eurocup_frontend/src/races/race_results_list_view.dart';
 import 'package:eurocup_frontend/src/teams/team_list_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:excel/excel.dart';
@@ -13,6 +14,7 @@ import 'administration/administration_view.dart';
 import 'model/user.dart';
 import 'common.dart';
 import 'api_helper.dart' as api;
+import 'services/startup_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -26,15 +28,33 @@ class _HomePageState extends State<HomePage> {
   final User user = currentUser;
   @override
   void initState() {
-    competitions = [];
-    disciplines = [];
-    api.getCompetitions();
-    api.getDisciplinesAll(eventId: EVENTID);
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    // If startup service hasn't initialized or user data is missing, show loading
+    if (!StartupService.isInitialized || currentUser.accessLevel == null) {
+      // Trigger initialization if not already done
+      if (!StartupService.isInitialized && !StartupService.isLoading) {
+        StartupService.initialize().then((_) {
+          if (mounted) {
+            setState(() {});
+          }
+        });
+      }
+
+      return Scaffold(
+        appBar: appBar(title: 'Events Platform'),
+        body: Container(
+          decoration: naslovnaDecoration(),
+          child: const Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: appBar(title: 'Events Platform'),
       body: Container(
@@ -44,7 +64,7 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Visibility(
-              visible: (currentUser.accessLevel! == 0),
+              visible: (currentUser.accessLevel ?? -1) == 0,
               child: ListTile(
                 title: Text('List of Athletes',
                     style: Theme.of(context).textTheme.displayLarge,
@@ -74,7 +94,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             Visibility(
-              visible: (currentUser.accessLevel! == 0),
+              visible: (currentUser.accessLevel ?? -1) == 0,
               child: ListTile(
                 title: Text('Teams/Races',
                     style: Theme.of(context).textTheme.displayLarge,
@@ -89,7 +109,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             Visibility(
-              visible: (currentUser.accessLevel! == 0),
+              visible: (currentUser.accessLevel ?? -1) == 0,
               child: ListTile(
                 title: Text('Crew Members',
                     style: Theme.of(context).textTheme.displayLarge,
@@ -107,7 +127,7 @@ class _HomePageState extends State<HomePage> {
               height: smallSpace,
             ),
             Visibility(
-              visible: (currentUser.accessLevel! >= 0),
+              visible: (currentUser.accessLevel ?? -1) >= 0,
               child: ListTile(
                 enabled: true,
                 title: Text('Current Entries',
@@ -124,9 +144,26 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             Visibility(
-              visible: (currentUser.accessLevel! >= 2),
+              visible: (currentUser.accessLevel ?? -1) >= 0,
               child: ListTile(
-                enabled: (currentUser.accessLevel! >= 2),
+                enabled: true,
+                title: Text('Race Results',
+                    style: Theme.of(context).textTheme.displayMedium,
+                    textAlign: TextAlign.left),
+                onTap: () {
+                  Navigator.pushNamed(
+                      context, RaceResultsListView.routeName);
+                },
+                leading: const Icon(
+                  Icons.play_arrow,
+                  color: Color.fromARGB(255, 0, 80, 150),
+                ),
+              ),
+            ),
+            Visibility(
+              visible: (currentUser.accessLevel ?? -1) >= 2,
+              child: ListTile(
+                enabled: (currentUser.accessLevel ?? -1) >= 2,
                 title: Text('Administration',
                     style: Theme.of(context).textTheme.displayMedium,
                     textAlign: TextAlign.left),
@@ -145,11 +182,29 @@ class _HomePageState extends State<HomePage> {
                   style: Theme.of(context).textTheme.displayMedium,
                   textAlign: TextAlign.left),
               onTap: () {
-                lastUser = null;
-                lastPassword = null;
+                // Call logout API first while token is still available
                 api.sendLogoutRequest().then((value) {
-                  Navigator.pop(context);
-                  // ClearToken();
+                  // Clear local authentication data after API call
+                  lastUser = null;
+                  lastPassword = null;
+                  currentUser = User(); // Reset user
+
+                  // Navigate to login page and clear all previous routes
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    '/login',
+                    (Route<dynamic> route) => false,
+                  );
+                }).catchError((error) {
+                  // Even if logout request fails, clear local data and navigate to login
+                  lastUser = null;
+                  lastPassword = null;
+                  clearToken();
+                  currentUser = User(); // Reset user
+
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    '/login',
+                    (Route<dynamic> route) => false,
+                  );
                 });
               },
               leading: const Icon(

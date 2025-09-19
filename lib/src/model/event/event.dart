@@ -51,12 +51,15 @@ class Competition {
         smallReserves: data['small_reserves'] as int?,
         smallMinGender: data['small_min_gender'] as int?,
         smallMaxGender: data['small_max_gender'] as int?,
-        raceEntriesLock: data['race_entries_lock'] =
-            DateTime.parse(data['race_entries_lock'] as String),
-        nameEntriesLock: data['name_entries_lock'] =
-            DateTime.parse(data['name_entries_lock'] as String),
-        crewEntriesLock: data['crew_entries_lock'] =
-            DateTime.parse(data['crew_entries_lock'] as String),
+        raceEntriesLock: data['race_entries_lock'] == null
+            ? null
+            : DateTime.parse(data['race_entries_lock'] as String),
+        nameEntriesLock: data['name_entries_lock'] == null
+            ? null
+            : DateTime.parse(data['name_entries_lock'] as String),
+        crewEntriesLock: data['crew_entries_lock'] == null
+            ? null
+            : DateTime.parse(data['crew_entries_lock'] as String),
         createdAt: data['created_at'] == null
             ? null
             : DateTime.parse(data['created_at'] as String),
@@ -76,9 +79,9 @@ class Competition {
         'small_reserves': smallReserves,
         'small_min_gender': smallMinGender,
         'small_max_gender': smallMaxGender,
-        'race_entries_lock': raceEntriesLock,
-        'name_entries_lock': nameEntriesLock,
-        'crew_entries_lock': crewEntriesLock,
+        'race_entries_lock': raceEntriesLock?.toIso8601String(),
+        'name_entries_lock': nameEntriesLock?.toIso8601String(),
+        'crew_entries_lock': crewEntriesLock?.toIso8601String(),
         'created_at': createdAt?.toIso8601String(),
         'updated_at': updatedAt?.toIso8601String(),
       };

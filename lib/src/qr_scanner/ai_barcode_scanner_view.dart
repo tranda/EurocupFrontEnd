@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 
 class AIBarCodeScanner extends StatefulWidget {
-  const AIBarCodeScanner({Key? key}) : super(key: key);
+  const AIBarCodeScanner({super.key});
   //  static const routeName = '/ai_barcode_scanner';
 
   @override

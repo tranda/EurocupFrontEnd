@@ -1,4 +1,3 @@
-import 'dart:math';
 
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
@@ -9,7 +8,7 @@ import '../model/race/team.dart';
 import 'discipline_list_view.dart';
 
 class TeamListView extends StatefulWidget {
-  const TeamListView({Key? key}) : super(key: key);
+  const TeamListView({super.key});
 
   static const routeName = '/team_list';
 

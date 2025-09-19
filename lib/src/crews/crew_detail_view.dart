@@ -4,12 +4,10 @@ import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
-import '../clubs/club_details_view.dart';
 import '../model/athlete/athlete.dart';
-import 'crew_detail_print.dart';
 
 class CrewDetailView extends StatefulWidget {
-  const CrewDetailView({Key? key}) : super(key: key);
+  const CrewDetailView({super.key});
   static const routeName = '/crew_detail';
 
   @override

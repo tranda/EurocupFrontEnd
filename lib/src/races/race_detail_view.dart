@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
 class RaceDetailView extends StatefulWidget {
-  const RaceDetailView({Key? key}) : super(key: key);
+  const RaceDetailView({super.key});
 
   static const routeName = '/race_detail';
 

@@ -14,7 +14,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 class CrewDetailPrint extends StatelessWidget {
-  const CrewDetailPrint({Key? key}) : super(key: key);
+  const CrewDetailPrint({super.key});
   static const routeName = '/crew_detail_print';
   // final String title;
 
@@ -22,7 +22,7 @@ class CrewDetailPrint extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(title: Text('title')),
+        appBar: AppBar(title: const Text('title')),
         body: PdfPreview(
           build: (format) => _generatePdf(format, 'title'),
         ),
@@ -59,7 +59,7 @@ class CrewDetailPrint extends StatelessWidget {
 }
 
 class CrewDetailPrint2 extends StatefulWidget {
-  const CrewDetailPrint2({Key? key}) : super(key: key);
+  const CrewDetailPrint2({super.key});
   static const routeName = '/crew_detail_print';
 
   @override

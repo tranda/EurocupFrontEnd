@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 class BarCodeScannerController extends StatelessWidget {
-  const BarCodeScannerController({Key? key}) : super(key: key);
+  const BarCodeScannerController({super.key});
   static const routeName = '/barcode_scanner';
 
   @override

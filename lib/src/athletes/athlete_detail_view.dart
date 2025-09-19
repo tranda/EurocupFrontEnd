@@ -6,12 +6,14 @@ import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:file_picker/file_picker.dart';
+import 'image_widget_web.dart' if (dart.library.io) 'package:flutter/material.dart';
 
 class AthleteDetailView extends StatefulWidget {
   const AthleteDetailView({super.key});
@@ -53,9 +55,13 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
     lastNameController.text = currentAthlete.lastName ?? '';
     dateOfBirthController.text = currentAthlete.birthDate ?? '';
     genderController.text = currentAthlete.gender ?? '';
-    var photoUrl = "https://$imagePrefix/${currentAthlete.photo}";
-    var certificateUrl =
-        "https://$certificatePrefix/${currentAthlete.certificate}";
+    // Use direct URLs - images work with img tags despite CORS warnings
+    var photoUrl = currentAthlete.photo != null && currentAthlete.photo!.isNotEmpty
+        ? "https://$imagePrefix/${currentAthlete.photo}"
+        : "";
+    var certificateUrl = currentAthlete.certificate != null && currentAthlete.certificate!.isNotEmpty
+        ? "https://$certificatePrefix/${currentAthlete.certificate}"
+        : "";
     // print('photo url: $photoUrl');
 
     return Scaffold(
@@ -159,7 +165,7 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                         if (pickedDate != null) {
                           String formattedDate =
                               DateFormat('yyyy-MM-dd').format(pickedDate);
-        
+      
                           setState(() {
                             dateOfBirthController.text = formattedDate;
                             currentAthlete.birthDate = dateOfBirthController.text;
@@ -555,7 +561,7 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
   }
 
   Future<void> _launchUrl(String url) async {
-    var random = new Random().nextInt(1000000);
+    var random = Random().nextInt(1000000);
     if (!await launchUrlString("$url?random=$random")) {
       throw Exception('Could not launch $url');
     }
@@ -639,12 +645,10 @@ class imagePreview extends StatelessWidget {
           height: 256,
         );
       }
-    } else if (currentAthlete.photo != null && currentAthlete.photo != "") {
+    } else if (photoUrl.isNotEmpty) {
       return imageFromUrl(photoUrl: photoUrl);
     }
-    {
-      return const imageUnknown();
-    }
+    return const imageUnknown();
 
     // return FutureBuilder(
     //   future: currentAthlete.convertPhotoBase64(),
@@ -685,10 +689,27 @@ class imageFromUrl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.network(
-      photoUrl,
-      width: 256,
-      height: 256,
+    // Use web-specific HTML rendering for web platform
+    if (kIsWeb) {
+      return WebImage(
+        imageUrl: photoUrl,
+        width: 256,
+        height: 256,
+      );
+    }
+    
+    // For non-web platforms, use regular Image.network
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Image.network(
+        photoUrl,
+        width: 256,
+        height: 256,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return const imageUnknown();
+        },
+      ),
     );
   }
 }

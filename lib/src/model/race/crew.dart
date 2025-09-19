@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'team.dart';
 
 class Crew {
   int? id;
@@ -7,6 +8,7 @@ class Crew {
   DateTime? createdAt;
   DateTime? updatedAt;
   int? capacity;
+  Team? team;
 
   Crew(
       {this.id,
@@ -14,13 +16,17 @@ class Crew {
       this.disciplineId,
       this.createdAt,
       this.updatedAt,
-      this.capacity});
+      this.capacity,
+      this.team});
 
   factory Crew.fromMap(Map<String, dynamic> data) => Crew(
         id: data['id'] as int?,
         teamId: data['team_id'] as int?,
         disciplineId: data['discipline_id'] as int?,
         capacity: data['capacity'] as int?,
+        team: data['team'] == null
+            ? null
+            : Team.fromMap(data['team'] as Map<String, dynamic>),
         createdAt: data['created_at'] == null
             ? null
             : DateTime.parse(data['created_at'] as String),
@@ -34,6 +40,7 @@ class Crew {
         'team_id': teamId,
         'discipline_id': disciplineId,
         'capacity': capacity,
+        'team': team?.toMap(),
         'created_at': createdAt?.toIso8601String(),
         'updated_at': updatedAt?.toIso8601String(),
       };

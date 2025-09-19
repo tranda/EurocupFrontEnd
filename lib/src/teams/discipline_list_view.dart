@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
 class DisciplineListView extends StatefulWidget {
-  const DisciplineListView({Key? key}) : super(key: key);
+  const DisciplineListView({super.key});
 
   static const routeName = '/discipline_list';
 
@@ -23,10 +23,27 @@ class _DisciplineListViewState extends State<DisciplineListView> {
     // setState(() {
     //   getAthletes();
     // });
-    var competition = competitions
-        .firstWhere((element) => element.id == EVENTID);
-    locked = (currentUser.accessLevel! > 0) && (currentUser.accessLevel! < 3) || ((currentUser.accessLevel! < 3) && DateTime.now().isAfter(competition.raceEntriesLock!) );
-    ;
+    try {
+      var competition = competitions
+          .firstWhere((element) => element.id == EVENTID, orElse: () => competitions.first);
+      
+      // Check for null values before using them
+      if (currentUser.accessLevel != null) {
+        bool accessLevelRestriction = (currentUser.accessLevel! > 0) && (currentUser.accessLevel! < 3);
+        bool dateRestriction = false;
+        
+        if (competition.raceEntriesLock != null && currentUser.accessLevel != null) {
+          dateRestriction = (currentUser.accessLevel! < 3) && DateTime.now().isAfter(competition.raceEntriesLock!);
+        }
+        
+        locked = accessLevelRestriction || dateRestriction;
+      } else {
+        locked = true; // Default to locked if access level is not set
+      }
+    } catch (e) {
+      print('Error in initState: $e');
+      locked = true; // Default to locked on error
+    }
   }
 
   Future<bool> _onWillPop() async {
@@ -99,18 +116,22 @@ class _DisciplineListViewState extends State<DisciplineListView> {
               }
               if (snapshot.hasData) {
                 final teamDisciplines = snapshot.data!;
-                print('# of Disciplines: ${disciplines.length}');
+                // Filter disciplines to only show those from the active event
+                final activeDisciplines = disciplines.where((d) => d.eventId == EVENTID).toList();
+                print('# of Disciplines: ${activeDisciplines.length}');
                 print('# of registered Disciplines: ${teamDisciplines.length}');
                 return ListView.builder(
-                  itemCount: disciplines.length,
+                  itemCount: activeDisciplines.length,
                   itemBuilder: (BuildContext context, int index) {
-                    final discipline = disciplines[index];
+                    final discipline = activeDisciplines[index];
                     final inactiveStatus =
                         discipline.status == "inactive" ? "(INACTIVE)" : "";
                     var competition = competitions.firstWhere(
                         (element) => element.id == discipline.eventId);
                     var eventName = '${competition.name!} ${competition.year}';
-                    var eventColor = competitionColor[discipline.eventId! - 1];
+                    var eventColor = competitionColor.isNotEmpty && discipline.eventId! <= competitionColor.length 
+                        ? competitionColor[discipline.eventId! - 1] 
+                        : Colors.transparent;
                     var registered = false;
                     for (var element in teamDisciplines) {
                       if (element.discipline!.id == discipline.id) {

@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
 class CrewListView extends StatefulWidget {
-  const CrewListView({Key? key}) : super(key: key);
+  const CrewListView({super.key});
 
   static const routeName = '/crew_list';
 
@@ -28,9 +28,7 @@ class _CrewListViewState extends State<CrewListView> {
     return Scaffold(
       appBar: appBar(title: 'Crew List'),
       body: Container(
-        // decoration: const BoxDecoration(
-        //     image: DecorationImage(
-        //         image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
+        decoration: bckDecoration(),
         child: FutureBuilder(
           future: api.getDisciplinesCombined(EVENTID),
           builder: (context, snapshot) {
@@ -38,12 +36,12 @@ class _CrewListViewState extends State<CrewListView> {
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasData) {
-              final _races = snapshot.data!;
+              final races = snapshot.data!;
               // print(_races);
               return ListView.builder(
-                itemCount: _races.length,
+                itemCount: races.length,
                 itemBuilder: (BuildContext context, int index) {
-                  final race = _races[index];
+                  final race = races[index];
                   // print(race);
                   var competition = competitions.firstWhere(
                       (element) => element.id == race.discipline?.eventId);
@@ -56,15 +54,25 @@ class _CrewListViewState extends State<CrewListView> {
 
                   return Column(
                     children: [
-                      ListTile(
-                        tileColor: eventColor,
-                        title: Text(
-                          race.discipline!.getDisplayName(),
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
-                        leading: Text(
-                          eventName,
-                          style: Theme.of(context).textTheme.bodyMedium,
+                      Container(
+                        color: eventColor,
+                        child: ListTile(
+                          leading: Text(
+                            eventName,
+                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                              color: Colors.white,
+                            ),
+                          ),
+                          title: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              race.discipline!.getDisplayName(),
+                              style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                       const Divider(

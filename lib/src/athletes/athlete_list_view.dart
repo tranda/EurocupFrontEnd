@@ -2,7 +2,6 @@ import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:eurocup_frontend/src/athletes/athlete_detail_view.dart';
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
-import 'package:eurocup_frontend/src/model/event/event.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 
@@ -42,10 +41,7 @@ class _AthleteListViewState extends State<AthleteListView> {
           title: 'Athlete List',
           icon: Icons.add),
       body: Container(
-        // decoration: const BoxDecoration(
-        //     image: DecorationImage(
-        //         image: AssetImage('assets/images/bck.jpg'),
-        //         fit: BoxFit.cover)),
+        decoration: bckDecoration(),
         child: FutureBuilder<List<Athlete>>(
           future: api.getAthletesForClub(currentUser.clubId),
           builder: (context, snapshot) {

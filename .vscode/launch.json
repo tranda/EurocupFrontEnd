@@ -7,8 +7,7 @@
         {
             "name": "frontend",
             "request": "launch",
-            "type": "dart",
-            "args": ["--web-renderer", "html"]
+            "type": "dart"
         },
         {
             "name": "frontend (profile mode)",

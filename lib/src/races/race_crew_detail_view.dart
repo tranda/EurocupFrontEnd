@@ -11,12 +11,13 @@ import 'package:qrscan/qrscan.dart' as scanner;
 
 import '../athletes/athlete_detail_view.dart';
 import '../model/athlete/athlete.dart';
-import '../qr_scanner/ai_barcode_scanner.dart';
 
 import 'package:collection/collection.dart';
 
+import '../qr_scanner/barcode_scanner_controller.dart';
+
 class RaceCrewDetailView extends StatefulWidget {
-  const RaceCrewDetailView({Key? key}) : super(key: key);
+  const RaceCrewDetailView({super.key});
   static const routeName = '/race_crew_detail';
 
   @override
@@ -32,7 +33,7 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
   @override
   void initState() {
     // TODO: implement initState
-    this._outputController = new TextEditingController();
+    _outputController = TextEditingController();
     super.initState();
   }
 
@@ -78,13 +79,9 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
   Future _scan() async {
     await Permission.camera.request();
     String? barcode = await scanner.scan();
-    if (barcode == null) {
-      print('nothing return.');
-    } else {
-      print(barcode);
-      // this._outputController.text = barcode;
+    print(barcode);
+    // this._outputController.text = barcode;
     }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +95,7 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
 
     return Scaffold(
       appBar: appBarWithAction(() {
-        Navigator.pushNamed(context, AiBarcodeScanner.routeName)
+        Navigator.pushNamed(context, BarCodeScannerController.routeName)
             .then((value) async {
           print(value);
           if (value != null && value.toString().isNotEmpty) {
