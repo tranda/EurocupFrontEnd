@@ -207,6 +207,11 @@ class MyApp extends StatelessWidget {
                 return MaterialPageRoute<void>(
                   settings: updatedSettings,
                   builder: (BuildContext context) {
+                    print('Router: Building route for ${routeSettings.name}');
+                    print('Router: Arguments extracted: $arguments');
+                    // Handle routes that might have query parameters
+                    final routeName = routeSettings.name ?? '';
+
                     switch (routeSettings.name) {
                       case SettingsView.routeName:
                         return SettingsView(controller: settingsController);
@@ -215,7 +220,17 @@ class MyApp extends StatelessWidget {
                       case ForgotPasswordView.routeName:
                         return const ForgotPasswordView();
                       case ResetPasswordView.routeName:
+                        print('Router: Creating ResetPasswordView');
                         return const ResetPasswordView();
+                    }
+
+                    // Handle routes with query parameters
+                    if (routeName.startsWith('/reset-password')) {
+                      print('Router: Creating ResetPasswordView for route with params');
+                      return const ResetPasswordView();
+                    }
+
+                    switch (routeSettings.name) {
                       case HomePage.routeName:
                         return StartupWrapper(
                           targetRoute: routeSettings.name,
@@ -394,6 +409,9 @@ class MyApp extends StatelessWidget {
       try {
         final uri = Uri.base;
         final queryParams = uri.queryParameters;
+        print('Extraction: URI = $uri');
+        print('Extraction: Query params = $queryParams');
+        print('Extraction: Route name = ${routeSettings.name}');
 
         // Handle route-specific parameter extraction
         switch (routeSettings.name) {
@@ -441,12 +459,24 @@ class MyApp extends StatelessWidget {
               }
             }
             break;
+        }
 
-          case ResetPasswordView.routeName:
-            if (queryParams.containsKey('token')) {
-              arguments['token'] = queryParams['token'];
-            }
-            break;
+        // Handle reset password route with query parameters
+        final routeName = routeSettings.name ?? '';
+        if (routeName.startsWith('/reset-password')) {
+          print('Extraction: Found reset-password route');
+          if (queryParams.containsKey('token')) {
+            arguments['token'] = queryParams['token'];
+            print('Extraction: Token found in query params = ${queryParams['token']}');
+          } else if (routeName.contains('?token=')) {
+            print('Extraction: No token in query params, checking route name');
+            final tokenPart = routeName.split('?token=')[1];
+            final token = tokenPart.split('&')[0]; // Get only the token part
+            arguments['token'] = token;
+            print('Extraction: Token found in route name = $token');
+          } else {
+            print('Extraction: No token found anywhere');
+          }
         }
       } catch (e) {
         // In case of any error, just return existing arguments

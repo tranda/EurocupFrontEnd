@@ -30,15 +30,22 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
 
     // Get the token from the route arguments
     final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    print('Route arguments: $args');
     if (args != null && args['token'] != null) {
       token = args['token'];
+      print('Token from args: $token');
     }
 
     // Also try to get token from query parameters (for web)
     final uri = Uri.base;
+    print('Current URI: $uri');
+    print('Query parameters: ${uri.queryParameters}');
     if (uri.queryParameters.containsKey('token')) {
       token = uri.queryParameters['token'];
+      print('Token from query params: $token');
     }
+
+    print('Final token: $token');
   }
 
   @override
@@ -143,7 +150,7 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                               controller: emailController,
                               keyboardType: TextInputType.emailAddress,
                               decoration: buildStandardInputDecoration("Email Address"),
-                              style: Theme.of(context).textTheme.bodyLarge,
+                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.black87),
                               textInputAction: TextInputAction.next,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
@@ -180,7 +187,7 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                                   },
                                 ),
                               ),
-                              style: Theme.of(context).textTheme.bodyLarge,
+                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.black87),
                               textInputAction: TextInputAction.next,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
@@ -217,7 +224,7 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                                   },
                                 ),
                               ),
-                              style: Theme.of(context).textTheme.bodyLarge,
+                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.black87),
                               textInputAction: TextInputAction.done,
                               onFieldSubmitted: (_) => _handleResetPassword(),
                               validator: (value) {
