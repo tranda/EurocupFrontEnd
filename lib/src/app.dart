@@ -1,4 +1,8 @@
 import 'package:eurocup_frontend/src/administration/administration_view.dart';
+import 'package:eurocup_frontend/src/administration/event_list_view.dart';
+import 'package:eurocup_frontend/src/administration/event_detail_view.dart';
+import 'package:eurocup_frontend/src/administration/discipline_list_view.dart' as admin;
+import 'package:eurocup_frontend/src/administration/discipline_detail_view.dart';
 import 'package:eurocup_frontend/src/athletes/athlete_detail_view.dart';
 import 'package:eurocup_frontend/src/athletes/athlete_list_view.dart';
 import 'package:eurocup_frontend/src/clubs/club_adel_list_view.dart';
@@ -9,14 +13,20 @@ import 'package:eurocup_frontend/src/crews/crew_detail_view.dart';
 import 'package:eurocup_frontend/src/crews/crew_list_view.dart';
 import 'package:eurocup_frontend/src/home_page_view.dart';
 import 'package:eurocup_frontend/src/login_view.dart';
+import 'package:eurocup_frontend/src/forgot_password_view.dart';
+import 'package:eurocup_frontend/src/reset_password_view.dart';
 import 'package:eurocup_frontend/src/qr_scanner/barcode_scanner_controller.dart';
 import 'package:eurocup_frontend/src/races/discipline_race_list_view.dart';
 import 'package:eurocup_frontend/src/races/race_crew_detail_view.dart';
 import 'package:eurocup_frontend/src/races/race_detail_view.dart';
+import 'package:eurocup_frontend/src/races/race_results_list_view.dart';
+import 'package:eurocup_frontend/src/races/race_result_detail_view.dart';
 import 'package:eurocup_frontend/src/teams/team_list_view.dart';
 import 'package:eurocup_frontend/src/users/user_detail_view.dart';
 import 'package:eurocup_frontend/src/users/users_list_view.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -27,6 +37,10 @@ import 'qr_scanner/ai_barcode_scanner_view.dart';
 import 'settings/settings_controller.dart';
 import 'settings/settings_view.dart';
 import 'teams/discipline_list_view.dart';
+import 'common.dart';
+import 'api_helper.dart' as api;
+import 'services/startup_service.dart';
+import 'widgets/startup_wrapper.dart';
 
 /// The Widget that configures your application.
 class MyApp extends StatelessWidget {
@@ -51,26 +65,24 @@ class MyApp extends StatelessWidget {
           return Container(
             constraints: const BoxConstraints(maxWidth: 500),
             child: MaterialApp(
-              //           home: FutureBuilder(
-              // future: ReadToken(),
-              // builder: (context, snapshot) {
-              //   switch (snapshot.connectionState) {
-              //     case ConnectionState.none:
-              //     case ConnectionState.waiting:
-              //       return CircularProgressIndicator();
-              //     default:
-              //       if (snapshot.hasError)
-              //         return Text('Error: ${snapshot.error}');
-              //       // else if (snapshot.data == null)
-              //         return LoginView();
-              //   }
-              // }),
               // Providing a restorationScopeId allows the Navigator built by the
               // MaterialApp to restore the navigation stack when a user leaves and
               // returns to the app after it has been killed while running in the
               // background.
               restorationScopeId: 'app',
               debugShowCheckedModeBanner: false,
+
+              // Set initial route based on current URL for web deep linking
+              initialRoute: kIsWeb ? _getInitialRoute() : LoginView.routeName,
+
+              // Initialize app data on startup
+              builder: (context, child) {
+                // Trigger startup service initialization on app start
+                if (!StartupService.isInitialized && !StartupService.isLoading) {
+                  StartupService.initialize();
+                }
+                return child ?? const SizedBox();
+              },
 
               // Provide the generated AppLocalizations to the MaterialApp. This
               // allows descendant Widgets to display the correct translations
@@ -149,9 +161,9 @@ class MyApp extends StatelessWidget {
                 ),
                 textButtonTheme: TextButtonThemeData(
                   style: ButtonStyle(
-                    foregroundColor: MaterialStateProperty.resolveWith(
-                        (Set<MaterialState> states) {
-                      return states.contains(MaterialState.disabled)
+                    foregroundColor: WidgetStateProperty.resolveWith(
+                        (Set<WidgetState> states) {
+                      return states.contains(WidgetState.disabled)
                           ? null
                           : const Color.fromARGB(255, 0, 80, 150);
                     }),
@@ -159,15 +171,15 @@ class MyApp extends StatelessWidget {
                 ),
                 elevatedButtonTheme: ElevatedButtonThemeData(
                   style: ButtonStyle(
-                    foregroundColor: MaterialStateProperty.resolveWith(
-                        (Set<MaterialState> states) {
-                      return states.contains(MaterialState.disabled)
+                    foregroundColor: WidgetStateProperty.resolveWith(
+                        (Set<WidgetState> states) {
+                      return states.contains(WidgetState.disabled)
                           ? null
                           : Colors.white;
                     }),
-                    backgroundColor: MaterialStateProperty.resolveWith(
-                        (Set<MaterialState> states) {
-                      return states.contains(MaterialState.disabled)
+                    backgroundColor: WidgetStateProperty.resolveWith(
+                        (Set<WidgetState> states) {
+                      return states.contains(WidgetState.disabled)
                           ? null
                           : const Color.fromARGB(255, 0, 80, 150);
                     }),
@@ -185,18 +197,42 @@ class MyApp extends StatelessWidget {
               // Define a function to handle named routes in order to support
               // Flutter web url navigation and deep linking.
               onGenerateRoute: (RouteSettings routeSettings) {
+                // Extract route arguments from URL if available (for web deep linking)
+                final arguments = _extractArgumentsFromSettings(routeSettings);
+                final updatedSettings = RouteSettings(
+                  name: routeSettings.name,
+                  arguments: arguments,
+                );
+
                 return MaterialPageRoute<void>(
-                  settings: routeSettings,
+                  settings: updatedSettings,
                   builder: (BuildContext context) {
                     switch (routeSettings.name) {
                       case SettingsView.routeName:
                         return SettingsView(controller: settingsController);
                       case LoginView.routeName:
-                        return LoginView();
+                        return const LoginView();
+                      case ForgotPasswordView.routeName:
+                        return const ForgotPasswordView();
+                      case ResetPasswordView.routeName:
+                        return const ResetPasswordView();
                       case HomePage.routeName:
-                        return const HomePage();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const HomePage(),
+                        );
                       case AdministrationPage.routeName:
                         return const AdministrationPage();
+                      case EventListView.routeName:
+                        return const EventListView();
+                      case EventDetailView.routeName:
+                        return const EventDetailView();
+                      case admin.AdminDisciplineListView.routeName:
+                        return const admin.AdminDisciplineListView();
+                      case DisciplineDetailView.routeName:
+                        return const DisciplineDetailView();
+                      case DisciplineListView.routeName:
+                        return const DisciplineListView();
                       case UserListView.routeName:
                         return const UserListView();
                       case UserDetailView.routeName:
@@ -210,23 +246,51 @@ class MyApp extends StatelessWidget {
                       case AthleteDetailView.routeName:
                         return const AthleteDetailView();
                       case CrewListView.routeName:
-                        return const CrewListView();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const CrewListView(),
+                        );
                       case CrewDetailView.routeName:
                         return const CrewDetailView();
                       case AthletePickerView.routeName:
                         return const AthletePickerView();
                       case TeamListView.routeName:
                         return const TeamListView();
-                      case DisciplineListView.routeName:
-                        return const DisciplineListView();
                       case DisciplineRaceListView.routeName:
-                        return const DisciplineRaceListView();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const DisciplineRaceListView(),
+                        );
                       case RaceDetailView.routeName:
-                        return const RaceDetailView();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const RaceDetailView(),
+                        );
                       case RaceCrewDetailView.routeName:
-                        return const RaceCrewDetailView();
-                      // case BarCodeScannerController.routeName:
-                      //   return const BarCodeScannerController();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const RaceCrewDetailView(),
+                        );
+                      case RaceResultsListView.routeName:
+                        // Race results can be viewed publicly
+                        // Load token and basic data if available, but don't require authentication
+                        loadToken();
+                        return const RaceResultsListView();
+                      case RaceResultDetailView.routeName:
+                        // Check if we have the required raceResultId argument
+                        if (arguments?['raceResultId'] == null) {
+                          // If no argument, redirect to race results list
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            Navigator.of(context).pushReplacementNamed(RaceResultsListView.routeName);
+                          });
+                          loadToken();
+                          return const RaceResultsListView();
+                        }
+                        // Race result details can be viewed publicly
+                        loadToken();
+                        return const RaceResultDetailView();
+                      case BarCodeScannerController.routeName:
+                        return const BarCodeScannerController();
                       case ClubDetailView.routeName:
                         return const ClubDetailView();
                       case CrewDetailPrint.routeName:
@@ -236,7 +300,8 @@ class MyApp extends StatelessWidget {
                       case AiBarcodeScanner.routeName:
                         return const AiBarcodeScanner();
                       default:
-                        return LoginView();
+                        // For unknown routes, redirect to home page instead of login
+                        return const HomePage();
                     }
                   },
                 );
@@ -247,4 +312,149 @@ class MyApp extends StatelessWidget {
       ),
     );
   }
+
+  /// Extract the initial route from the current URL (for web deep linking)
+  static String _getInitialRoute() {
+    if (!kIsWeb) return LoginView.routeName;
+
+    try {
+      // Get current URL path
+      final uri = Uri.base;
+      final path = uri.path;
+
+      // Remove leading slash if present
+      final routePath = path.startsWith('/') ? path : '/$path';
+
+      // Define valid routes that can be accessed directly
+      const validDirectRoutes = [
+        LoginView.routeName,
+        ForgotPasswordView.routeName,
+        ResetPasswordView.routeName,
+        HomePage.routeName,
+        RaceResultsListView.routeName,
+        AthleteListView.routeName,
+        ClubListView.routeName,
+        CrewListView.routeName,
+        TeamListView.routeName,
+        DisciplineRaceListView.routeName,
+        AdministrationPage.routeName,
+        EventListView.routeName,
+        admin.AdminDisciplineListView.routeName,
+        DisciplineListView.routeName,
+        UserListView.routeName,
+      ];
+
+      // Check if the route is valid for direct access
+      if (validDirectRoutes.contains(routePath)) {
+        return routePath;
+      }
+
+      // Handle routes that require parameters
+      if (routePath == RaceResultDetailView.routeName) {
+        // Check if we have the required parameter in query string
+        final raceResultId = uri.queryParameters['raceResultId'];
+        if (raceResultId != null) {
+          return routePath;
+        }
+        // If no parameter, redirect to race results list
+        return RaceResultsListView.routeName;
+      }
+
+      // For other routes that might require parameters, redirect to a safe default
+      if (routePath.contains('detail') || routePath.contains('picker')) {
+        return HomePage.routeName;
+      }
+
+      // Default fallback - check if path looks like a public race results view
+      if (routePath.contains('race') || routePath.contains('result')) {
+        return RaceResultsListView.routeName;
+      }
+
+      // Ultimate fallback
+      return HomePage.routeName;
+    } catch (e) {
+      // In case of any error, return safe default
+      return HomePage.routeName;
+    }
+  }
+
+  /// Extract arguments from route settings and URL query parameters (for web deep linking)
+  static Map<String, dynamic>? _extractArgumentsFromSettings(RouteSettings routeSettings) {
+    Map<String, dynamic> arguments = {};
+
+    // First, use any existing arguments
+    if (routeSettings.arguments != null) {
+      if (routeSettings.arguments is Map<String, dynamic>) {
+        arguments.addAll(routeSettings.arguments as Map<String, dynamic>);
+      }
+    }
+
+    // For web, also extract from URL query parameters
+    if (kIsWeb) {
+      try {
+        final uri = Uri.base;
+        final queryParams = uri.queryParameters;
+
+        // Handle route-specific parameter extraction
+        switch (routeSettings.name) {
+          case RaceResultDetailView.routeName:
+            if (queryParams.containsKey('raceResultId')) {
+              final raceResultId = int.tryParse(queryParams['raceResultId']!);
+              if (raceResultId != null) {
+                arguments['raceResultId'] = raceResultId;
+              }
+            }
+            break;
+
+          case RaceResultsListView.routeName:
+            if (queryParams.containsKey('eventId')) {
+              arguments['eventId'] = queryParams['eventId'];
+            }
+            if (queryParams.containsKey('eventName')) {
+              arguments['eventName'] = queryParams['eventName'];
+            }
+            break;
+
+          case AthleteDetailView.routeName:
+            if (queryParams.containsKey('athleteId')) {
+              final athleteId = int.tryParse(queryParams['athleteId']!);
+              if (athleteId != null) {
+                arguments['athleteId'] = athleteId;
+              }
+            }
+            break;
+
+          case CrewDetailView.routeName:
+            if (queryParams.containsKey('crewId')) {
+              final crewId = int.tryParse(queryParams['crewId']!);
+              if (crewId != null) {
+                arguments['crewId'] = crewId;
+              }
+            }
+            break;
+
+          case RaceDetailView.routeName:
+            if (queryParams.containsKey('raceId')) {
+              final raceId = int.tryParse(queryParams['raceId']!);
+              if (raceId != null) {
+                arguments['raceId'] = raceId;
+              }
+            }
+            break;
+
+          case ResetPasswordView.routeName:
+            if (queryParams.containsKey('token')) {
+              arguments['token'] = queryParams['token'];
+            }
+            break;
+        }
+      } catch (e) {
+        // In case of any error, just return existing arguments
+        print('Error extracting URL parameters: $e');
+      }
+    }
+
+    return arguments.isEmpty ? null : arguments;
+  }
+
 }
