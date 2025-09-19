@@ -1,6 +1,7 @@
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/model/race/race_result.dart';
 import 'package:eurocup_frontend/src/model/race/crew_result.dart';
+import 'package:eurocup_frontend/src/model/event/event.dart';
 import 'package:eurocup_frontend/src/races/race_result_detail_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +24,36 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   String? _errorMessage;
   String? _eventId;
   String? _eventName;
+  Competition? _competition;
+
+  /// Returns short event name format: [name] [year]
+  String _getShortEventName() {
+    // Use competition's getShortName if available
+    if (_competition != null) {
+      return _competition!.getShortName();
+    }
+
+    // Fallback to processing _eventName if no competition data
+    if (_eventName == null) return 'Event ${DateTime.now().year}';
+
+    // If already in short format (like "EuroCup 2025"), return as is
+    if (_eventName!.split(' ').length <= 2) {
+      return _eventName!;
+    }
+
+    // For longer names, try to extract name and year
+    final words = _eventName!.split(' ');
+    final lastWord = words.last;
+
+    // Check if last word is a year (4 digits)
+    if (RegExp(r'^\d{4}$').hasMatch(lastWord)) {
+      final name = words.first; // Take first word as name
+      return '$name $lastWord';
+    }
+
+    // If no year found, use first word + current year
+    return '${words.first} ${DateTime.now().year}';
+  }
 
   @override
   void initState() {
@@ -43,8 +74,30 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     
     // Default to current EVENTID if no event ID provided
     _eventId ??= EVENTID.toString();
-    _eventName ??= 'EuroCup 2025';
-    
+
+    _loadEventData();
+  }
+
+  Future<void> _loadEventData() async {
+    try {
+      // Try to get event data from public competitions API (since public APIs work correctly)
+      final competitions = await api.getCompetitions();
+      final eventIdInt = int.tryParse(_eventId ?? EVENTID.toString()) ?? EVENTID;
+      final competition = competitions.firstWhere((comp) => comp.id == eventIdInt);
+
+      setState(() {
+        _competition = competition;
+        if (_eventName == null) {
+          _eventName = competition.getShortName();
+        }
+      });
+      print('Successfully loaded event from competitions: ${competition.getShortName()}');
+    } catch (e) {
+      print('Failed to load event data: $e');
+      // Continue without competition data - will use fallbacks
+    }
+
+    // Load race results after event data
     _loadRaceResults();
   }
 
@@ -63,10 +116,8 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
       });
 
       final eventIdInt = int.tryParse(_eventId ?? EVENTID.toString()) ?? EVENTID;
-      // Use public API if we don't have an authenticated token, otherwise use authenticated API
-      final results = (token == null || token!.isEmpty)
-          ? await api.getPublicRaceResults(eventId: eventIdInt)
-          : await api.getRaceResults(eventId: eventIdInt);
+      // Always use public API since it works correctly for both authenticated and non-authenticated users
+      final results = await api.getPublicRaceResults(eventId: eventIdInt);
 
       setState(() {
         _raceResults = results;
@@ -186,7 +237,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  _eventName ?? 'EuroCup 2025',
+                  _getShortEventName(),
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                     color: Colors.black87,
                     fontWeight: FontWeight.bold,
@@ -266,7 +317,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                       });
                     },
                     leading: Text(
-                      _eventName ?? 'EuroCup 2025',
+                      _getShortEventName(),
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         color: Colors.white,
                       ),

@@ -40,6 +40,11 @@ class Competition {
     return '$name, $location $year';
   }
 
+  /// Returns short name format: [name] [year]
+  String getShortName() {
+    return '${name ?? 'Event'} ${year ?? DateTime.now().year}';
+  }
+
   factory Competition.fromMap(Map<String, dynamic> data) => Competition(
         id: data['id'] as int?,
         name: data['name'] as String?,

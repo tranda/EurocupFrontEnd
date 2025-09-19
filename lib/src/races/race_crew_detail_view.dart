@@ -5,9 +5,7 @@ import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:flutter/services.dart';
-import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:qrscan/qrscan.dart' as scanner;
 
 import '../athletes/athlete_detail_view.dart';
 import '../model/athlete/athlete.dart';
@@ -27,13 +25,10 @@ class RaceCrewDetailView extends StatefulWidget {
 class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
   late Crew crew;
 
-  String _scanBarcode = 'Unknown';
-  late TextEditingController _outputController;
+  // Removed unused variables related to old barcode scanning
 
   @override
   void initState() {
-    // TODO: implement initState
-    _outputController = TextEditingController();
     super.initState();
   }
 
@@ -55,33 +50,9 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
     return true;
   }
 
-  Future<void> scanQR() async {
-    String barcodeScanRes;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    try {
-      barcodeScanRes = await FlutterBarcodeScanner.scanBarcode(
-          '#ff6666', 'Cancel', true, ScanMode.QR);
-      print(barcodeScanRes);
-    } on PlatformException {
-      barcodeScanRes = 'Failed to get platform version.';
-    }
+  // Removed old scanQR method - now using BarCodeScannerController
 
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    setState(() {
-      _scanBarcode = barcodeScanRes;
-    });
-  }
-
-  Future _scan() async {
-    await Permission.camera.request();
-    String? barcode = await scanner.scan();
-    print(barcode);
-    // this._outputController.text = barcode;
-    }
+  // Removed old _scan method - now using BarCodeScannerController
 
   @override
   Widget build(BuildContext context) {
@@ -95,8 +66,11 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
 
     return Scaffold(
       appBar: appBarWithAction(() {
-        Navigator.pushNamed(context, BarCodeScannerController.routeName)
-            .then((value) async {
+        Navigator.pushNamed(
+          context,
+          BarCodeScannerController.routeName,
+          arguments: {'list': listAthlete},
+        ).then((value) async {
           print(value);
           if (value != null && value.toString().isNotEmpty) {
             checkForPresence(value.toString(), listAthlete);

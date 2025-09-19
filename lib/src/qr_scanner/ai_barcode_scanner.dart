@@ -1,7 +1,9 @@
-import 'package:ai_barcode_scanner/ai_barcode_scanner.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
-// import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+
+import '../model/athlete/athlete.dart';
 
 /// Barcode scanner widget
 class AiBarcodeScanner extends StatefulWidget {
@@ -166,9 +168,19 @@ class _AiBarcodeScannerState extends State<AiBarcodeScanner> {
   /// bool to check if barcode is valid or not
   bool? _isSuccess;
   bool isDetected = false;
+  bool isProcessing = false;
 
   /// Scanner controller
   late MobileScannerController controller;
+
+  /// Find athlete by ID in the provided list
+  Athlete? findAthleteById(List<Athlete> list, int searchId) {
+    try {
+      return list.firstWhere((athlete) => athlete.id == searchId);
+    } catch (e) {
+      return null;
+    }
+  }
 
   @override
   void initState() {
@@ -242,49 +254,299 @@ class _AiBarcodeScannerState extends State<AiBarcodeScanner> {
                   )
               : null,
           appBar: widget.appBar,
-          body: MobileScanner(
-            controller: controller,
-            fit: widget.fit,
-            errorBuilder: widget.errorBuilder,
-            onScannerStarted: widget.onScannerStarted,
-            placeholderBuilder: widget.placeholderBuilder,
-            scanWindow: widget.scanWindow,
-            startDelay: widget.startDelay ?? false,
-            key: widget.key,
-            onDetect: (BarcodeCapture barcode) async {
-              if (isDetected) return;
-              isDetected = true;
+          body: Stack(
+            children: [
+              MobileScanner(
+                controller: controller,
+                fit: widget.fit,
+                errorBuilder: widget.errorBuilder,
+                onScannerStarted: widget.onScannerStarted,
+                placeholderBuilder: widget.placeholderBuilder,
+                scanWindow: widget.scanWindow,
+                startDelay: widget.startDelay ?? false,
+                key: widget.key,
+                onDetect: (BarcodeCapture barcode) async {
+              if (isDetected || isProcessing) return;
+
+              setState(() {
+                isDetected = true;
+                isProcessing = true;
+              });
+
               widget.onDetect?.call(barcode);
 
-              // if (barcode.barcodes.isEmpty) {
-              //   log('Scanned Code is Empty');
-              //   return;
-              // }
+              if (barcode.barcodes.isEmpty) {
+                print('Scanned Code is Empty');
+                _showErrorAndResume('No barcode detected');
+                return;
+              }
 
               final String code = barcode.barcodes.first.rawValue ?? "";
+              print('QR Code detected: $code');
 
-              // if ((widget.validator != null && !widget.validator!(code))) {
-              //   setState(() {
-              //     if (widget.hapticFeedback) HapticFeedback.heavyImpact();
-              //     // log('Invalid Barcode => $code');
-              //     _isSuccess = false;
-              //   });
-              //   return;
-              // }
-              // setState(() {
-              //   _isSuccess = true;
-              //   if (widget.hapticFeedback) HapticFeedback.lightImpact();
-              //   // log('Barcode rawValue => $code');
-              //   widget.onScan?.call(code);
-              // });
-              // if (widget.canPop && mounted && Navigator.canPop(context)) {
-              Navigator.of(context).pop(code);
-              // return;
-              // }
+              // Get athlete list from route arguments if available
+              final routeSettings = ModalRoute.of(context)?.settings;
+              final args = routeSettings?.arguments;
+              List<Athlete> listAthlete = [];
+
+              if (args != null && args is Map && args.containsKey('list')) {
+                final athleteList = args['list'];
+                if (athleteList is List<Athlete>) {
+                  listAthlete = athleteList;
+                }
+              }
+
+              // If we have athlete list, validate against it
+              if (listAthlete.isNotEmpty) {
+                try {
+                  final qrcode = jsonDecode(code);
+                  final id = qrcode['id'];
+                  print('Athlete ID: $id');
+
+                  Athlete? athlete = findAthleteById(listAthlete, id);
+                  if (athlete != null) {
+                    print('Athlete found: ${athlete.getDisplayName()}');
+                    setState(() {
+                      _isSuccess = true;
+                      if (widget.hapticFeedback) HapticFeedback.lightImpact();
+                    });
+
+                    if (widget.canPop && mounted && Navigator.canPop(context)) {
+                      Navigator.of(context).pop({'success': true, 'athlete': athlete});
+                    }
+                    return;
+                  } else {
+                    print('Athlete not found');
+                    _showErrorAndResume('Athlete not found');
+                    return;
+                  }
+                } catch (e) {
+                  print('Error processing QR code: $e');
+                  _showErrorAndResume('Invalid QR code format');
+                  return;
+                }
+              }
+
+              // Fallback: use validator if provided
+              if (widget.validator != null && !widget.validator!(code)) {
+                setState(() {
+                  if (widget.hapticFeedback) HapticFeedback.heavyImpact();
+                  print('Invalid Barcode => $code');
+                  _isSuccess = false;
+                });
+                _showErrorAndResume('Invalid QR code');
+                return;
+              }
+
+              setState(() {
+                _isSuccess = true;
+                if (widget.hapticFeedback) HapticFeedback.lightImpact();
+                print('Barcode rawValue => $code');
+                widget.onScan?.call(code);
+              });
+
+              if (widget.canPop && mounted && Navigator.canPop(context)) {
+                Navigator.of(context).pop(code);
+                return;
+              }
             },
+          ),
+          // Add overlay for scanning feedback
+          if (widget.showOverlay)
+            _buildScannerOverlay(),
+        ],
           ),
         );
       },
+    );
+  }
+
+  void _showErrorAndResume(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: widget.errorColor,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+
+    // Resume scanning after error
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() {
+          isDetected = false;
+          isProcessing = false;
+          _isSuccess = null;
+        });
+      }
+    });
+  }
+
+  Widget _buildScannerOverlay() {
+    return Container(
+      decoration: ShapeDecoration(
+        shape: QrScannerOverlayShape(
+          borderColor: _isSuccess == null
+              ? widget.borderColor
+              : _isSuccess!
+                  ? widget.successColor
+                  : widget.errorColor,
+          borderRadius: widget.borderRadius,
+          borderLength: widget.borderLength,
+          borderWidth: widget.borderWidth,
+          cutOutSize: widget.cutOutSize,
+          cutOutWidth: widget.cutOutWidth,
+          cutOutHeight: widget.cutOutHeight,
+          cutOutBottomOffset: widget.cutOutBottomOffset,
+          overlayColor: widget.overlayColor,
+        ),
+      ),
+    );
+  }
+}
+
+class QrScannerOverlayShape extends ShapeBorder {
+  final Color borderColor;
+  final double borderWidth;
+  final Color overlayColor;
+  final double borderRadius;
+  final double borderLength;
+  final double? cutOutWidth;
+  final double? cutOutHeight;
+  final double cutOutBottomOffset;
+  final double cutOutSize;
+
+  const QrScannerOverlayShape({
+    this.borderColor = Colors.white,
+    this.borderWidth = 3.0,
+    this.overlayColor = const Color.fromRGBO(0, 0, 0, 80),
+    this.borderRadius = 0,
+    this.borderLength = 40,
+    this.cutOutWidth,
+    this.cutOutHeight,
+    this.cutOutBottomOffset = 0,
+    this.cutOutSize = 300,
+  });
+
+  @override
+  EdgeInsetsGeometry get dimensions => const EdgeInsets.all(10);
+
+  @override
+  Path getInnerPath(Rect rect, {TextDirection? textDirection}) {
+    return Path()
+      ..fillType = PathFillType.evenOdd
+      ..addPath(getOuterPath(rect), Offset.zero);
+  }
+
+  @override
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) {
+    Path path = Path()..addRect(rect);
+
+    double width = cutOutWidth ?? cutOutSize;
+    double height = cutOutHeight ?? cutOutSize;
+
+    double left = rect.center.dx - width / 2;
+    double top = rect.center.dy - height / 2 + cutOutBottomOffset;
+
+    final cutOutRect = Rect.fromLTWH(left, top, width, height);
+
+    path = Path.combine(
+      PathOperation.difference,
+      path,
+      Path()
+        ..addRRect(
+          RRect.fromRectAndCorners(
+            cutOutRect,
+            topLeft: Radius.circular(borderRadius),
+            topRight: Radius.circular(borderRadius),
+            bottomLeft: Radius.circular(borderRadius),
+            bottomRight: Radius.circular(borderRadius),
+          ),
+        ),
+    );
+
+    return path;
+  }
+
+  @override
+  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {
+    final Paint paint = Paint()
+      ..color = overlayColor
+      ..style = PaintingStyle.fill;
+
+    canvas.drawPath(getOuterPath(rect), paint);
+
+    double width = cutOutWidth ?? cutOutSize;
+    double height = cutOutHeight ?? cutOutSize;
+
+    double left = rect.center.dx - width / 2;
+    double top = rect.center.dy - height / 2 + cutOutBottomOffset;
+
+    final cutOutRect = Rect.fromLTWH(left, top, width, height);
+
+    final Paint borderPaint = Paint()
+      ..color = borderColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = borderWidth;
+
+    // Draw corner borders
+    final double cornerLength = borderLength;
+
+    // Top left corner
+    canvas.drawLine(
+      Offset(cutOutRect.left, cutOutRect.top + cornerLength),
+      Offset(cutOutRect.left, cutOutRect.top + borderRadius),
+      borderPaint,
+    );
+    canvas.drawLine(
+      Offset(cutOutRect.left + borderRadius, cutOutRect.top),
+      Offset(cutOutRect.left + cornerLength, cutOutRect.top),
+      borderPaint,
+    );
+
+    // Top right corner
+    canvas.drawLine(
+      Offset(cutOutRect.right - cornerLength, cutOutRect.top),
+      Offset(cutOutRect.right - borderRadius, cutOutRect.top),
+      borderPaint,
+    );
+    canvas.drawLine(
+      Offset(cutOutRect.right, cutOutRect.top + borderRadius),
+      Offset(cutOutRect.right, cutOutRect.top + cornerLength),
+      borderPaint,
+    );
+
+    // Bottom left corner
+    canvas.drawLine(
+      Offset(cutOutRect.left, cutOutRect.bottom - cornerLength),
+      Offset(cutOutRect.left, cutOutRect.bottom - borderRadius),
+      borderPaint,
+    );
+    canvas.drawLine(
+      Offset(cutOutRect.left + borderRadius, cutOutRect.bottom),
+      Offset(cutOutRect.left + cornerLength, cutOutRect.bottom),
+      borderPaint,
+    );
+
+    // Bottom right corner
+    canvas.drawLine(
+      Offset(cutOutRect.right - cornerLength, cutOutRect.bottom),
+      Offset(cutOutRect.right - borderRadius, cutOutRect.bottom),
+      borderPaint,
+    );
+    canvas.drawLine(
+      Offset(cutOutRect.right, cutOutRect.bottom - borderRadius),
+      Offset(cutOutRect.right, cutOutRect.bottom - cornerLength),
+      borderPaint,
+    );
+  }
+
+  @override
+  ShapeBorder scale(double t) {
+    return QrScannerOverlayShape(
+      borderColor: borderColor,
+      borderWidth: borderWidth,
+      overlayColor: overlayColor,
     );
   }
 }
