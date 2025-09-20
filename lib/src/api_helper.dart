@@ -1102,8 +1102,9 @@ Future<List<RaceResult>> getRaceResults({int? eventId}) async {
 }
 
 Future<RaceResult?> getRaceResult(int raceResultId) async {
-  var headers = {'Authorization': 'Bearer $token'};
-  var request = http.Request('GET', Uri.parse('$apiURL/race-results/$raceResultId'));
+  var headers = {'Authorization': 'Bearer $token', 'Cache-Control': 'no-cache'};
+  var timestamp = DateTime.now().millisecondsSinceEpoch;
+  var request = http.Request('GET', Uri.parse('$apiURL/race-results/$raceResultId?t=$timestamp'));
   request.headers.addAll(headers);
 
   http.StreamedResponse response = await request.send();
@@ -1151,7 +1152,9 @@ Future<List<RaceResult>> getPublicRaceResults({int? eventId}) async {
 }
 
 Future<RaceResult?> getPublicRaceResult(int raceResultId) async {
-  var request = http.Request('GET', Uri.parse('$apiURL/public/race-results/$raceResultId'));
+  var timestamp = DateTime.now().millisecondsSinceEpoch;
+  var request = http.Request('GET', Uri.parse('$apiURL/public/race-results/$raceResultId?t=$timestamp'));
+  request.headers.addAll({'Cache-Control': 'no-cache'});
 
   http.StreamedResponse response = await request.send();
 
