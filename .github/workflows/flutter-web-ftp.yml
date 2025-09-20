@@ -1,0 +1,61 @@
+name: Build & Deploy Flutter Web (FTP)
+
+on:
+  push:
+    branches: [ "main" ]   # change if needed
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Restore packages
+        run: flutter pub get
+
+      - name: Analyze & Test
+        run: |
+          flutter analyze
+          flutter test
+
+      - name: Build Web (base-href /web/)
+        run: flutter build web --release --base-href "/web/"
+
+      - name: Upload artifact (optional)
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: build/web
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build
+          path: build/web
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftp              # use 'ftps' or 'sftp' if your host supports it
+          local-dir: build/web
+          server-dir: ${{ secrets.FTP_REMOTE_DIR }}  # e.g. /public_html/web
+          state-name: .deploy-state.json
+          exclude: |
+            **/.DS_Store
+            **/Thumbs.db
