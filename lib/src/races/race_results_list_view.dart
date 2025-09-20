@@ -55,6 +55,59 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     return '${words.first} ${DateTime.now().year}';
   }
 
+  /// Returns event title without year
+  String _getEventTitle() {
+    // Use competition's name if available
+    if (_competition != null) {
+      final shortName = _competition!.getShortName();
+      final words = shortName.split(' ');
+      if (words.length > 1 && RegExp(r'^\d{4}$').hasMatch(words.last)) {
+        return words.sublist(0, words.length - 1).join(' ');
+      }
+      return shortName;
+    }
+
+    // Fallback to processing _eventName if no competition data
+    if (_eventName == null) return 'Event';
+
+    final words = _eventName!.split(' ');
+    final lastWord = words.last;
+
+    // Check if last word is a year (4 digits)
+    if (RegExp(r'^\d{4}$').hasMatch(lastWord)) {
+      return words.sublist(0, words.length - 1).join(' ');
+    }
+
+    // If no year found, return the first word or full name
+    return words.length > 1 ? words.first : _eventName!;
+  }
+
+  /// Returns event year
+  String _getEventYear() {
+    // Use competition's year if available
+    if (_competition != null) {
+      final shortName = _competition!.getShortName();
+      final words = shortName.split(' ');
+      if (words.length > 1 && RegExp(r'^\d{4}$').hasMatch(words.last)) {
+        return words.last;
+      }
+    }
+
+    // Fallback to processing _eventName if no competition data
+    if (_eventName != null) {
+      final words = _eventName!.split(' ');
+      final lastWord = words.last;
+
+      // Check if last word is a year (4 digits)
+      if (RegExp(r'^\d{4}$').hasMatch(lastWord)) {
+        return lastWord;
+      }
+    }
+
+    // Default to current year
+    return DateTime.now().year.toString();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -148,6 +201,16 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     setState(() {
       _expandedRaces.clear();
     });
+  }
+
+  /// Check if the race stage is a final round (uses backend determination)
+  bool _isFinalStage(RaceResult raceResult) {
+    return raceResult.isFinalRound ?? false;
+  }
+
+  /// Check if this is the last round where accumulated time should be shown
+  bool _isLastRound(RaceResult raceResult) {
+    return _isFinalStage(raceResult);
   }
 
   void _calculatePositions(List<CrewResult> crewResults, {bool isFinalRound = false}) {
@@ -269,13 +332,25 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  _getShortEventName(),
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    color: Colors.black87,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
+                Column(
+                  children: [
+                    Text(
+                      _getEventTitle(),
+                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                        color: Colors.black87,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    Text(
+                      _getEventYear(),
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: Colors.black54,
+                        fontWeight: FontWeight.normal,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
                 Row(
@@ -321,7 +396,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
           final crewResults = raceResult.crewResults ?? [];
           
           // Calculate positions based on time and sort crew results
-          final isFinal = raceResult.isFinalRound ?? false;
+          final isFinal = _isFinalStage(raceResult);
           _calculatePositions(crewResults, isFinalRound: isFinal);
 
           // Sort crew results based on position
@@ -371,11 +446,24 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                         }
                       });
                     },
-                    leading: Text(
-                      _getShortEventName(),
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: Colors.white,
-                      ),
+                    leading: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _getEventTitle(),
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          _getEventYear(),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
                     ),
                     title: FittedBox(
                       fit: BoxFit.scaleDown,
@@ -480,15 +568,25 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
           child: Row(
             children: [
               // Position indicator
-              CircleAvatar(
-                backgroundColor: _getPositionColor(crewResult.position),
-                radius: 20,
-                child: Text(
-                  crewResult.position?.toString() ?? '-',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: _getPositionBackgroundColor(crewResult.position, isFinalRound),
+                  border: Border.all(
+                    color: _getPositionBorderColor(crewResult.position, isFinalRound),
+                    width: 2,
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    crewResult.position?.toString() ?? '-',
+                    style: TextStyle(
+                      color: _getPositionTextColor(crewResult.position, isFinalRound),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ),
@@ -542,15 +640,16 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  // Final time
-                  Text(
-                    'Total: ${crewResult.displayFinalTime}',
-                    style: const TextStyle(
-                      color: Colors.black87,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                  // Final time - only show for last round
+                  if (_isLastRound(raceResult))
+                    Text(
+                      'Total: ${crewResult.displayFinalTime}',
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ],
@@ -569,13 +668,25 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
           ),
         ),
         child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: _getPositionColor(crewResult.position),
-              child: Text(
-                crewResult.position?.toString() ?? '-',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+            leading: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: _getPositionBackgroundColor(crewResult.position, isFinalRound),
+                border: Border.all(
+                  color: _getPositionBorderColor(crewResult.position, isFinalRound),
+                  width: 2,
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  crewResult.position?.toString() ?? '-',
+                  style: TextStyle(
+                    color: _getPositionTextColor(crewResult.position, isFinalRound),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
               ),
             ),
@@ -673,6 +784,27 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
       default:
         return Colors.blue;
     }
+  }
+
+  Color _getPositionBackgroundColor(int? position, bool isFinalRound) {
+    if (isFinalRound) {
+      return _getPositionColor(position);
+    }
+    return Colors.transparent; // Transparent background for non-final
+  }
+
+  Color _getPositionBorderColor(int? position, bool isFinalRound) {
+    if (isFinalRound) {
+      return Colors.transparent; // No border for final rounds
+    }
+    return _getPositionColor(position); // Border color for non-final
+  }
+
+  Color _getPositionTextColor(int? position, bool isFinalRound) {
+    if (isFinalRound) {
+      return Colors.white; // White text on colored background
+    }
+    return _getPositionColor(position); // Colored text on transparent background
   }
 
 
