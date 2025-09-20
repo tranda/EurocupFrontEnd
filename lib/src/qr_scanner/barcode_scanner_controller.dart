@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../model/athlete/athlete.dart';
 
@@ -14,8 +14,9 @@ class BarCodeScannerController extends StatefulWidget {
 }
 
 class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
-  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
-  QRViewController? controller;
+  MobileScannerController controller = MobileScannerController(
+    detectionSpeed: DetectionSpeed.normal,
+  );
   bool isProcessing = false;
 
   Athlete? findAthleteById(List<Athlete> list, int searchId) {
@@ -45,20 +46,29 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
       appBar: AppBar(
         title: const Text('QR Scanner'),
         actions: [
-          if (controller != null)
-            IconButton(
-              icon: const Icon(Icons.flash_on),
-              onPressed: () async {
-                await controller?.toggleFlash();
+          IconButton(
+            icon: ValueListenableBuilder(
+              valueListenable: controller.torchState,
+              builder: (context, state, child) {
+                switch (state) {
+                  case TorchState.off:
+                    return const Icon(Icons.flash_off, color: Colors.grey);
+                  case TorchState.on:
+                    return const Icon(Icons.flash_on, color: Colors.yellow);
+                }
               },
             ),
-          if (controller != null)
-            IconButton(
-              icon: const Icon(Icons.flip_camera_ios),
-              onPressed: () async {
-                await controller?.flipCamera();
+            onPressed: () => controller.toggleTorch(),
+          ),
+          IconButton(
+            icon: ValueListenableBuilder(
+              valueListenable: controller.cameraFacingState,
+              builder: (context, state, child) {
+                return const Icon(Icons.flip_camera_ios);
               },
             ),
+            onPressed: () => controller.switchCamera(),
+          ),
         ],
       ),
       body: listAthlete.isEmpty
@@ -76,16 +86,11 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
               children: [
                 Expanded(
                   flex: 4,
-                  child: QRView(
-                    key: qrKey,
-                    onQRViewCreated: _onQRViewCreated,
-                    overlay: QrScannerOverlayShape(
-                      borderColor: Colors.red,
-                      borderRadius: 10,
-                      borderLength: 30,
-                      borderWidth: 10,
-                      cutOutSize: 300,
-                    ),
+                  child: MobileScanner(
+                    controller: controller,
+                    onDetect: (capture) {
+                      _onBarcodeDetect(capture, listAthlete);
+                    },
                   ),
                 ),
                 Expanded(
@@ -104,7 +109,7 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
                         const SizedBox(height: 10),
                         ElevatedButton(
                           onPressed: () async {
-                            await controller?.resumeCamera();
+                            await controller.start();
                             setState(() {
                               isProcessing = false;
                             });
@@ -120,32 +125,17 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
     );
   }
 
-  void _onQRViewCreated(QRViewController controller) {
-    setState(() {
-      this.controller = controller;
-    });
-
-    // Safely extract route arguments
-    final routeSettings = ModalRoute.of(context)?.settings;
-    final args = routeSettings?.arguments;
-
-    List<Athlete> listAthlete = [];
-    if (args != null && args is Map && args.containsKey('list')) {
-      final athleteList = args['list'];
-      if (athleteList is List<Athlete>) {
-        listAthlete = athleteList;
-      }
-    }
-
-    controller.scannedDataStream.listen((scanData) {
-      if (!isProcessing) {
+  void _onBarcodeDetect(BarcodeCapture capture, List<Athlete> listAthlete) {
+    if (!isProcessing) {
+      final List<Barcode> barcodes = capture.barcodes;
+      if (barcodes.isNotEmpty) {
         setState(() {
           isProcessing = true;
         });
 
-        controller.pauseCamera();
+        controller.stop();
 
-        final qrValue = scanData.code;
+        final qrValue = barcodes.first.rawValue;
         print('QR Code detected: $qrValue');
 
         try {
@@ -166,7 +156,7 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
           _showErrorAndResume('Invalid QR code format');
         }
       }
-    });
+    }
   }
 
   void _showErrorAndResume(String message) {
@@ -180,7 +170,7 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
     // Resume scanning after error
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
-        controller?.resumeCamera();
+        controller.start();
         setState(() {
           isProcessing = false;
         });
@@ -190,16 +180,7 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
 
   @override
   void dispose() {
-    controller?.dispose();
+    controller.dispose();
     super.dispose();
-  }
-
-  @override
-  void reassemble() {
-    super.reassemble();
-    if (controller != null) {
-      controller!.pauseCamera();
-      controller!.resumeCamera();
-    }
   }
 }

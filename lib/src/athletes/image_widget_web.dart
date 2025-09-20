@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:html' as html;
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:ui_web' as ui_web;
 import 'dart:ui' as ui;
 
 class WebImage extends StatelessWidget {
@@ -21,7 +23,7 @@ class WebImage extends StatelessWidget {
     
     // Register the HTML image element
     // ignore: undefined_prefixed_name
-    ui.platformViewRegistry.registerViewFactory(
+    ui_web.platformViewRegistry.registerViewFactory(
       viewType,
       (int viewId) {
         final html.ImageElement img = html.ImageElement()
