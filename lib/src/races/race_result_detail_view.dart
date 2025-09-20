@@ -146,6 +146,7 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
           
           // Calculate positions based on time and sort crew results
           final isFinal = raceResult.isFinalRound ?? false;
+          final isLastRound = _isLastRound(raceResult);
           _calculatePositions(crewResults, isFinalRound: isFinal);
 
           // Sort crew results based on position type
@@ -189,7 +190,7 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    '#${raceResult.raceNumber} ${raceResult.raceTimeDisplay} ${raceResult.discipline?.getDisplayName() ?? 'Unknown'} - ${raceResult.stage}${isFinal ? ' (Final)' : ''}',
+                    '#${raceResult.raceNumber} ${raceResult.raceTimeDisplay} ${raceResult.discipline?.getDisplayName() ?? 'Unknown'} - ${raceResult.stage}${isLastRound ? ' (Final)' : ''}',
                     style: Theme.of(context).textTheme.displaySmall?.copyWith(
                       color: Colors.white,
                     ),
@@ -221,10 +222,29 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
 
           // Adjust index for crew results (subtract 1 because of header)
           final crewResult = crewResults[index - 1];
-          return _buildCrewResultItem(context, crewResult, raceResult, isFinal);
+          return _buildCrewResultItem(context, crewResult, raceResult, isLastRound);
         },
       ),
     );
+  }
+
+  /// Check if this is the last round where accumulated time should be shown
+  /// Uses backend determination via showAccumulatedTime flag with fallback
+  bool _isLastRound(RaceResult raceResult) {
+    // If backend provides showAccumulatedTime flag, use it
+    if (raceResult.showAccumulatedTime != null) {
+      return raceResult.showAccumulatedTime!;
+    }
+
+    // Fallback logic if backend doesn't provide the flag yet
+    final stage = raceResult.stage?.trim() ?? '';
+
+    // Only show for "Round" stages that are final rounds
+    if (stage.toLowerCase().contains('round') && (raceResult.isFinalRound ?? false)) {
+      return true;
+    }
+
+    return false;
   }
 
   void _calculatePositions(List<CrewResult> crewResults, {bool isFinalRound = false}) {
@@ -280,8 +300,8 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
     }
   }
 
-  Widget _buildCrewResultItem(BuildContext context, CrewResult crewResult, RaceResult raceResult, bool isFinalRound) {
-    if (isFinalRound && crewResult.hasFinalTime) {
+  Widget _buildCrewResultItem(BuildContext context, CrewResult crewResult, RaceResult raceResult, bool isLastRound) {
+    if (isLastRound && crewResult.hasFinalTime) {
       // Two-line format for final rounds
       return Container(
         decoration: const BoxDecoration(
@@ -301,9 +321,9 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: _getPositionBackgroundColor(crewResult.position, isFinalRound),
+                  color: _getPositionBackgroundColor(crewResult.position, isLastRound),
                   border: Border.all(
-                    color: _getPositionBorderColor(crewResult.position, isFinalRound),
+                    color: _getPositionBorderColor(crewResult.position, isLastRound),
                     width: 2,
                   ),
                   shape: BoxShape.circle,
@@ -312,7 +332,7 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
                   child: Text(
                     crewResult.position?.toString() ?? '-',
                     style: TextStyle(
-                      color: _getPositionTextColor(crewResult.position, isFinalRound),
+                      color: _getPositionTextColor(crewResult.position, isLastRound),
                       fontWeight: FontWeight.bold,
                       fontSize: 20,
                     ),
@@ -421,9 +441,9 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: _getPositionBackgroundColor(crewResult.position, isFinalRound),
+                  color: _getPositionBackgroundColor(crewResult.position, isLastRound),
                   border: Border.all(
-                    color: _getPositionBorderColor(crewResult.position, isFinalRound),
+                    color: _getPositionBorderColor(crewResult.position, isLastRound),
                     width: 2,
                   ),
                   shape: BoxShape.circle,
@@ -432,7 +452,7 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
                   child: Text(
                     crewResult.position?.toString() ?? '-',
                     style: TextStyle(
-                      color: _getPositionTextColor(crewResult.position, isFinalRound),
+                      color: _getPositionTextColor(crewResult.position, isLastRound),
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
                     ),
@@ -513,14 +533,17 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
     int? currentTime;
     int? firstPlaceTime;
 
-    if (isFinalRound && crewResult.finalTimeMs != null) {
-      // For final rounds, use final times and find first place based on finalPosition
+    // Check if this is a round with accumulation
+    final isAccumulatedRound = _isLastRound(raceResult);
+
+    if (isAccumulatedRound && crewResult.finalTimeMs != null) {
+      // For accumulated rounds, use final times
       currentTime = crewResult.finalTimeMs;
       firstPlaceTime = raceResult.crewResults
-          ?.where((crew) => crew.finalPosition == 1 && crew.finalTimeMs != null)
+          ?.where((crew) => (crew.finalPosition ?? crew.position) == 1 && crew.finalTimeMs != null)
           .firstOrNull
           ?.finalTimeMs;
-    } else if (!isFinalRound && crewResult.timeMs != null) {
+    } else if (crewResult.timeMs != null) {
       // For regular rounds, use round times
       currentTime = crewResult.timeMs;
       firstPlaceTime = raceResult.crewResults
