@@ -209,9 +209,22 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   }
 
   /// Check if this is the last round where accumulated time should be shown
-  /// Uses backend determination via showAccumulatedTime flag
+  /// Uses backend determination via showAccumulatedTime flag with fallback
   bool _isLastRound(RaceResult raceResult) {
-    return raceResult.showAccumulatedTime ?? false;
+    // If backend provides showAccumulatedTime flag, use it
+    if (raceResult.showAccumulatedTime != null) {
+      return raceResult.showAccumulatedTime!;
+    }
+
+    // Fallback logic if backend doesn't provide the flag yet
+    final stage = raceResult.stage?.trim() ?? '';
+
+    // Only show for "Round" stages that are final rounds
+    if (stage.toLowerCase().contains('round') && (raceResult.isFinalRound ?? false)) {
+      return true;
+    }
+
+    return false;
   }
 
   void _calculatePositions(List<CrewResult> crewResults, {bool isFinalRound = false}) {
