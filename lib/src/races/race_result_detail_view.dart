@@ -296,16 +296,26 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
-              // Position indicator
-              CircleAvatar(
-                backgroundColor: _getPositionColor(crewResult.position),
-                radius: 20,
-                child: Text(
-                  crewResult.position?.toString() ?? '-',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
+              // Position indicator - matching race_results_list_view style
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: _getPositionBackgroundColor(crewResult.position, isFinalRound),
+                  border: Border.all(
+                    color: _getPositionBorderColor(crewResult.position, isFinalRound),
+                    width: 2,
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    crewResult.position?.toString() ?? '-',
+                    style: TextStyle(
+                      color: _getPositionTextColor(crewResult.position, isFinalRound),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
                   ),
                 ),
               ),
@@ -402,62 +412,94 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
             ),
           ),
         ),
-        child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: _getPositionColor(crewResult.position),
-              child: Text(
-                crewResult.position?.toString() ?? '-',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              // Position indicator - matching race_results_list_view style
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: _getPositionBackgroundColor(crewResult.position, isFinalRound),
+                  border: Border.all(
+                    color: _getPositionBorderColor(crewResult.position, isFinalRound),
+                    width: 2,
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    crewResult.position?.toString() ?? '-',
+                    style: TextStyle(
+                      color: _getPositionTextColor(crewResult.position, isFinalRound),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
                 ),
               ),
-            ),
-            title: Text(
-              crewResult.crew?.team?.name ?? crewResult.team?.name ?? 'Unknown Team',
-              style: Theme.of(context).textTheme.displaySmall,
-            ),
-            subtitle: crewResult.lane != null
-                ? Text(
-                    'Lane ${crewResult.lane}',
-                    style: const TextStyle(
-                      color: Colors.black54,
-                      fontSize: 12,
+              const SizedBox(width: 12),
+              // Team name
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      crewResult.crew?.team?.name ?? crewResult.team?.name ?? 'Unknown Team',
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  )
-                : null,
-            trailing: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(crewResult.status),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    crewResult.displayTime,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
+                    if (crewResult.lane != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          'Lane ${crewResult.lane}',
+                          style: const TextStyle(
+                            color: Colors.black54,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-                if (crewResult.isFinished && crewResult.position != null && crewResult.position! > 1)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
+              ),
+              // Time display
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _getStatusColor(crewResult.status),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                     child: Text(
-                      _calculateDelay(crewResult, raceResult, isFinalRound: false),
+                      crewResult.displayTime,
                       style: const TextStyle(
-                        color: Colors.grey,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
                     ),
                   ),
-              ],
-            ),
+                  if (crewResult.isFinished && crewResult.position != null && crewResult.position! > 1)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        _calculateDelay(crewResult, raceResult, isFinalRound: false),
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -513,6 +555,27 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
       default:
         return Colors.blue;
     }
+  }
+
+  Color _getPositionBackgroundColor(int? position, bool isFinalRound) {
+    if (isFinalRound) {
+      return _getPositionColor(position);
+    }
+    return Colors.transparent; // Transparent background for non-final
+  }
+
+  Color _getPositionBorderColor(int? position, bool isFinalRound) {
+    if (isFinalRound) {
+      return Colors.transparent; // No border for final rounds
+    }
+    return _getPositionColor(position); // Border color for non-final
+  }
+
+  Color _getPositionTextColor(int? position, bool isFinalRound) {
+    if (isFinalRound) {
+      return Colors.white; // White text on colored background
+    }
+    return _getPositionColor(position); // Colored text on transparent background
   }
 
   Color _getStatusColor(String? status) {
