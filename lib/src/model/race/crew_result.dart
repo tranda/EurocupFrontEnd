@@ -11,6 +11,11 @@ class CrewResult {
   int? timeMs; // Time in milliseconds or null if DNS/DNF
   String? delayAfterFirst; // Format: "+2.44" or null if first place
   String? status; // "FINISHED", "DNS", "DNF", "DSQ"
+  int? finalTimeMs; // Sum of all round times in milliseconds
+  String? finalStatus; // Overall status across all rounds ('FINISHED' or 'DSQ')
+  String? formattedFinalTime; // Formatted total time string (MM:SS.mmm)
+  int? finalPosition; // Position based on final accumulated time (for final rounds)
+  bool? isFinalRound; // Indicates if this crew result is from a final round
   Crew? crew;
   Team? team;
   DateTime? createdAt;
@@ -25,6 +30,11 @@ class CrewResult {
     this.timeMs,
     this.delayAfterFirst,
     this.status,
+    this.finalTimeMs,
+    this.finalStatus,
+    this.formattedFinalTime,
+    this.finalPosition,
+    this.isFinalRound,
     this.crew,
     this.team,
     this.createdAt,
@@ -40,6 +50,11 @@ class CrewResult {
         timeMs: data['time_ms'] as int?,
         delayAfterFirst: data['delay_after_first'] as String?,
         status: data['status'] as String?,
+        finalTimeMs: data['final_time_ms'] as int?,
+        finalStatus: data['final_status'] as String?,
+        formattedFinalTime: data['formatted_final_time'] as String?,
+        finalPosition: data['final_position'] as int?,
+        isFinalRound: data['is_final_round'] as bool?,
         crew: data['crew'] == null
             ? null
             : Crew.fromMap(data['crew'] as Map<String, dynamic>),
@@ -63,6 +78,11 @@ class CrewResult {
         'time_ms': timeMs,
         'delay_after_first': delayAfterFirst,
         'status': status,
+        'final_time_ms': finalTimeMs,
+        'final_status': finalStatus,
+        'formatted_final_time': formattedFinalTime,
+        'final_position': finalPosition,
+        'is_final_round': isFinalRound,
         'crew': crew?.toMap(),
         'team': team?.toMap(),
         'created_at': createdAt?.toIso8601String(),
@@ -100,4 +120,31 @@ class CrewResult {
     if (!isFinished || position == 1) return '';
     return delayAfterFirst ?? '';
   }
+
+  // Getter for final time display in final rounds
+  String get displayFinalTime {
+    if (finalStatus == 'DSQ') return 'DSQ';
+    if (finalStatus == 'DNS') return 'DNS';
+    if (finalStatus == 'DNF') return 'DNF';
+
+    // Use formatted time if available
+    if (formattedFinalTime != null && formattedFinalTime!.isNotEmpty) {
+      return formattedFinalTime!;
+    }
+
+    // Fallback to formatting the final time ourselves
+    if (finalTimeMs != null) {
+      final totalMs = finalTimeMs!;
+      final minutes = totalMs ~/ 60000;
+      final seconds = (totalMs % 60000) ~/ 1000;
+      final milliseconds = totalMs % 1000;
+
+      return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}.${milliseconds.toString().padLeft(3, '0')}';
+    }
+
+    return '-';
+  }
+
+  // Check if crew has final time data
+  bool get hasFinalTime => finalTimeMs != null || finalStatus != null;
 }

@@ -9,6 +9,7 @@ class RaceResult {
   DateTime? raceTime;
   String? stage; // "Round x", "Heat x", "Semifinal x", "Repechage x", "Minor Final", "Grand Final", "Final"
   String? status; // "SCHEDULED", "IN_PROGRESS", "FINISHED", "CANCELLED"
+  bool? isFinalRound; // Indicates if this is the final round
   List<CrewResult>? crewResults;
   Discipline? discipline;
   DateTime? createdAt;
@@ -21,6 +22,7 @@ class RaceResult {
     this.raceTime,
     this.stage,
     this.status,
+    this.isFinalRound,
     this.crewResults,
     this.discipline,
     this.createdAt,
@@ -36,6 +38,7 @@ class RaceResult {
             : DateTime.parse(data['race_time'] as String),
         stage: data['stage'] as String?,
         status: data['status'] as String?,
+        isFinalRound: data['is_final_round'] as bool?,
         crewResults: (data['crew_results'] as List<dynamic>?)
             ?.map((e) => CrewResult.fromMap(e as Map<String, dynamic>))
             .toList(),
@@ -57,6 +60,7 @@ class RaceResult {
         'race_time': raceTime?.toIso8601String(),
         'stage': stage,
         'status': status,
+        'is_final_round': isFinalRound,
         'crew_results': crewResults?.map((e) => e.toMap()).toList(),
         'discipline': discipline?.toMap(),
         'created_at': createdAt?.toIso8601String(),
