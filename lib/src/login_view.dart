@@ -6,7 +6,6 @@ import 'package:url_launcher/url_launcher_string.dart';
 
 import 'common.dart';
 import 'home_page_view.dart';
-import 'races/race_results_list_view.dart';
 import 'forgot_password_view.dart';
 import 'api_helper.dart' as api;
 
@@ -42,22 +41,6 @@ class _LoginViewState extends State<LoginView> {
   var currentPassword = lastPassword ?? "";
   bool busy = false;
   
-  // Event selection for public race results
-  String selectedEventId = "1";
-  List<Map<String, String>> get availableEvents {
-    if (competitions.isEmpty) {
-      // Fallback to hardcoded events if API hasn't loaded yet
-      return [
-        {"id": "1", "name": "EuroCup 2023"},
-        {"id": "8", "name": "National Championship 2025"},
-      ];
-    }
-    
-    return competitions.map((competition) => {
-      "id": competition.id.toString(),
-      "name": "${competition.name} ${competition.year}, ${competition.location}",
-    }).toList();
-  }
   
   void _handleLogin() {
     lastUser = usernameController.text;
@@ -96,17 +79,10 @@ class _LoginViewState extends State<LoginView> {
     competitions = [];
     disciplines = [];
     api.getCompetitions().then((_) {
-      // After competitions are loaded, update the UI and set default selection
+      // After competitions are loaded, update the UI
       if (mounted) {
         setState(() {
-          // Set default to EVENTID if it exists in competitions, otherwise first competition
-          if (competitions.isNotEmpty) {
-            final defaultCompetition = competitions.firstWhere(
-              (comp) => comp.id == EVENTID,
-              orElse: () => competitions.first,
-            );
-            selectedEventId = defaultCompetition.id.toString();
-          }
+          // Competitions loaded - UI will update if needed
         });
       }
     });
@@ -244,111 +220,6 @@ class _LoginViewState extends State<LoginView> {
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
-                            ),
-                          ),
-                        ),
-                        // Public Race Results Section
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: horizontalPadding,
-                              vertical: verticalPadding),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.2),
-                                width: 1,
-                              ),
-                            ),
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                const Text(
-                                  'View Public Race Results',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 12),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: Colors.grey.shade300,
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: DropdownButtonHideUnderline(
-                                    child: DropdownButton<String>(
-                                      value: availableEvents.any((event) => event['id'] == selectedEventId) 
-                                          ? selectedEventId 
-                                          : availableEvents.isNotEmpty ? availableEvents.first['id'] : "1",
-                                      isExpanded: true,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 4,
-                                      ),
-                                      style: const TextStyle(
-                                        color: Colors.black87,
-                                        fontSize: 14,
-                                      ),
-                                      icon: const Icon(
-                                        Icons.keyboard_arrow_down,
-                                        color: Colors.black54,
-                                      ),
-                                      items: availableEvents.map((event) {
-                                        return DropdownMenuItem<String>(
-                                          value: event['id'],
-                                          child: Text(event['name']!),
-                                        );
-                                      }).toList(),
-                                      onChanged: (String? newValue) {
-                                        if (newValue != null) {
-                                          setState(() {
-                                            selectedEventId = newValue;
-                                          });
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                ElevatedButton.icon(
-                                  onPressed: () {
-                                    Navigator.pushNamed(
-                                      context,
-                                      RaceResultsListView.routeName,
-                                      arguments: {
-                                        'eventId': selectedEventId,
-                                        'eventName': availableEvents.firstWhere(
-                                          (event) => event['id'] == selectedEventId,
-                                          orElse: () => {'name': 'Unknown Event'}
-                                        )['name'],
-                                      },
-                                    );
-                                  },
-                                  icon: const Icon(Icons.bar_chart, size: 20),
-                                  label: const Text('View Results'),
-                                  style: ElevatedButton.styleFrom(
-                                    foregroundColor: Colors.white,
-                                    backgroundColor: const Color.fromARGB(255, 15, 91, 169),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 24,
-                                      vertical: 14,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    elevation: 2,
-                                  ),
-                                ),
-                              ],
                             ),
                           ),
                         ),

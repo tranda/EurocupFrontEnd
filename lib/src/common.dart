@@ -1,5 +1,7 @@
 import 'package:eurocup_frontend/src/model/event/event.dart';
+export 'package:eurocup_frontend/src/model/event/event.dart' show Competition;
 import 'package:eurocup_frontend/src/model/race/discipline.dart';
+export 'package:eurocup_frontend/src/model/race/discipline.dart' show Discipline;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:html' as html;

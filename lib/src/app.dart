@@ -21,13 +21,14 @@ import 'package:eurocup_frontend/src/races/race_crew_detail_view.dart';
 import 'package:eurocup_frontend/src/races/race_detail_view.dart';
 import 'package:eurocup_frontend/src/races/race_results_list_view.dart';
 import 'package:eurocup_frontend/src/races/race_result_detail_view.dart';
+import 'package:eurocup_frontend/src/races/competition_selector_view.dart';
 import 'package:eurocup_frontend/src/teams/team_list_view.dart';
 import 'package:eurocup_frontend/src/users/user_detail_view.dart';
 import 'package:eurocup_frontend/src/users/users_list_view.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:eurocup_frontend/src/localization/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'clubs/club_athlete_list_view.dart';
@@ -212,6 +213,16 @@ class MyApp extends StatelessWidget {
                     // Handle routes that might have query parameters
                     final routeName = routeSettings.name ?? '';
 
+                    // Skip the initial '/' route if we're on web with a fragment
+                    if (kIsWeb && routeName == '/' && Uri.base.fragment.isNotEmpty) {
+                      print('Router: Skipping initial / route, waiting for fragment route');
+                      return const Scaffold(
+                        body: Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
+
                     switch (routeSettings.name) {
                       case SettingsView.routeName:
                         return SettingsView(controller: settingsController);
@@ -230,6 +241,8 @@ class MyApp extends StatelessWidget {
                       return const ResetPasswordView();
                     }
 
+                    print('Router: Second switch checking route: ${routeSettings.name}');
+                    print('Router: CompetitionSelectorView.routeName = ${CompetitionSelectorView.routeName}');
                     switch (routeSettings.name) {
                       case HomePage.routeName:
                         return StartupWrapper(
@@ -286,6 +299,10 @@ class MyApp extends StatelessWidget {
                           targetRoute: routeSettings.name,
                           child: const RaceCrewDetailView(),
                         );
+                      case CompetitionSelectorView.routeName:
+                        // Competition selector is public - no auth needed
+                        print('Router: Creating CompetitionSelectorView');
+                        return const CompetitionSelectorView();
                       case RaceResultsListView.routeName:
                         // Race results can be viewed publicly
                         // Load token and basic data if available, but don't require authentication
@@ -316,6 +333,7 @@ class MyApp extends StatelessWidget {
                         return const AiBarcodeScanner();
                       default:
                         // For unknown routes, redirect to home page instead of login
+                        print('Router: Unknown route ${routeSettings.name}, redirecting to HomePage');
                         return const HomePage();
                     }
                   },
@@ -333,12 +351,24 @@ class MyApp extends StatelessWidget {
     if (!kIsWeb) return LoginView.routeName;
 
     try {
-      // Get current URL path
+      // Get current URL path from fragment for hash routing
       final uri = Uri.base;
-      final path = uri.path;
+      String routePath;
 
-      // Remove leading slash if present
-      final routePath = path.startsWith('/') ? path : '/$path';
+      // For hash routing, the route is in the fragment
+      if (uri.fragment.isNotEmpty) {
+        routePath = '/${uri.fragment}';
+        // Remove the leading slash if fragment already has it
+        if (routePath.startsWith('//')) {
+          routePath = routePath.substring(1);
+        }
+        print('Router: Initial route from fragment: $routePath');
+      } else {
+        // Fall back to path-based routing
+        final path = uri.path;
+        routePath = path.startsWith('/') ? path : '/$path';
+        print('Router: Initial route from path: $routePath');
+      }
 
       // Define valid routes that can be accessed directly
       const validDirectRoutes = [
@@ -346,6 +376,7 @@ class MyApp extends StatelessWidget {
         ForgotPasswordView.routeName,
         ResetPasswordView.routeName,
         HomePage.routeName,
+        CompetitionSelectorView.routeName,
         RaceResultsListView.routeName,
         AthleteListView.routeName,
         ClubListView.routeName,
@@ -360,9 +391,12 @@ class MyApp extends StatelessWidget {
       ];
 
       // Check if the route is valid for direct access
+      print('Router: Checking if $routePath is in validDirectRoutes');
       if (validDirectRoutes.contains(routePath)) {
+        print('Router: Route is valid, returning: $routePath');
         return routePath;
       }
+      print('Router: Route not in valid list');
 
       // Handle routes that require parameters
       if (routePath == RaceResultDetailView.routeName) {
