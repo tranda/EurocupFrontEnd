@@ -633,51 +633,111 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                   ],
                 ),
               ),
-              // Time displays
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  // Current round time
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(crewResult.status),
-                      borderRadius: BorderRadius.circular(6),
+              // Time displays - show both current and accumulated for last round
+              if (_isLastRound(raceResult))
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Current round time and delay (left side)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(crewResult.status),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            crewResult.displayTime,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        if (crewResult.isFinished && crewResult.position != null && crewResult.position! > 1)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              _calculateCurrentRoundDelay(crewResult, raceResult),
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
-                    child: Text(
-                      crewResult.displayTime,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                    const SizedBox(width: 16),
+                    // Accumulated total time and delay (right side)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _getStatusColorTotal(crewResult.finalStatus ?? crewResult.status),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            crewResult.displayFinalTime,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        if (crewResult.isFinished && crewResult.position != null && crewResult.position! > 1)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              _calculateDelay(crewResult, raceResult, isFinalRound: isFinalRound),
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                )
+              else
+                // Regular display for non-accumulated rounds
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(crewResult.status),
+                        borderRadius: BorderRadius.circular(6),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  // Final time - only show for last round
-                  if (_isLastRound(raceResult))
-                    Text(
-                      'Total: ${crewResult.displayFinalTime}',
-                      style: const TextStyle(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                  // Delay for final races (position > 1)
-                  if (crewResult.isFinished && crewResult.position != null && crewResult.position! > 1)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
                       child: Text(
-                        _calculateDelay(crewResult, raceResult, isFinalRound: isFinalRound),
+                        crewResult.displayTime,
                         style: const TextStyle(
-                          color: Colors.grey,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                           fontSize: 12,
                         ),
                       ),
                     ),
-                ],
-              ),
+                    if (crewResult.isFinished && crewResult.position != null && crewResult.position! > 1)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          _calculateDelay(crewResult, raceResult, isFinalRound: isFinalRound),
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
             ],
           ),
         ),
@@ -767,6 +827,25 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   }
 
 
+  String _calculateCurrentRoundDelay(CrewResult crewResult, RaceResult raceResult) {
+    if (crewResult.position == null || crewResult.position == 1 || crewResult.timeMs == null) {
+      return '';
+    }
+
+    // Always use current round times
+    final firstPlaceTime = raceResult.crewResults
+        ?.where((crew) => crew.position == 1 && crew.timeMs != null)
+        .firstOrNull
+        ?.timeMs;
+
+    if (firstPlaceTime == null) return '';
+
+    final delayMs = crewResult.timeMs! - firstPlaceTime;
+    final delaySeconds = delayMs / 1000.0;
+
+    return '+${delaySeconds.toStringAsFixed(2)}s';
+  }
+
   String _calculateDelay(CrewResult crewResult, RaceResult raceResult, {bool isFinalRound = false}) {
     if (crewResult.position == null || crewResult.position == 1) {
       return '';
@@ -775,15 +854,18 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     int? currentTime;
     int? firstPlaceTime;
 
-    if (isFinalRound && crewResult.finalTimeMs != null) {
-      // For final rounds, use final times and find first place based on finalPosition
+    // Check if this is a round with accumulation (showAccumulatedTime is true)
+    final isAccumulatedRound = _isLastRound(raceResult);
+
+    if (isAccumulatedRound && crewResult.finalTimeMs != null) {
+      // For accumulated rounds, use final times
       currentTime = crewResult.finalTimeMs;
       firstPlaceTime = raceResult.crewResults
-          ?.where((crew) => crew.finalPosition == 1 && crew.finalTimeMs != null)
+          ?.where((crew) => (crew.finalPosition ?? crew.position) == 1 && crew.finalTimeMs != null)
           .firstOrNull
           ?.finalTimeMs;
-    } else if (!isFinalRound && crewResult.timeMs != null) {
-      // For regular rounds, use round times
+    } else if (crewResult.timeMs != null) {
+      // For all other races (including regular Finals/Grand Finals), use current race times
       currentTime = crewResult.timeMs;
       firstPlaceTime = raceResult.crewResults
           ?.where((crew) => crew.position == 1 && crew.timeMs != null)
@@ -865,6 +947,23 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
         return Colors.blue; // Registered but no result yet
       default:
         return Colors.grey;
+    }
+  }
+
+  Color _getStatusColorTotal(String? status) {
+    switch (status) {
+      case 'FINISHED':
+        return Colors.green.shade700;
+      case 'DNS':
+        return Colors.orange.shade700;
+      case 'DNF':
+        return Colors.red.shade700;
+      case 'DSQ':
+        return Colors.purple.shade700;
+      case null:
+        return Colors.blue.shade700; // Registered but no result yet
+      default:
+        return Colors.grey.shade700;
     }
   }
 }
