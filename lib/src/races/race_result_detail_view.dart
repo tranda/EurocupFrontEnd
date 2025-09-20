@@ -368,47 +368,69 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
                   ],
                 ),
               ),
-              // Time displays
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+              // Time displays - show both current and accumulated for last round
+              Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Current round time
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(crewResult.status),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      crewResult.displayTime,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  // Final time with position
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+                  // Current round time and delay (left side)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(
-                        'Total: ${crewResult.displayFinalTime}',
-                        style: const TextStyle(
-                          color: Colors.black87,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(crewResult.status),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          crewResult.displayTime,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
-                      if (crewResult.position != null)
+                      if (crewResult.isFinished && crewResult.position != null && crewResult.position! > 1)
                         Padding(
-                          padding: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.only(top: 2),
                           child: Text(
-                            '[${_getPositionDisplay(crewResult.position!)}]',
-                            style: TextStyle(
-                              color: _getPositionColor(crewResult.position),
-                              fontWeight: FontWeight.bold,
+                            _calculateCurrentRoundDelay(crewResult, raceResult),
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(width: 16),
+                  // Accumulated total time and delay (right side)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _getStatusColorTotal(crewResult.finalStatus ?? crewResult.status),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          crewResult.displayFinalTime,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      if (crewResult.isFinished && crewResult.position != null && crewResult.position! > 1)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            _calculateDelay(crewResult, raceResult, isFinalRound: true),
+                            style: const TextStyle(
+                              color: Colors.grey,
                               fontSize: 12,
                             ),
                           ),
@@ -596,5 +618,43 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
       default:
         return Colors.grey;
     }
+  }
+
+  Color _getStatusColorTotal(String? status) {
+    switch (status) {
+      case 'FINISHED':
+        return Colors.green.shade700;
+      case 'DNS':
+        return Colors.orange.shade700;
+      case 'DNF':
+        return Colors.red.shade700;
+      case 'DSQ':
+        return Colors.purple.shade700;
+      case null:
+        return Colors.blue.shade700; // Registered but no result yet
+      default:
+        return Colors.grey.shade700;
+    }
+  }
+
+  String _calculateCurrentRoundDelay(CrewResult crewResult, RaceResult raceResult) {
+    if (crewResult.position == null || crewResult.position == 1) {
+      return '';
+    }
+
+    // For current round delay, always use current race times
+    if (crewResult.timeMs == null) return '';
+
+    final firstPlaceTime = raceResult.crewResults
+        ?.where((crew) => crew.position == 1 && crew.timeMs != null)
+        .firstOrNull
+        ?.timeMs;
+
+    if (firstPlaceTime == null) return '';
+
+    final delayMs = crewResult.timeMs! - firstPlaceTime;
+    final delaySeconds = delayMs / 1000.0;
+
+    return '+${delaySeconds.toStringAsFixed(2)}s';
   }
 }
