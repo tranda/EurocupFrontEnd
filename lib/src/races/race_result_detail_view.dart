@@ -222,7 +222,7 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
 
           // Adjust index for crew results (subtract 1 because of header)
           final crewResult = crewResults[index - 1];
-          return _buildCrewResultItem(context, crewResult, raceResult, isLastRound);
+          return _buildCrewResultItem(context, crewResult, raceResult, isFinal, isLastRound);
         },
       ),
     );
@@ -300,7 +300,7 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
     }
   }
 
-  Widget _buildCrewResultItem(BuildContext context, CrewResult crewResult, RaceResult raceResult, bool isLastRound) {
+  Widget _buildCrewResultItem(BuildContext context, CrewResult crewResult, RaceResult raceResult, bool isFinalRound, bool isLastRound) {
     if (isLastRound && crewResult.hasFinalTime) {
       // Two-line format for final rounds
       return Container(
@@ -321,9 +321,9 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: _getPositionBackgroundColor(crewResult.position, isLastRound),
+                  color: _getPositionBackgroundColor(crewResult.position, isFinalRound),
                   border: Border.all(
-                    color: _getPositionBorderColor(crewResult.position, isLastRound),
+                    color: _getPositionBorderColor(crewResult.position, isFinalRound),
                     width: 2,
                   ),
                   shape: BoxShape.circle,
@@ -332,7 +332,7 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
                   child: Text(
                     crewResult.position?.toString() ?? '-',
                     style: TextStyle(
-                      color: _getPositionTextColor(crewResult.position, isLastRound),
+                      color: _getPositionTextColor(crewResult.position, isFinalRound),
                       fontWeight: FontWeight.bold,
                       fontSize: 20,
                     ),
