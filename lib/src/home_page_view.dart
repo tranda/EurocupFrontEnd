@@ -242,10 +242,10 @@ class _HomePageState extends State<HomePage> {
           athletes.add(athlete);
         }
       }
-      print('Finished parsing csv');
+      // Finished parsing csv
 
       var success = await api.sendAthletes(athletes);
-      print('Finished sending athletes');
+      // Finished sending athletes
       if (success) {
         showInfoDialog(context, 'Message', 'Athletes imported', () {});
       } else {
@@ -253,7 +253,7 @@ class _HomePageState extends State<HomePage> {
       }
     } else {
       // User canceled the file selection
-      print('File selection canceled.');
+      // File selection canceled.
     }
   }
 
@@ -283,12 +283,12 @@ class _HomePageState extends State<HomePage> {
       // Process the Excel data as needed
       for (var row in sheet!.rows) {
         for (var cell in row) {
-          print(cell?.value);
+          // Debug: cell value
         }
       }
     } else {
       // User canceled the file selection
-      print('File selection canceled.');
+      // File selection canceled.
     }
   }
 }

@@ -46,7 +46,7 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
         }
       }
     });
-    print('male #: $countMale, female #: $countFemale');
+    // Debug: male #: $countMale, female #: $countFemale
     return true;
   }
 
@@ -71,7 +71,7 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
           BarCodeScannerController.routeName,
           arguments: {'list': listAthlete},
         ).then((value) async {
-          print(value);
+          // Debug: QR scan result
           if (value != null && value.toString().isNotEmpty) {
             checkForPresence(value.toString(), listAthlete);
           }
@@ -91,9 +91,9 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
                     .map<Athlete>((innerMap) => innerMap['athlete'] as Athlete)
                     .toList();
                 listAthleteIds = listAthlete.map((e) => e.id as int).toList();
-                // print(listAthleteIds);
-                // checkMix(crewAthletes, size, helmNo);
-                // print (crewAthletes);
+                // Debug: athlete IDs list
+                // Debug: check mix validation
+                // Debug: crew athletes data
                 return ListView.builder(
                   itemCount: size,
                   itemBuilder: (context, index) {
@@ -162,17 +162,17 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
   bool checkForPresence(String? code, List<Athlete> listAthlete) {
     var result = false;
     if (code != null && code.isNotEmpty) {
-      print(code);
+      // Debug: QR code content
       final qrcode = jsonDecode(code);
       final id = qrcode['id'];
-      print(id);
+      // Debug: athlete ID from QR code
       Athlete? athlete = findAthleteById(listAthlete, id);
       if (athlete != null) {
         result = true;
-        // print('PASSED');
+        // Debug: athlete validation passed
         showInfoDialog(context, 'PASSED', '', () {});
       } else {
-        // print('FAILED');
+        // Debug: athlete validation failed
         showInfoDialog(context, 'NOT IN THIS CREW!', '', () {});
       }
     }

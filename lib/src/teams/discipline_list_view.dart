@@ -41,7 +41,7 @@ class _DisciplineListViewState extends State<DisciplineListView> {
         locked = true; // Default to locked if access level is not set
       }
     } catch (e) {
-      print('Error in initState: $e');
+      // Error in initState
       locked = true; // Default to locked on error
     }
   }
@@ -118,8 +118,7 @@ class _DisciplineListViewState extends State<DisciplineListView> {
                 final teamDisciplines = snapshot.data!;
                 // Filter disciplines to only show those from the active event
                 final activeDisciplines = disciplines.where((d) => d.eventId == EVENTID).toList();
-                print('# of Disciplines: ${activeDisciplines.length}');
-                print('# of registered Disciplines: ${teamDisciplines.length}');
+                // Debug: discipline counts
                 return ListView.builder(
                   itemCount: activeDisciplines.length,
                   itemBuilder: (BuildContext context, int index) {
@@ -167,7 +166,7 @@ class _DisciplineListViewState extends State<DisciplineListView> {
                                 : GestureDetector(
                                     onTap: () {
                                       if (registered) {
-                                        print('unregister for ${discipline.id}');
+                                        // Debug: unregister discipline
                                         api
                                             .unregisterCrew(
                                                 teamId, discipline.id!)
@@ -175,7 +174,7 @@ class _DisciplineListViewState extends State<DisciplineListView> {
                                           setState(() {});
                                         });
                                       } else {
-                                        print('register for ${discipline.id}');
+                                        // Debug: register discipline
                                         api
                                             .registerCrew(
                                                 teamId, discipline.id!)

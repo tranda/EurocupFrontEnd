@@ -136,23 +136,23 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
         controller.stop();
 
         final qrValue = barcodes.first.rawValue;
-        print('QR Code detected: $qrValue');
+        // Debug: QR Code detected
 
         try {
           final qrcode = jsonDecode(qrValue ?? '');
           final id = qrcode['id'];
-          print('Athlete ID: $id');
+          // Debug: Athlete ID extracted
 
           Athlete? athlete = findAthleteById(listAthlete, id);
           if (athlete != null) {
-            print('Athlete found: ${athlete.getDisplayName()}');
+            // Debug: Athlete found
             Navigator.pop(context, {'success': true, 'athlete': athlete});
           } else {
-            print('Athlete not found');
+            // Debug: Athlete not found
             _showErrorAndResume('Athlete not found');
           }
         } catch (e) {
-          print('Error processing QR code: $e');
+          // Debug: Error processing QR code
           _showErrorAndResume('Invalid QR code format');
         }
       }

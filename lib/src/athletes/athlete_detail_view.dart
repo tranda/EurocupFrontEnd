@@ -62,7 +62,7 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
     var certificateUrl = currentAthlete.certificate != null && currentAthlete.certificate!.isNotEmpty
         ? "https://$certificatePrefix/${currentAthlete.certificate}"
         : "";
-    // print('photo url: $photoUrl');
+    // Debug: photo url
 
     return Scaffold(
         appBar: AppBar(
@@ -551,7 +551,7 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                       );
                     },
                   );
-                  print('delete');
+                  // Debug: delete action
                 },
                 child: const Icon(Icons.delete),
               ),
@@ -620,7 +620,7 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
       setState(() {});
     } else {
       // User canceled the file selection
-      print('File selection canceled.');
+      // File selection canceled.
     }
   }
 }

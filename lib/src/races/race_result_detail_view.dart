@@ -59,14 +59,14 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
         _errorMessage = null;
       });
 
-      print('Loading race result with ID: $raceResultId');
-      print('Token status: ${token == null || token!.isEmpty ? "No token - using public API" : "Has token - using authenticated API"}');
+      // Loading race result with ID: $raceResultId
+      // Token status: ${token == null || token!.isEmpty ? "No token - using public API" : "Has token - using authenticated API"}
 
       final result = (token == null || token!.isEmpty)
           ? await api.getPublicRaceResult(raceResultId!)
           : await api.getRaceResult(raceResultId!);
 
-      print('Race result loaded: ${result?.toMap()}');
+      // Race result loaded: ${result?.toMap()}
 
       setState(() {
         _raceResult = result;
@@ -74,7 +74,7 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
         _isRefreshing = false;
       });
     } catch (e) {
-      print('Error loading race result: $e');
+      // Error loading race result: $e
       setState(() {
         _errorMessage = e.toString();
         _isLoading = false;

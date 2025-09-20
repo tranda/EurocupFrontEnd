@@ -26,10 +26,10 @@ var adminPassword = _getStringFromEnv('ADMIN_PASSWORD', '');
 bool _getBoolFromEnv(String key) {
   try {
     final value = dotenv.env[key] == 'true';
-    if (kDebugMode) print('Environment $key: $value');
+    // Debug: Environment $key: $value
     return value;
   } catch (e) {
-    if (kDebugMode) print('Failed to read environment $key: $e');
+    // Debug: Failed to read environment $key: $e
     return false;
   }
 }
@@ -37,10 +37,10 @@ bool _getBoolFromEnv(String key) {
 String _getStringFromEnv(String key, String defaultValue) {
   try {
     final value = dotenv.env[key] ?? defaultValue;
-    if (kDebugMode) print('Environment $key: ${value.isNotEmpty ? "***set***" : "empty"}');
+    // Debug: Environment $key: ${value.isNotEmpty ? "***set***" : "empty"}
     return value;
   } catch (e) {
-    if (kDebugMode) print('Failed to read environment $key: $e');
+    // Debug: Failed to read environment $key: $e
     return defaultValue;
   }
 }

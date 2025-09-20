@@ -44,7 +44,7 @@ class StartupService {
       try {
         competitions = await api.getCompetitions();
       } catch (e) {
-        print('Warning: Failed to load competitions: $e');
+        // Warning: Failed to load competitions
         competitions = []; // Continue with empty list
       }
 
@@ -52,7 +52,7 @@ class StartupService {
       if (token != null && token!.isNotEmpty) {
         final user = await api.getCurrentUser();
         if (user == null) {
-          print('Warning: Failed to get user data - token may be expired');
+          // Warning: Failed to get user data - token may be expired
           clearToken(); // Clear invalid token
         } else {
           currentUser = user;
@@ -62,7 +62,7 @@ class StartupService {
         try {
           disciplines = await api.getDisciplinesAll(eventId: EVENTID);
         } catch (e) {
-          print('Warning: Failed to load disciplines: $e');
+          // Warning: Failed to load disciplines
           disciplines = []; // Continue with empty list
         }
       }

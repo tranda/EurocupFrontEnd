@@ -208,14 +208,14 @@ class MyApp extends StatelessWidget {
                 return MaterialPageRoute<void>(
                   settings: updatedSettings,
                   builder: (BuildContext context) {
-                    print('Router: Building route for ${routeSettings.name}');
-                    print('Router: Arguments extracted: $arguments');
+                    // Router: Building route for ${routeSettings.name}
+                    // Router: Arguments extracted: $arguments
                     // Handle routes that might have query parameters
                     final routeName = routeSettings.name ?? '';
 
                     // Skip the initial '/' route if we're on web with a fragment
                     if (kIsWeb && routeName == '/' && Uri.base.fragment.isNotEmpty) {
-                      print('Router: Skipping initial / route, waiting for fragment route');
+                      // Router: Skipping initial / route, waiting for fragment route
                       return const Scaffold(
                         body: Center(
                           child: CircularProgressIndicator(),
@@ -231,18 +231,18 @@ class MyApp extends StatelessWidget {
                       case ForgotPasswordView.routeName:
                         return const ForgotPasswordView();
                       case ResetPasswordView.routeName:
-                        print('Router: Creating ResetPasswordView');
+                        // Router: Creating ResetPasswordView
                         return const ResetPasswordView();
                     }
 
                     // Handle routes with query parameters
                     if (routeName.startsWith('/reset-password')) {
-                      print('Router: Creating ResetPasswordView for route with params');
+                      // Router: Creating ResetPasswordView for route with params
                       return const ResetPasswordView();
                     }
 
-                    print('Router: Second switch checking route: ${routeSettings.name}');
-                    print('Router: CompetitionSelectorView.routeName = ${CompetitionSelectorView.routeName}');
+                    // Router: Second switch checking route: ${routeSettings.name}
+                    // Router: CompetitionSelectorView.routeName = ${CompetitionSelectorView.routeName}
                     switch (routeSettings.name) {
                       case HomePage.routeName:
                         return StartupWrapper(
@@ -301,7 +301,7 @@ class MyApp extends StatelessWidget {
                         );
                       case CompetitionSelectorView.routeName:
                         // Competition selector is public - no auth needed
-                        print('Router: Creating CompetitionSelectorView');
+                        // Router: Creating CompetitionSelectorView
                         return const CompetitionSelectorView();
                       case RaceResultsListView.routeName:
                         // Race results can be viewed publicly
@@ -333,7 +333,7 @@ class MyApp extends StatelessWidget {
                         return const AiBarcodeScanner();
                       default:
                         // For unknown routes, redirect to home page instead of login
-                        print('Router: Unknown route ${routeSettings.name}, redirecting to HomePage');
+                        // Router: Unknown route ${routeSettings.name}, redirecting to HomePage
                         return const HomePage();
                     }
                   },
@@ -362,12 +362,12 @@ class MyApp extends StatelessWidget {
         if (routePath.startsWith('//')) {
           routePath = routePath.substring(1);
         }
-        print('Router: Initial route from fragment: $routePath');
+        // Router: Initial route from fragment: $routePath
       } else {
         // Fall back to path-based routing
         final path = uri.path;
         routePath = path.startsWith('/') ? path : '/$path';
-        print('Router: Initial route from path: $routePath');
+        // Router: Initial route from path: $routePath
       }
 
       // Define valid routes that can be accessed directly
@@ -391,12 +391,12 @@ class MyApp extends StatelessWidget {
       ];
 
       // Check if the route is valid for direct access
-      print('Router: Checking if $routePath is in validDirectRoutes');
+      // Router: Checking if $routePath is in validDirectRoutes
       if (validDirectRoutes.contains(routePath)) {
-        print('Router: Route is valid, returning: $routePath');
+        // Router: Route is valid, returning: $routePath
         return routePath;
       }
-      print('Router: Route not in valid list');
+      // Router: Route not in valid list
 
       // Handle routes that require parameters
       if (routePath == RaceResultDetailView.routeName) {
@@ -443,9 +443,9 @@ class MyApp extends StatelessWidget {
       try {
         final uri = Uri.base;
         final queryParams = uri.queryParameters;
-        print('Extraction: URI = $uri');
-        print('Extraction: Query params = $queryParams');
-        print('Extraction: Route name = ${routeSettings.name}');
+        // Extraction: URI = $uri
+        // Extraction: Query params = $queryParams
+        // Extraction: Route name = ${routeSettings.name}
 
         // Handle route-specific parameter extraction
         switch (routeSettings.name) {
@@ -498,23 +498,23 @@ class MyApp extends StatelessWidget {
         // Handle reset password route with query parameters
         final routeName = routeSettings.name ?? '';
         if (routeName.startsWith('/reset-password')) {
-          print('Extraction: Found reset-password route');
+          // Extraction: Found reset-password route
           if (queryParams.containsKey('token')) {
             arguments['token'] = queryParams['token'];
-            print('Extraction: Token found in query params = ${queryParams['token']}');
+            // Extraction: Token found in query params = ${queryParams['token']}
           } else if (routeName.contains('?token=')) {
-            print('Extraction: No token in query params, checking route name');
+            // Extraction: No token in query params, checking route name
             final tokenPart = routeName.split('?token=')[1];
             final token = tokenPart.split('&')[0]; // Get only the token part
             arguments['token'] = token;
-            print('Extraction: Token found in route name = $token');
+            // Extraction: Token found in route name = $token
           } else {
-            print('Extraction: No token found anywhere');
+            // Extraction: No token found anywhere
           }
         }
       } catch (e) {
         // In case of any error, just return existing arguments
-        print('Error extracting URL parameters: $e');
+        // Error extracting URL parameters: $e
       }
     }
 

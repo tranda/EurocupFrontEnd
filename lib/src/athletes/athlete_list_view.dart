@@ -50,12 +50,12 @@ class _AthleteListViewState extends State<AthleteListView> {
             }
             if (snapshot.hasData) {
               final athletes = snapshot.data!;
-              // print(_athletes);
+              // Debug: athletes list
               return ListView.builder(
                 itemCount: athletes.length,
                 itemBuilder: (BuildContext context, int index) {
                   final athlete = athletes[index];
-                  // print(athlete);
+                  // Debug: athlete data
                   final coach = athlete.coach! ? ' (Coach)' : "";
 
                   return Column(

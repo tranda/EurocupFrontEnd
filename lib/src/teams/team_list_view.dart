@@ -51,13 +51,13 @@ class ListViewState extends State<TeamListView> {
                         setState(() {
                           teamName = value;
                         });
-                        print(value);
+                        // Debug: team created
                       }).catchError((error) {
-                        print('Error creating team: $error');
+                        // Error: team creation failed
                       });
                     }
                   }).catchError((error) {
-                    print('Error opening dialog: $error');
+                    // Error: dialog failed
                   });
                 },
           title: "Team List",
@@ -72,7 +72,7 @@ class ListViewState extends State<TeamListView> {
             }
             if (snapshot.hasData) {
               final teams = snapshot.data!;
-              // print(_races);
+              // Debug: teams list
               return ListView.builder(
                 itemCount: teams.length,
                 itemBuilder: (BuildContext context, int index) {

@@ -37,7 +37,7 @@ class _CrewDetailViewState extends State<CrewDetailView> {
         }
       }
     });
-    print('male #: $countMale, female #: $countFemale');
+    // Debug: male #: $countMale, female #: $countFemale
     return true;
   }
 
@@ -76,7 +76,7 @@ class _CrewDetailViewState extends State<CrewDetailView> {
               if (snapshot.hasData) {
                 var crewAthletes = snapshot.data!;
                 checkMix(crewAthletes, size, helmNo);
-                // print (crewAthletes);
+                // Debug: crew athletes data
                 return ListView.builder(
                   itemCount: size,
                   itemBuilder: (context, index) {

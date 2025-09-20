@@ -37,7 +37,7 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
       });
 
       final allDisciplines = await api.getDisciplinesAll(eventId: EVENTID);
-      print('# of Disciplines: ${allDisciplines.length}');
+      // Debug: # of Disciplines: ${allDisciplines.length}
 
       setState(() {
         _disciplines = allDisciplines;

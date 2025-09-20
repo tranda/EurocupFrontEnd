@@ -12,9 +12,9 @@ void main() async {
   if (kDebugMode) {
     try {
       await dotenv.load(fileName: ".env");
-      print("Environment variables loaded successfully");
+      // Environment variables loaded successfully
     } catch (e) {
-      print("No .env file found, using default values: $e");
+      // No .env file found, using default values: $e
     }
   }
 

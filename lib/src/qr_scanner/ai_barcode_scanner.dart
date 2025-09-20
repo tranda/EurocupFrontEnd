@@ -276,13 +276,13 @@ class _AiBarcodeScannerState extends State<AiBarcodeScanner> {
               widget.onDetect?.call(barcode);
 
               if (barcode.barcodes.isEmpty) {
-                print('Scanned Code is Empty');
+                // Debug: Scanned Code is Empty
                 _showErrorAndResume('No barcode detected');
                 return;
               }
 
               final String code = barcode.barcodes.first.rawValue ?? "";
-              print('QR Code detected: $code');
+              // Debug: QR Code detected
 
               // Get athlete list from route arguments if available
               final routeSettings = ModalRoute.of(context)?.settings;
@@ -301,11 +301,11 @@ class _AiBarcodeScannerState extends State<AiBarcodeScanner> {
                 try {
                   final qrcode = jsonDecode(code);
                   final id = qrcode['id'];
-                  print('Athlete ID: $id');
+                  // Debug: Athlete ID extracted
 
                   Athlete? athlete = findAthleteById(listAthlete, id);
                   if (athlete != null) {
-                    print('Athlete found: ${athlete.getDisplayName()}');
+                    // Debug: Athlete found
                     setState(() {
                       _isSuccess = true;
                       if (widget.hapticFeedback) HapticFeedback.lightImpact();
@@ -316,12 +316,12 @@ class _AiBarcodeScannerState extends State<AiBarcodeScanner> {
                     }
                     return;
                   } else {
-                    print('Athlete not found');
+                    // Debug: Athlete not found
                     _showErrorAndResume('Athlete not found');
                     return;
                   }
                 } catch (e) {
-                  print('Error processing QR code: $e');
+                  // Debug: Error processing QR code
                   _showErrorAndResume('Invalid QR code format');
                   return;
                 }
@@ -331,7 +331,7 @@ class _AiBarcodeScannerState extends State<AiBarcodeScanner> {
               if (widget.validator != null && !widget.validator!(code)) {
                 setState(() {
                   if (widget.hapticFeedback) HapticFeedback.heavyImpact();
-                  print('Invalid Barcode => $code');
+                  // Debug: Invalid Barcode
                   _isSuccess = false;
                 });
                 _showErrorAndResume('Invalid QR code');
@@ -341,7 +341,7 @@ class _AiBarcodeScannerState extends State<AiBarcodeScanner> {
               setState(() {
                 _isSuccess = true;
                 if (widget.hapticFeedback) HapticFeedback.lightImpact();
-                print('Barcode rawValue => $code');
+                // Debug: Barcode rawValue
                 widget.onScan?.call(code);
               });
 

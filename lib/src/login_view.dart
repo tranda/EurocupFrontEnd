@@ -94,7 +94,7 @@ class _LoginViewState extends State<LoginView> {
 
     if (kDebugMode) {
       // Code specific to debug mode
-      print('Running in debug mode');
+      // Running in debug mode
       // Only use test credentials if they are explicitly provided in environment
       if (ADMINTEST && adminUser.isNotEmpty && adminPassword.isNotEmpty) {
         currentUser = adminUser;
@@ -106,7 +106,7 @@ class _LoginViewState extends State<LoginView> {
       // Otherwise use saved credentials or empty
     } else {
       // Code specific to release mode
-      print('Running in release mode');
+      // Running in release mode
       currentUser = lastUser ?? "";
       currentPassword = lastPassword ?? "";
     }
@@ -121,7 +121,7 @@ class _LoginViewState extends State<LoginView> {
 
     if (kDebugMode) {
       // Code specific to debug mode
-      print('Running in debug mode');
+      // Running in debug mode
       // Only use test credentials if they are explicitly provided in environment
       if (ADMINTEST && adminUser.isNotEmpty && adminPassword.isNotEmpty) {
         currentUser = adminUser;
@@ -133,7 +133,7 @@ class _LoginViewState extends State<LoginView> {
       // Otherwise use saved credentials or empty
     } else {
       // Code specific to release mode
-      print('Running in release mode');
+      // Running in release mode
       currentUser = lastUser ?? "";
       currentPassword = lastPassword ?? "";
     }

@@ -27,3 +27,11 @@ linter:
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
+
+analyzer:
+  errors:
+    unused_import: warning
+    avoid_print: ignore
+    depend_on_referenced_packages: error
+  exclude:
+    - lib/**/barcode_scanner_controller copy.dart

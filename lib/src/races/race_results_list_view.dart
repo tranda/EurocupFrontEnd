@@ -144,9 +144,9 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
           _eventName = competition.getShortName();
         }
       });
-      print('Successfully loaded event from competitions: ${competition.getShortName()}');
+      // Successfully loaded event from competitions: ${competition.getShortName()}
     } catch (e) {
-      print('Failed to load event data: $e');
+      // Failed to load event data: $e
       // Continue without competition data - will use fallbacks
     }
 
@@ -572,8 +572,8 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
               ],
             );
         } catch (e, stackTrace) {
-          print('Error building race result item: $e');
-          print('Stack trace: $stackTrace');
+          // Error building race result item: $e
+          // Stack trace: $stackTrace
           return Card(
             child: Padding(
               padding: const EdgeInsets.all(16),

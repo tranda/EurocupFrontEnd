@@ -33,17 +33,17 @@ Future<bool> sendLoginRequest(String username, String password) async {
     saveToken(data['token']);
     currentUser = User.fromMap(data['user']);
     // SaveToken(token);
-    // print(currentUser);
+    // Debug: user data
     return (true);
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
     return (false);
   }
 }
 
 Future<bool> sendLogoutRequest() async {
   try {
-    print('Attempting logout...');
+    // Debug: attempting logout
 
     // Store current token before clearing
     String? currentToken = token;
@@ -62,27 +62,26 @@ Future<bool> sendLogoutRequest() async {
       var response = await request.send().timeout(Duration(seconds: 10));
       String responseBody = await response.stream.bytesToString();
 
-      print('Server logout response: ${response.statusCode}');
-      print('Server logout body: $responseBody');
+      // Debug: server logout response
 
       if (response.statusCode == 200 || response.statusCode == 401) {
         // 200 = success, 401 = token already invalid (which is fine)
-        print('Server logout successful');
+        // Debug: server logout successful
       } else {
-        print('Server logout failed with status ${response.statusCode}');
+        // Debug: server logout failed
       }
     }
 
     // Clear local token regardless of server response
     clearToken();
-    print('User logged out locally.');
+    // Debug: user logged out locally
     return true;
 
   } catch (e) {
-    print('Logout error: $e');
+    // Debug: logout error
     // Even if server logout fails, clear the local token
     clearToken();
-    print('User logged out locally (server unreachable).');
+    // Debug: user logged out locally (server unreachable)
     return true;
   }
 }
@@ -103,9 +102,9 @@ Future<List<Athlete>> getAthletesForClub(int? clubId) async {
     for (var athlete in result) {
       athletes.add(Athlete.fromMap(athlete));
     }
-    // print(athletes);
+    // Debug: athletes data
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
   return (athletes);
 }
@@ -141,9 +140,9 @@ Future updateAthlete(Athlete athlete) async {
   http.StreamedResponse response = await request.send();
 
   if (response.statusCode == 200) {
-    print(await response.stream.bytesToString());
+    // Debug: API response received
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
 }
 
@@ -173,9 +172,9 @@ Future createAthlete(Athlete athlete) async {
   http.StreamedResponse response = await request.send();
 
   if (response.statusCode == 200) {
-    print(await response.stream.bytesToString());
+    // Debug: API response received
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
 }
 
@@ -198,10 +197,10 @@ Future<bool> sendAthletes(List<Athlete> athletes) async {
   http.StreamedResponse response = await request.send();
 
   if (response.statusCode >= 200 && response.statusCode < 300) {
-    print(await response.stream.bytesToString());
+    // Debug: API response received
     return (true);
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
     return (false);
   }
 }
@@ -216,9 +215,9 @@ Future deleteAthlete(Athlete athlete) async {
   http.StreamedResponse response = await request.send();
 
   if (response.statusCode == 200) {
-    print(await response.stream.bytesToString());
+    // Debug: API response received
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
 }
 
@@ -240,7 +239,7 @@ Future<List<Team>> getTeamsAll({bool activeOnly = false}) async {
       teams.add(Team.fromMap(race));
     }
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
   return (teams);
 }
@@ -266,7 +265,7 @@ Future<List<Team>> getTeams(int accessLevel, {bool activeOnly = false}) async {
       teams.add(Team.fromMap(race));
     }
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
   return (teams);
 }
@@ -284,13 +283,13 @@ Future createTeam(String name) async {
 
   http.StreamedResponse response = await request.send();
 
-  print('response.statusCode: ${response.statusCode}');
+  // Debug: response status
   var responseString = await response.stream.bytesToString();
-  print(responseString);
+  // Debug: API response received
   if (response.statusCode == 200) {
-    print(responseString);
+    // Debug: API response received
   } else {
-    print('error response: ${response.reasonPhrase}');
+    // Error: API request failed
   }
 }
 
@@ -314,7 +313,7 @@ Future<List<Discipline>> getDisciplinesAll({int? eventId}) async {
       disciplines.add(Discipline.fromMap(discipline));
     }
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
   return (disciplines);
 }
@@ -335,7 +334,7 @@ Future<List<Crew>> getCrewsAll() async {
       crews.add(Crew.fromMap(race));
     }
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
   return (crews);
 }
@@ -356,7 +355,7 @@ Future<List<Race>> getDisciplines() async {
       races.add(Race.fromMap(discipline));
     }
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
   return (races);
 }
@@ -378,7 +377,7 @@ Future<List<Race>> getDisciplinesCombined(int eventId) async {
       races.add(Race.fromMap(discipline));
     }
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
   return (races);
 }
@@ -400,7 +399,7 @@ Future<List<Race>> getTeamDisciplines(int teamId, int eventId) async {
       races.add(Race.fromMap(discipline));
     }
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
   return (races);
 }
@@ -422,7 +421,7 @@ Future<List<DisciplineCrew>> getTeamsForDisciplines(int disciplineId) async {
       races.add(DisciplineCrew.fromMap(disciplineRace));
     }
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
   return (races);
 }
@@ -451,7 +450,7 @@ Future<Map<int, Map<String, dynamic>>> getCrewAthletesForCrew(
     }
     // print(crewAthletes);
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
   // print("http response: $crewAthletes");
   return (crewAthletes);
@@ -473,9 +472,9 @@ Future insertCrewAthlete(int no, int crewId, int athleteId) async {
   http.StreamedResponse response = await request.send();
 
   if (response.statusCode == 200) {
-    print(await response.stream.bytesToString());
+    // Debug: API response received
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
 }
 
@@ -494,9 +493,9 @@ Future registerCrew(int teamId, int disciplineId) async {
   http.StreamedResponse response = await request.send();
 
   if (response.statusCode == 200) {
-    print(await response.stream.bytesToString());
+    // Debug: API response received
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
 }
 
@@ -519,9 +518,9 @@ Future registerCrews(int teamId, List<int> disciplineIds) async {
   http.StreamedResponse response = await request.send();
 
   if (response.statusCode == 200) {
-    print(await response.stream.bytesToString());
+    // Debug: API response received
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
 }
 
@@ -540,9 +539,9 @@ Future unregisterCrew(int teamId, int disciplineId) async {
   http.StreamedResponse response = await request.send();
 
   if (response.statusCode == 200) {
-    print(await response.stream.bytesToString());
+    // Debug: API response received
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
 }
 
@@ -555,9 +554,9 @@ Future deleteCrewAthlete(int id) async {
   http.StreamedResponse response = await request.send();
 
   if (response.statusCode == 200) {
-    print(await response.stream.bytesToString());
+    // Debug: API response received
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
 }
 
@@ -575,9 +574,9 @@ Future<List<Athlete>> getEligibleAthletesForCrew(int crewId, int no) async {
     for (var athlete in result) {
       athletes.add(Athlete.fromMap(athlete));
     }
-    // print(athletes);
+    // Debug: athletes data
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
   return (athletes);
 }
@@ -597,9 +596,9 @@ Future<List<Athlete>> getEligibleAthletesForCombinedCrew(
     for (var athlete in result) {
       athletes.add(Athlete.fromMap(athlete));
     }
-    // print(athletes);
+    // Debug: athletes data
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
   return (athletes);
 }
@@ -622,7 +621,7 @@ Future<List<Competition>> getCompetitions() async {
     }
     // print(result);
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
   return (competitions);
 }
@@ -646,7 +645,7 @@ Future<List<Club>> getClubs({bool activeOnly = false}) async {
     }
     // print(result);
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
   return (clubs);
 }
@@ -670,7 +669,7 @@ Future<List<Club>> getClubsForAdel({bool adelOnly = false}) async {
     }
     // print(result);
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
   return (clubs);
 }
@@ -693,7 +692,7 @@ Future<List<User>> getUsers() async {
     }
     // print(result);
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
   return (users);
 }
@@ -718,7 +717,7 @@ Future<User?> getCurrentUser() async {
 
     return User.fromMap(userData);
   } else {
-    print('Failed to get current user: ${response.reasonPhrase}');
+    // Error: Failed to get current user
     return null;
   }
 }
@@ -743,14 +742,14 @@ Future createUser(User user) async {
 
   http.StreamedResponse response = await request.send();
 
-  print('response.statusCode: ${response.statusCode}');
+  // Debug: response status
   var responseString = await response.stream.bytesToString();
-  print(responseString);
+  // Debug: API response received
   if (response.statusCode == 200) {
     var responseString = await response.stream.bytesToString();
-    print(responseString);
+    // Debug: API response received
   } else {
-    print('error response: ${response.reasonPhrase}');
+    // Error: API request failed
   }
 }
 
@@ -763,9 +762,9 @@ Future deleteUser(User user) async {
   http.StreamedResponse response = await request.send();
 
   if (response.statusCode == 200) {
-    print(await response.stream.bytesToString());
+    // Debug: API response received
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
 }
 
@@ -795,9 +794,9 @@ Future updateUser(User user) async {
 
   if (response.statusCode == 200) {
     var responseString = await response.stream.bytesToString();
-    print(responseString);
+    // Debug: API response received
   } else {
-    print('error response: ${response.reasonPhrase}');
+    // Error: API request failed
   }
 }
 
@@ -818,9 +817,9 @@ Future updatePassword(User user) async {
 
   if (response.statusCode == 200) {
     var responseString = await response.stream.bytesToString();
-    print(responseString);
+    // Debug: API response received
   } else {
-    print('error response: ${response.reasonPhrase}');
+    // Error: API request failed
   }
 }
 
@@ -843,7 +842,7 @@ Future<ClubDetails> getClubDetails(int clubId) async {
     var data = result;
     clubDetails = ClubDetails.fromMap(data);
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
   }
   // print("http response: $crewAthletes");
   return (clubDetails);
@@ -875,9 +874,9 @@ Future<void> uploadFile(int id, List<int> fileBytes) async {
 
   if (response.statusCode == 200) {
     var responseString = await response.stream.bytesToString();
-    print(responseString);
+    // Debug: API response received
   } else {
-    print('error response: ${response.reasonPhrase}');
+    // Error: API request failed
   }
 }
 
@@ -894,7 +893,7 @@ Future<Competition?> getEvent(int eventId) async {
     Map<String, dynamic> result = jsonDecode(responseString);
     return Competition.fromMap(result);
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
     return null;
   }
 }
@@ -924,9 +923,9 @@ Future createEvent(Competition event) async {
   http.StreamedResponse response = await request.send();
 
   if (response.statusCode == 200 || response.statusCode == 201) {
-    print(await response.stream.bytesToString());
+    // Debug: API response received
   } else {
-    print('Error creating event: ${response.reasonPhrase}');
+    // Error: Failed to create event
     throw Exception('Failed to create event: ${response.reasonPhrase}');
   }
 }
@@ -960,9 +959,9 @@ Future updateEvent(Competition event) async {
   http.StreamedResponse response = await request.send();
 
   if (response.statusCode == 200) {
-    print(await response.stream.bytesToString());
+    // Debug: API response received
   } else {
-    print('Error updating event: ${response.reasonPhrase}');
+    // Error: Failed to update event
     throw Exception('Failed to update event: ${response.reasonPhrase}');
   }
 }
@@ -975,9 +974,9 @@ Future deleteEvent(Competition event) async {
   http.StreamedResponse response = await request.send();
 
   if (response.statusCode == 200) {
-    print(await response.stream.bytesToString());
+    // Debug: API response received
   } else {
-    print('Error deleting event: ${response.reasonPhrase}');
+    // Error: Failed to delete event
     throw Exception('Failed to delete event: ${response.reasonPhrase}');
   }
 }
@@ -995,7 +994,7 @@ Future<Discipline?> getDiscipline(int disciplineId) async {
     Map<String, dynamic> result = jsonDecode(responseString);
     return Discipline.fromMap(result);
   } else {
-    print(response.reasonPhrase);
+    // Error: API request failed
     return null;
   }
 }
@@ -1019,9 +1018,9 @@ Future createDiscipline(Discipline discipline) async {
   http.StreamedResponse response = await request.send();
 
   if (response.statusCode == 200 || response.statusCode == 201) {
-    print(await response.stream.bytesToString());
+    // Debug: API response received
   } else {
-    print('Error creating discipline: ${response.reasonPhrase}');
+    // Error: Failed to create discipline
     throw Exception('Failed to create discipline: ${response.reasonPhrase}');
   }
 }
@@ -1049,9 +1048,9 @@ Future updateDiscipline(Discipline discipline) async {
   http.StreamedResponse response = await request.send();
 
   if (response.statusCode == 200) {
-    print(await response.stream.bytesToString());
+    // Debug: API response received
   } else {
-    print('Error updating discipline: ${response.reasonPhrase}');
+    // Error: Failed to update discipline
     throw Exception('Failed to update discipline: ${response.reasonPhrase}');
   }
 }
@@ -1064,9 +1063,9 @@ Future deleteDiscipline(Discipline discipline) async {
   http.StreamedResponse response = await request.send();
 
   if (response.statusCode == 200) {
-    print(await response.stream.bytesToString());
+    // Debug: API response received
   } else {
-    print('Error deleting discipline: ${response.reasonPhrase}');
+    // Error: Failed to delete discipline
     throw Exception('Failed to delete discipline: ${response.reasonPhrase}');
   }
 }
@@ -1095,7 +1094,7 @@ Future<List<RaceResult>> getRaceResults({int? eventId}) async {
       }
     }
   } else {
-    print('Error fetching race results: ${response.reasonPhrase}');
+    // Error: Failed to fetch race results
   }
   
   return raceResults;
@@ -1118,7 +1117,7 @@ Future<RaceResult?> getRaceResult(int raceResultId) async {
     }
     return null;
   } else {
-    print('Error fetching race result: ${response.reasonPhrase}');
+    // Error: Failed to fetch race result
     return null;
   }
 }
@@ -1145,7 +1144,7 @@ Future<List<RaceResult>> getPublicRaceResults({int? eventId}) async {
       }
     }
   } else {
-    print('Error fetching public race results: ${response.reasonPhrase}');
+    // Error: Failed to fetch public race results
   }
   
   return raceResults;
@@ -1167,7 +1166,7 @@ Future<RaceResult?> getPublicRaceResult(int raceResultId) async {
     }
     return null;
   } else {
-    print('Error fetching public race result: ${response.reasonPhrase}');
+    // Error: Failed to fetch public race result
     return null;
   }
 }
@@ -1185,14 +1184,13 @@ Future<Map<String, dynamic>> sendForgotPasswordRequest(String email) async {
   var responseString = await response.stream.bytesToString();
 
   // Debug logging
-  print('Forgot password response: ${response.statusCode}');
-  print('Response body: $responseString');
+  // Debug: forgot password response
 
   Map<String, dynamic> responseJson;
   try {
     responseJson = jsonDecode(responseString);
   } catch (e) {
-    print('JSON decode error: $e');
+    // Error: JSON decode failed
     responseJson = {'error': 'Invalid JSON response', 'raw': responseString};
   }
 

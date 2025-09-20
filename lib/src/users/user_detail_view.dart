@@ -365,7 +365,7 @@ class _UserDetailViewState extends State<UserDetailView> {
                       );
                     },
                   );
-                  print('delete');
+                  // Debug: delete action
                 },
                 child: const Icon(Icons.delete),
               ),

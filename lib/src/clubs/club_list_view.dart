@@ -53,7 +53,7 @@ class ListViewState extends State<ClubListView> {
             }
             if (snapshot.hasData) {
               final clubs = snapshot.data!;
-              // print(_races);
+              // Debug: clubs list
               return ListView.builder(
                 itemCount: clubs.length,
                 itemBuilder: (BuildContext context, int index) {

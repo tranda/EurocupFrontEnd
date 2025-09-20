@@ -37,12 +37,12 @@ class _CrewListViewState extends State<CrewListView> {
             }
             if (snapshot.hasData) {
               final races = snapshot.data!;
-              // print(_races);
+              // Debug: races list
               return ListView.builder(
                 itemCount: races.length,
                 itemBuilder: (BuildContext context, int index) {
                   final race = races[index];
-                  // print(race);
+                  // Debug: race data
                   var competition = competitions.firstWhere(
                       (element) => element.id == race.discipline?.eventId);
                   var eventName = '${competition.name!} ${competition.year}';

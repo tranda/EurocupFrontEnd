@@ -30,22 +30,21 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
 
     // Get the token from the route arguments
     final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-    print('Route arguments: $args');
+    // Debug: Route arguments
     if (args != null && args['token'] != null) {
       token = args['token'];
-      print('Token from args: $token');
+      // Debug: Token from args
     }
 
     // Also try to get token from query parameters (for web)
     final uri = Uri.base;
-    print('Current URI: $uri');
-    print('Query parameters: ${uri.queryParameters}');
+    // Debug: Current URI and query parameters
     if (uri.queryParameters.containsKey('token')) {
       token = uri.queryParameters['token'];
-      print('Token from query params: $token');
+      // Debug: Token from query params
     }
 
-    print('Final token: $token');
+    // Debug: Final token
   }
 
   @override
