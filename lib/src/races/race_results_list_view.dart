@@ -209,7 +209,16 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   }
 
   /// Check if this is the last round where accumulated time should be shown
+  /// Shows total for: "Final", "Grand Final" stages OR chronologically last round
   bool _isLastRound(RaceResult raceResult) {
+    final stage = raceResult.stage?.trim() ?? '';
+
+    // Show total for exact "Final" and "Grand Final" stages (always)
+    if (stage == 'Final' || stage == 'Grand Final') {
+      return true;
+    }
+
+    // Also show total for backend-determined final rounds (chronologically last)
     return _isFinalStage(raceResult);
   }
 
