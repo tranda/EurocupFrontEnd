@@ -651,6 +651,18 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                         fontSize: 14,
                       ),
                     ),
+                  // Delay for final races (position > 1)
+                  if (crewResult.isFinished && crewResult.position != null && crewResult.position! > 1)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        _calculateDelay(crewResult, raceResult, isFinalRound: isFinalRound),
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ],
