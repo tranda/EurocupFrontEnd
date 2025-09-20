@@ -469,7 +469,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        '#${raceResult.raceNumber} ${raceResult.raceTimeDisplay} ${discipline?.getDisplayName() ?? 'Unknown'} - ${raceResult.stage}${isFinal ? ' (Final)' : ''}',
+                        '#${raceResult.raceNumber} ${raceResult.raceTimeDisplay} ${discipline?.getDisplayName() ?? 'Unknown'} - ${raceResult.stage}',
                         style: Theme.of(context).textTheme.displaySmall?.copyWith(
                           color: Colors.white,
                         ),
