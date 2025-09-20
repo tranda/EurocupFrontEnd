@@ -599,7 +599,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                     style: TextStyle(
                       color: _getPositionTextColor(crewResult.position, isFinalRound),
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: 20,
                     ),
                   ),
                 ),
@@ -771,7 +771,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                   style: TextStyle(
                     color: _getPositionTextColor(crewResult.position, isFinalRound),
                     fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                    fontSize: 18,
                   ),
                 ),
               ),
