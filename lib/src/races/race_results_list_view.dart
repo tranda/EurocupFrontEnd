@@ -479,15 +479,39 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                         ),
                       ],
                     ),
-                    title: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        '#${raceResult.raceNumber} ${raceResult.raceTimeDisplay} ${discipline?.getDisplayName() ?? 'Unknown'} - ${raceResult.stage}',
-                        style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                          color: Colors.white,
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '#${raceResult.raceNumber} ${raceResult.raceTimeDisplay}',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 16,
+                              ),
+                            ),
+                            Text(
+                              '${raceResult.stage}',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
+                        Text(
+                          '${discipline?.getDisplayName() ?? 'Unknown'}',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ],
                     ),
                     subtitle: Text(
                       '${raceResult.statusDisplay} (${crewResults.length})',
