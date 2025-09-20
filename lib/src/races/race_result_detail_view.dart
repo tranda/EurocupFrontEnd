@@ -190,7 +190,7 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    '#${raceResult.raceNumber} ${raceResult.raceTimeDisplay} ${raceResult.discipline?.getDisplayName() ?? 'Unknown'} - ${raceResult.stage}${isLastRound ? ' (Final)' : ''}',
+                    '#${raceResult.raceNumber} ${raceResult.raceTimeDisplay} ${raceResult.discipline?.getDisplayName() ?? 'Unknown'} - ${raceResult.stage}',
                     style: Theme.of(context).textTheme.displaySmall?.copyWith(
                       color: Colors.white,
                     ),
@@ -422,7 +422,7 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
         ),
       );
     } else {
-      // Regular single-line format for non-final rounds
+      // Regular single-line format for non-final rounds - matching race_results_list_view exactly
       return Container(
         decoration: const BoxDecoration(
           border: Border(
@@ -432,92 +432,72 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
             ),
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
+        child: ListTile(
+          leading: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: _getPositionBackgroundColor(crewResult.position, isLastRound),
+              border: Border.all(
+                color: _getPositionBorderColor(crewResult.position, isLastRound),
+                width: 2,
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                crewResult.position?.toString() ?? '-',
+                style: TextStyle(
+                  color: _getPositionTextColor(crewResult.position, isLastRound),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ),
+          title: Text(
+            crewResult.crew?.team?.name ?? crewResult.team?.name ?? 'Unknown Team',
+            style: Theme.of(context).textTheme.displaySmall,
+          ),
+          subtitle: crewResult.lane != null
+              ? Text(
+                  'Lane ${crewResult.lane}',
+                  style: const TextStyle(
+                    color: Colors.black54,
+                    fontSize: 12,
+                  ),
+                )
+              : null,
+          trailing: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              // Position indicator - matching race_results_list_view style
               Container(
-                width: 40,
-                height: 40,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _getPositionBackgroundColor(crewResult.position, isLastRound),
-                  border: Border.all(
-                    color: _getPositionBorderColor(crewResult.position, isLastRound),
-                    width: 2,
-                  ),
-                  shape: BoxShape.circle,
+                  color: _getStatusColor(crewResult.status),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-                child: Center(
+                child: Text(
+                  crewResult.displayTime,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              if (crewResult.isFinished && crewResult.position != null && crewResult.position! > 1)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
                   child: Text(
-                    crewResult.position?.toString() ?? '-',
-                    style: TextStyle(
-                      color: _getPositionTextColor(crewResult.position, isLastRound),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
+                    _calculateDelay(crewResult, raceResult, isFinalRound: false),
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 12,
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              // Team name
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      crewResult.crew?.team?.name ?? crewResult.team?.name ?? 'Unknown Team',
-                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    if (crewResult.lane != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          'Lane ${crewResult.lane}',
-                          style: const TextStyle(
-                            color: Colors.black54,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              // Time display
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(crewResult.status),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      crewResult.displayTime,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  if (crewResult.isFinished && crewResult.position != null && crewResult.position! > 1)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        _calculateDelay(crewResult, raceResult, isFinalRound: false),
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
             ],
           ),
         ),
