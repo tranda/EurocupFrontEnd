@@ -5,6 +5,7 @@ import 'package:eurocup_frontend/src/administration/discipline_list_view.dart' a
 import 'package:eurocup_frontend/src/administration/discipline_detail_view.dart';
 import 'package:eurocup_frontend/src/athletes/athlete_detail_view.dart';
 import 'package:eurocup_frontend/src/athletes/athlete_list_view.dart';
+import 'package:eurocup_frontend/src/model/user.dart';
 import 'package:eurocup_frontend/src/clubs/club_adel_list_view.dart';
 import 'package:eurocup_frontend/src/clubs/club_details_view.dart';
 import 'package:eurocup_frontend/src/clubs/club_list_view.dart';
@@ -199,17 +200,27 @@ class MyApp extends StatelessWidget {
               // Flutter web url navigation and deep linking.
               onGenerateRoute: (RouteSettings routeSettings) {
                 // Extract route arguments from URL if available (for web deep linking)
-                final arguments = _extractArgumentsFromSettings(routeSettings);
+                // But preserve existing arguments if they were passed programmatically
+                print('onGenerateRoute: route = ${routeSettings.name}');
+                print('onGenerateRoute: original arguments = ${routeSettings.arguments}');
+                print('onGenerateRoute: arguments type = ${routeSettings.arguments.runtimeType}');
+
+                final extractedArguments = _extractArgumentsFromSettings(routeSettings);
+                final finalArguments = routeSettings.arguments ?? extractedArguments;
+
+                print('onGenerateRoute: extracted arguments = $extractedArguments');
+                print('onGenerateRoute: final arguments = $finalArguments');
+
                 final updatedSettings = RouteSettings(
                   name: routeSettings.name,
-                  arguments: arguments,
+                  arguments: finalArguments,
                 );
 
                 return MaterialPageRoute<void>(
                   settings: updatedSettings,
                   builder: (BuildContext context) {
                     // Router: Building route for ${routeSettings.name}
-                    // Router: Arguments extracted: $arguments
+                    // Router: Arguments extracted: $finalArguments
                     // Handle routes that might have query parameters
                     final routeName = routeSettings.name ?? '';
 
@@ -264,7 +275,13 @@ class MyApp extends StatelessWidget {
                       case UserListView.routeName:
                         return const UserListView();
                       case UserDetailView.routeName:
-                        return const UserDetailView();
+                        print('Route: UserDetailView');
+                        print('Original routeSettings.arguments: ${routeSettings.arguments}');
+                        print('Updated settings.arguments: ${updatedSettings.arguments}');
+                        print('Final arguments: $finalArguments');
+                        // Pass the user directly if available
+                        final userArg = updatedSettings.arguments is User ? updatedSettings.arguments as User : null;
+                        return UserDetailView(user: userArg);
                       case AthleteListView.routeName:
                         return AthleteListView();
                       case ClubListView.routeName:
@@ -310,7 +327,7 @@ class MyApp extends StatelessWidget {
                         return const RaceResultsListView();
                       case RaceResultDetailView.routeName:
                         // Check if we have the required raceResultId argument
-                        if (arguments?['raceResultId'] == null) {
+                        if (finalArguments is Map && finalArguments['raceResultId'] == null) {
                           // If no argument, redirect to race results list
                           WidgetsBinding.instance.addPostFrameCallback((_) {
                             Navigator.of(context).pushReplacementNamed(RaceResultsListView.routeName);
@@ -428,7 +445,12 @@ class MyApp extends StatelessWidget {
   }
 
   /// Extract arguments from route settings and URL query parameters (for web deep linking)
-  static Map<String, dynamic>? _extractArgumentsFromSettings(RouteSettings routeSettings) {
+  static dynamic _extractArgumentsFromSettings(RouteSettings routeSettings) {
+    // If arguments are not a Map, return them as-is (e.g., User object)
+    if (routeSettings.arguments != null && routeSettings.arguments is! Map<String, dynamic>) {
+      return routeSettings.arguments;
+    }
+
     Map<String, dynamic> arguments = {};
 
     // First, use any existing arguments

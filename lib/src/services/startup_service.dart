@@ -48,7 +48,15 @@ class StartupService {
         competitions = []; // Continue with empty list
       }
 
-      // Step 3: If token exists, try to restore user data
+      // Step 3: Load clubs list (useful for dropdowns throughout the app)
+      try {
+        clubs = await api.getClubs();
+      } catch (e) {
+        // Warning: Failed to load clubs
+        clubs = []; // Continue with empty list
+      }
+
+      // Step 4: If token exists, try to restore user data
       if (token != null && token!.isNotEmpty) {
         final user = await api.getCurrentUser();
         if (user == null) {

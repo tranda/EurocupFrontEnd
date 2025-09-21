@@ -675,26 +675,52 @@ Future<List<Club>> getClubsForAdel({bool adelOnly = false}) async {
 }
 
 Future<List<User>> getUsers() async {
-  var headers = {
-    'Authorization': 'Bearer $token',
-  };
-  var request = http.Request('GET', Uri.parse('$apiURL/users'));
-  request.bodyFields = {};
-  request.headers.addAll(headers);
+  try {
+    print('getUsers: Starting API call');
+    print('getUsers: Token = ${token?.substring(0, min(10, token?.length ?? 0))}...');
+    print('getUsers: API URL = $apiURL/users');
 
-  http.StreamedResponse response = await request.send();
-  List<User> users = [];
-  if (response.statusCode == 200) {
-    var responseString = await response.stream.bytesToString();
-    List<dynamic> result = jsonDecode(responseString);
-    for (var user in result) {
-      users.add(User.fromMap(user));
+    var headers = {
+      'Authorization': 'Bearer $token',
+    };
+    var request = http.Request('GET', Uri.parse('$apiURL/users'));
+    request.bodyFields = {};
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+    print('getUsers: Response status code = ${response.statusCode}');
+
+    List<User> users = [];
+    if (response.statusCode == 200) {
+      var responseString = await response.stream.bytesToString();
+      print('getUsers: Response string length = ${responseString.length}');
+
+      List<dynamic> result = jsonDecode(responseString);
+      print('getUsers: Parsed ${result.length} users from JSON');
+
+      for (var i = 0; i < result.length; i++) {
+        try {
+          var userData = result[i];
+          print('getUsers: Parsing user $i: ${userData['name']}');
+          User user = User.fromMap(userData);
+          users.add(user);
+        } catch (e) {
+          print('getUsers: Error parsing user at index $i: $e');
+          print('getUsers: User data was: ${result[i]}');
+        }
+      }
+      print('getUsers: Successfully created ${users.length} User objects');
+    } else {
+      print('getUsers: API request failed with status ${response.statusCode}');
+      var errorBody = await response.stream.bytesToString();
+      print('getUsers: Error response: $errorBody');
     }
-    // print(result);
-  } else {
-    // Error: API request failed
+    return users;
+  } catch (e, stackTrace) {
+    print('getUsers: Exception caught: $e');
+    print('getUsers: Stack trace: $stackTrace');
+    return [];
   }
-  return (users);
 }
 
 Future<User?> getCurrentUser() async {

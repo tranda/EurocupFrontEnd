@@ -2,6 +2,8 @@ import 'package:eurocup_frontend/src/model/event/event.dart';
 export 'package:eurocup_frontend/src/model/event/event.dart' show Competition;
 import 'package:eurocup_frontend/src/model/race/discipline.dart';
 export 'package:eurocup_frontend/src/model/race/discipline.dart' show Discipline;
+import 'package:eurocup_frontend/src/model/club/club.dart';
+export 'package:eurocup_frontend/src/model/club/club.dart' show Club;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:html' as html;
@@ -51,6 +53,7 @@ User currentUser = User();
 String? token = '';
 List<Competition> competitions = [];
 List<Discipline> disciplines = [];
+List<Club> clubs = [];
 
 const String imagePrefix = 'events.motion.rs/photos';
 const String certificatePrefix = 'events.motion.rs/certificates';
