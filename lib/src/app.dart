@@ -79,7 +79,13 @@ class MyApp extends StatelessWidget {
                 if (!StartupService.isInitialized && !StartupService.isLoading) {
                   StartupService.initialize();
                 }
-                return child ?? const SizedBox();
+                // Apply max width constraint of 1024px
+                return Center(
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 1024),
+                    child: child ?? const SizedBox(),
+                  ),
+                );
               },
 
               // Provide the generated AppLocalizations to the MaterialApp. This
