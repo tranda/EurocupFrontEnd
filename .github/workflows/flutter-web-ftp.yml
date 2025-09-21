@@ -2,7 +2,7 @@ name: Build & Deploy Flutter Web (FTP)
 
 on:
   push:
-    branches: [ "main" ]   # change if needed
+    branches: [ "release" ]   # change if needed
   workflow_dispatch:
 
 jobs:
