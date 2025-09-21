@@ -154,7 +154,7 @@ class _DisciplineListViewState extends State<DisciplineListView> {
                                 ? (registered
                                     ? Icon(
                                         Icons.check_circle_outline,
-                                        color: Colors.green.shade600,
+                                        color: Colors.green.shade200,
                                         size: 28,
                                       )
                                     : const Icon(
@@ -187,7 +187,7 @@ class _DisciplineListViewState extends State<DisciplineListView> {
                                     child: registered
                                         ? Icon(
                                             Icons.check_circle_outline,
-                                            color: Colors.green.shade600,
+                                            color: Colors.green.shade200,
                                             size: 28,
                                           )
                                         : const Icon(
