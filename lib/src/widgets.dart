@@ -206,7 +206,7 @@ BoxDecoration bckDecoration() {
     image: DecorationImage(
         image: AssetImage('assets/images/bck.jpg'),
         fit: BoxFit.cover,
-        ),
+        alignment: Alignment.center),
   );
 }
 
@@ -215,6 +215,6 @@ BoxDecoration naslovnaDecoration() {
     image: DecorationImage(
         image: AssetImage('assets/images/naslovna-bck.jpg'),
         fit: BoxFit.cover,
-        alignment: Alignment.bottomCenter),
+        alignment: Alignment.center),
   );
 }

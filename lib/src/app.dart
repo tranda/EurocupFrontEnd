@@ -59,14 +59,10 @@ class MyApp extends StatelessWidget {
     //
     // The AnimatedBuilder Widget listens to the SettingsController for changes.
     // Whenever the user updates their settings, the MaterialApp is rebuilt.
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 500),
-      child: AnimatedBuilder(
+    return AnimatedBuilder(
         animation: settingsController,
         builder: (BuildContext context, Widget? child) {
-          return Container(
-            constraints: const BoxConstraints(maxWidth: 500),
-            child: MaterialApp(
+          return MaterialApp(
               // Providing a restorationScopeId allows the Navigator built by the
               // MaterialApp to restore the navigation stack when a user leaves and
               // returns to the app after it has been killed while running in the
@@ -356,10 +352,8 @@ class MyApp extends StatelessWidget {
                   },
                 );
               },
-            ),
           );
         },
-      ),
     );
   }
 

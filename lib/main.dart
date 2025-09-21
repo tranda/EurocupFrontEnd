@@ -34,33 +34,5 @@ void main() async {
   SystemChrome.setPreferredOrientations(
       [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
 
-  final runnableApp = _buildRunnableApp(
-    isWeb: kIsWeb,
-    webAppWidth: 480.0,
-    app: MyApp(
-      settingsController: settingsController,
-    ),
-  );
-  runApp(runnableApp);
-
-  // runApp(MyApp(settingsController: settingsController));
-}
-
-Widget _buildRunnableApp({
-  required bool isWeb,
-  required double webAppWidth,
-  required Widget app,
-}) {
-  if (!isWeb) {
-    return app;
-  }
-
-  return Center(
-    child: ClipRect(
-      child: SizedBox(
-        width: webAppWidth,
-        child: app,
-      ),
-    ),
-  );
+  runApp(MyApp(settingsController: settingsController));
 }
