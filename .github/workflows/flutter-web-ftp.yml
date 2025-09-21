@@ -24,7 +24,7 @@ jobs:
 
       - name: Analyze & Test
         run: |
-          flutter analyze
+          dart analyze
           continue-on-error: true
           flutter test
 
