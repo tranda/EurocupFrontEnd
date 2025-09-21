@@ -8,6 +8,7 @@ import 'common.dart';
 import 'home_page_view.dart';
 import 'forgot_password_view.dart';
 import 'api_helper.dart' as api;
+import '../config/app_version.dart';
 
 // const _storage = FlutterSecureStorage();
 // Future ReadToken() async {
@@ -236,7 +237,34 @@ class _LoginViewState extends State<LoginView> {
                               launchUrlString(registrationFormURL);
                             },
                           ),
-                        )
+                        ),
+                        // Version and attribution footer
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            left: 16,
+                            right: 16,
+                            bottom: 16,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Made By Zoran Trandafilovic',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                ),
+                              ),
+                              Text(
+                                'Version ${AppVersion.version}',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
