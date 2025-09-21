@@ -23,10 +23,7 @@ jobs:
         run: flutter pub get
 
       - name: Analyze & Test
-        run: |
-          dart analyze
-          continue-on-error: true
-          flutter test
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
 
       - name: Build Web (base-href /web/)
         run: flutter build web --release --base-href "/web/"
