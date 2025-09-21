@@ -55,7 +55,7 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftp              # use 'ftps' or 'sftp' if your host supports it
-          local-dir: build/web
+          local-dir: build/web/
           server-dir: ${{ secrets.FTP_REMOTE_DIR }}  # e.g. /public_html/web
           state-name: .deploy-state.json
           exclude: |
