@@ -5,7 +5,6 @@ import 'package:eurocup_frontend/src/races/race_results_list_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
-import 'package:intl/intl.dart';
 
 class RaceResultDetailView extends StatefulWidget {
   const RaceResultDetailView({super.key});
@@ -46,8 +45,7 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
   Future<void> _loadRaceResult({bool isRefresh = false}) async {
     if (raceResultId == null) return;
 
-    // Only load if we haven't loaded yet or if we're reloading
-    if (_raceResult != null && !_isLoading && !isRefresh) return;
+    // Always fetch fresh data - no caching for public race results
 
     try {
       setState(() {
@@ -62,9 +60,8 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
       // Loading race result with ID: $raceResultId
       // Token status: ${token == null || token!.isEmpty ? "No token - using public API" : "Has token - using authenticated API"}
 
-      final result = (token == null || token!.isEmpty)
-          ? await api.getPublicRaceResult(raceResultId!)
-          : await api.getRaceResult(raceResultId!);
+      // Always use public API for race results
+      final result = await api.getPublicRaceResult(raceResultId!);
 
       // Race result loaded: ${result?.toMap()}
 
@@ -620,12 +617,6 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
     return '+${delaySeconds.toStringAsFixed(2)}s';
   }
 
-  String _getPositionDisplay(int position) {
-    if (position == 1) return '1st';
-    if (position == 2) return '2nd';
-    if (position == 3) return '3rd';
-    return '${position}th';
-  }
 
   Color _getPositionColor(int? position) {
     switch (position) {

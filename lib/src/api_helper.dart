@@ -1124,11 +1124,15 @@ Future<RaceResult?> getRaceResult(int raceResultId) async {
 
 // Public Race Results API methods (no authentication required)
 Future<List<RaceResult>> getPublicRaceResults({int? eventId}) async {
+  var timestamp = DateTime.now().millisecondsSinceEpoch;
   var url = '$apiURL/public/race-results';
   if (eventId != null) {
-    url += '?event_id=$eventId';
+    url += '?event_id=$eventId&t=$timestamp';
+  } else {
+    url += '?t=$timestamp';
   }
   var request = http.Request('GET', Uri.parse(url));
+  request.headers.addAll({'Cache-Control': 'no-cache'});
 
   http.StreamedResponse response = await request.send();
   List<RaceResult> raceResults = [];

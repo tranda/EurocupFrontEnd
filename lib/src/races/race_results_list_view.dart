@@ -1,7 +1,6 @@
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/model/race/race_result.dart';
 import 'package:eurocup_frontend/src/model/race/crew_result.dart';
-import 'package:eurocup_frontend/src/model/event/event.dart';
 import 'package:eurocup_frontend/src/races/race_result_detail_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
@@ -26,34 +25,6 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   String? _eventName;
   Competition? _competition;
 
-  /// Returns short event name format: [name] [year]
-  String _getShortEventName() {
-    // Use competition's getShortName if available
-    if (_competition != null) {
-      return _competition!.getShortName();
-    }
-
-    // Fallback to processing _eventName if no competition data
-    if (_eventName == null) return 'Event ${DateTime.now().year}';
-
-    // If already in short format (like "EuroCup 2025"), return as is
-    if (_eventName!.split(' ').length <= 2) {
-      return _eventName!;
-    }
-
-    // For longer names, try to extract name and year
-    final words = _eventName!.split(' ');
-    final lastWord = words.last;
-
-    // Check if last word is a year (4 digits)
-    if (RegExp(r'^\d{4}$').hasMatch(lastWord)) {
-      final name = words.first; // Take first word as name
-      return '$name $lastWord';
-    }
-
-    // If no year found, use first word + current year
-    return '${words.first} ${DateTime.now().year}';
-  }
 
   /// Returns event title without year
   String _getEventTitle() {
@@ -140,9 +111,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
 
       setState(() {
         _competition = competition;
-        if (_eventName == null) {
-          _eventName = competition.getShortName();
-        }
+        _eventName ??= competition.getShortName();
       });
       // Successfully loaded event from competitions: ${competition.getShortName()}
     } catch (e) {
@@ -155,8 +124,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   }
 
   Future<void> _loadRaceResults({bool isRefresh = false}) async {
-    // Only load if we haven't loaded yet or if we're reloading
-    if (_raceResults != null && !_isLoading && !isRefresh) return;
+    // Always fetch fresh data - no caching for public race results
 
     try {
       setState(() {
@@ -504,7 +472,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                           ],
                         ),
                         Text(
-                          '${discipline?.getDisplayName() ?? 'Unknown'}',
+                          discipline?.getDisplayName() ?? 'Unknown',
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -571,9 +539,8 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                 ),
               ],
             );
-        } catch (e, stackTrace) {
+        } catch (e) {
           // Error building race result item: $e
-          // Stack trace: $stackTrace
           return Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -957,22 +924,6 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     }
   }
 
-  Color _getFinalStatusColor(String? finalStatus) {
-    switch (finalStatus) {
-      case 'FINISHED':
-        return Colors.green;
-      case 'DNS':
-        return Colors.orange;
-      case 'DNF':
-        return Colors.red;
-      case 'DSQ':
-        return Colors.purple;
-      case null:
-        return Colors.blue; // Registered but no result yet
-      default:
-        return Colors.grey;
-    }
-  }
 
   Color _getStatusColorTotal(String? status) {
     switch (status) {
