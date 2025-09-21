@@ -224,6 +224,40 @@ class _LoginViewState extends State<LoginView> {
                             ),
                           ),
                         ),
+                        // Results button (public access)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: horizontalPadding,
+                              vertical: 12),
+                          child: Center(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/results');
+                              },
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 32,
+                                  vertical: 12,
+                                ),
+                                side: BorderSide(
+                                  color: Colors.blue[700]!,
+                                  width: 2,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Text(
+                                'VIEW RACE RESULTS',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: Colors.blue[700],
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                         const SizedBox(
                           height: bigSpace,
                         ),

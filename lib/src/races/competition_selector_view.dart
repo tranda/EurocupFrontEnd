@@ -82,20 +82,21 @@ class _CompetitionSelectorViewState extends State<CompetitionSelectorView> {
       appBar: appBar(title: 'Race Results'),
       body: Container(
         decoration: naslovnaDecoration(),
-        child: SingleChildScrollView(
-          child: Container(
-            margin: const EdgeInsets.all(16),
-            child: Card(
-              elevation: 8,
-              color: Colors.blue.shade50,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                    children: [
+        child: Center(
+          child: SingleChildScrollView(
+            child: Container(
+              margin: const EdgeInsets.all(16),
+              child: Card(
+                elevation: 8,
+                color: Colors.blue.shade50,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                      children: [
 
                       // Title
                       Text(
@@ -215,6 +216,7 @@ class _CompetitionSelectorViewState extends State<CompetitionSelectorView> {
             ),
           ),
         ),
+      ),
     );
   }
 }
