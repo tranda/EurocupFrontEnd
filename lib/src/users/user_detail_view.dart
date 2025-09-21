@@ -548,47 +548,14 @@ class _UserDetailViewState extends State<UserDetailView> {
               FloatingActionButton(
                 heroTag: "saveUserBtn",
                 backgroundColor: Colors.blue,
-                onPressed: () async {
+                onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    // Show loading indicator
-                    showDialog(
-                      context: context,
-                      barrierDismissible: false,
-                      builder: (context) => const Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
-
-                    final updatedUser = await api.updateUser(user);
-
-                    // Close loading indicator
-                    Navigator.pop(context);
-
-                    if (updatedUser != null) {
-                      setState(() {
-                        user = updatedUser;
-                        nameController.text = updatedUser.name ?? '';
-                        usernameController.text = updatedUser.username ?? '';
-                        eMailController.text = updatedUser.email ?? '';
-                        mode = 'r';
-                      });
-
-                      // Show success message
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('User updated successfully'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    } else {
-                      // Show error message
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Failed to update user'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
+                    setState(() {
+                      mode = 'r';
+                      api.updateUser(user).then((value) => Navigator.pop(
+                            context,
+                          ));
+                    });
                   }
                 },
                 child: const Icon(Icons.save),
