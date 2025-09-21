@@ -33,10 +33,6 @@ jobs:
         with:
           name: web-build
           path: build/web/
-
-  # Drop a marker so you can find it via FTP/search
-  - name: Add deploy marker
-    run: echo "run=${GITHUB_RUN_NUMBER} $(date -u)" > build/web/__DEPLOY_MARKER.txt
   
   deploy:
     runs-on: ubuntu-latest
@@ -47,6 +43,10 @@ jobs:
         with:
           name: web-build
           path: build/web/
+
+      # Drop a marker so you can find it via FTP/search
+      - name: Add deploy marker
+        run: echo "run=${GITHUB_RUN_NUMBER} $(date -u)" > build/web/__DEPLOY_MARKER.txt
 
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
