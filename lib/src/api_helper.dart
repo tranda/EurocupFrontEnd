@@ -794,10 +794,10 @@ Future deleteUser(User user) async {
   }
 }
 
-Future updateUser(User user) async {
+Future<User?> updateUser(User user) async {
   if (user.id == null) {
     await createUser(user);
-    return;
+    return null;
   }
   var headers = {
     'Content-Type': 'application/x-www-form-urlencoded',
@@ -814,15 +814,31 @@ Future updateUser(User user) async {
     'event_id': '${user.eventId}',
     'access_level': '${user.accessLevel}'
   };
+
+  print('Updating user ${user.id} with data:');
+  print('  name: ${user.name}');
+  print('  username: ${user.username}');
+  print('  club_id: ${user.clubId}');
+  print('  event_id: ${user.eventId}');
+  print('  access_level: ${user.accessLevel}');
+
   request.headers.addAll(headers);
 
   http.StreamedResponse response = await request.send();
 
   if (response.statusCode == 200) {
     var responseString = await response.stream.bytesToString();
-    // Debug: API response received
+    print('Update user response: $responseString');
+    // Parse the response to get the updated user
+    var json = jsonDecode(responseString);
+    if (json['data'] != null) {
+      return User.fromJson(json['data']);
+    }
+    return user; // Return the original user if no data in response
   } else {
-    // Error: API request failed
+    var errorString = await response.stream.bytesToString();
+    print('Error updating user: ${response.statusCode} - $errorString');
+    return null;
   }
 }
 
