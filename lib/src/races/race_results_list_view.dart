@@ -5,6 +5,9 @@ import 'package:eurocup_frontend/src/races/race_result_detail_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 class RaceResultsListView extends StatefulWidget {
   const RaceResultsListView({super.key});
@@ -77,6 +80,31 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
 
     // Default to current year
     return DateTime.now().year.toString();
+  }
+
+  /// Returns full event name for file naming
+  String _getEventFullName() {
+    // Use competition's full name if available
+    if (_competition != null) {
+      return _competition!.toString(); // This gives us "Name, Location Year"
+    }
+
+    // Fallback to processing _eventName
+    if (_eventName != null) {
+      return _eventName!;
+    }
+
+    // Default fallback
+    return 'Event ${_getEventYear()}';
+  }
+
+  /// Sanitizes filename to remove invalid characters
+  String _sanitizeFilename(String filename) {
+    // Remove or replace characters that are invalid in filenames
+    return filename
+        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '') // Remove invalid chars
+        .replaceAll(RegExp(r'\s+'), ' ') // Replace multiple spaces with single space
+        .trim(); // Remove leading/trailing spaces
   }
 
   @override
@@ -193,6 +221,410 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     }
 
     return false;
+  }
+
+  Future<void> _exportToPDF() async {
+    if (_raceResults == null || _raceResults!.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No race results to export')),
+        );
+      }
+      return;
+    }
+
+    try {
+      final pdf = pw.Document();
+
+      // Prepare race results with sorted crew results
+      final races = List<RaceResult>.from(_raceResults!);
+      races.sort((a, b) => (a.raceNumber ?? 0).compareTo(b.raceNumber ?? 0));
+
+      // Process each race to ensure proper positioning and sorting
+      for (var race in races) {
+        final crewResults = race.crewResults ?? [];
+        final isFinal = _isFinalStage(race);
+        _calculatePositions(crewResults, isFinalRound: isFinal);
+
+        // Sort crew results
+        if (isFinal) {
+          crewResults.sort((a, b) {
+            final aPos = a.position;
+            final bPos = b.position;
+            if (aPos == null && bPos == null) {
+              if (a.finalTimeMs != null && b.finalTimeMs != null) {
+                return a.finalTimeMs!.compareTo(b.finalTimeMs!);
+              }
+              return 0;
+            }
+            if (aPos == null) return 1;
+            if (bPos == null) return -1;
+            return aPos.compareTo(bPos);
+          });
+        } else {
+          crewResults.sort((a, b) {
+            if (a.position == null && b.position == null) return 0;
+            if (a.position == null) return 1;
+            if (b.position == null) return -1;
+            return a.position!.compareTo(b.position!);
+          });
+        }
+      }
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(20),
+          build: (pw.Context context) => _buildPDFContent(races),
+        ),
+      );
+
+      // Sanitize filename for different operating systems
+      final sanitizedName = _sanitizeFilename('Race results for ${_getEventFullName()}');
+      final fullFilename = '$sanitizedName.pdf';
+
+      // Debug: Print the filename being used
+      print('PDF filename: $fullFilename');
+
+      final pdfBytes = await pdf.save();
+
+      // Try sharePdf first (better filename support)
+      try {
+        await Printing.sharePdf(
+          bytes: pdfBytes,
+          filename: fullFilename,
+        );
+      } catch (shareError) {
+        // Fallback to layoutPdf if sharePdf fails
+        print('Share PDF failed, falling back to layout PDF: $shareError');
+        await Printing.layoutPdf(
+          onLayout: (PdfPageFormat format) async => pdfBytes,
+          name: fullFilename,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error exporting PDF: $e')),
+        );
+      }
+    }
+  }
+
+  List<pw.Widget> _buildPDFContent(List<RaceResult> races) {
+    final widgets = <pw.Widget>[];
+
+    // Header
+    widgets.add(
+      pw.Column(
+        children: [
+          pw.Text(
+            _getEventFullName(),
+            style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
+            textAlign: pw.TextAlign.center,
+          ),
+          pw.SizedBox(height: 20),
+        ],
+      ),
+    );
+
+    // Race results
+    for (var race in races) {
+      widgets.add(_buildPDFRaceSection(race));
+      widgets.add(pw.SizedBox(height: 20));
+    }
+
+    return widgets;
+  }
+
+  pw.Widget _buildPDFRaceSection(RaceResult race) {
+    final crewResults = race.crewResults ?? [];
+    final isFinal = _isFinalStage(race);
+    final isLastRound = _isLastRound(race);
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        // Race header
+        pw.Container(
+          width: double.infinity,
+          padding: const pw.EdgeInsets.all(12),
+          decoration: pw.BoxDecoration(
+            color: PdfColors.blue800,
+            borderRadius: pw.BorderRadius.circular(4),
+          ),
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text(
+                    '#${race.raceNumber} ${race.raceTimeDisplay}',
+                    style: pw.TextStyle(
+                      color: PdfColors.white,
+                      fontWeight: pw.FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  pw.Text(
+                    race.stage ?? '',
+                    style: pw.TextStyle(
+                      color: PdfColors.white,
+                      fontWeight: pw.FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+              pw.SizedBox(height: 4),
+              pw.Text(
+                race.discipline?.getDisplayName() ?? 'Unknown',
+                style: pw.TextStyle(
+                  color: PdfColors.white,
+                  fontWeight: pw.FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              pw.Text(
+                race.statusDisplay,
+                style: pw.TextStyle(
+                  color: PdfColors.grey300,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        pw.SizedBox(height: 8),
+
+        // Crew results
+        if (crewResults.isNotEmpty)
+          ...crewResults.map((crew) => _buildPDFCrewResult(crew, race, isFinal, isLastRound))
+        else
+          pw.Padding(
+            padding: const pw.EdgeInsets.all(16),
+            child: pw.Text(
+              'No crews registered for this race yet',
+              style: pw.TextStyle(
+                color: PdfColors.grey600,
+                fontStyle: pw.FontStyle.italic,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  pw.Widget _buildPDFCrewResult(CrewResult crew, RaceResult race, bool isFinal, bool isLastRound) {
+    return pw.Container(
+      decoration: const pw.BoxDecoration(
+        border: pw.Border(
+          bottom: pw.BorderSide(color: PdfColors.grey300, width: 0.5),
+        ),
+      ),
+      padding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: pw.Row(
+        children: [
+          // Position circle
+          pw.Container(
+            width: 36,
+            height: 36,
+            decoration: pw.BoxDecoration(
+              color: _getPDFPositionColor(crew.position, isFinal),
+              shape: pw.BoxShape.circle,
+              border: isFinal
+                ? null
+                : pw.Border.all(color: _getPDFPositionColor(crew.position, false), width: 2),
+            ),
+            child: pw.Center(
+              child: pw.Text(
+                crew.position?.toString() ?? '-',
+                style: pw.TextStyle(
+                  color: isFinal ? PdfColors.white : _getPDFPositionColor(crew.position, false),
+                  fontWeight: pw.FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+
+          pw.SizedBox(width: 12),
+
+          // Team name and lane
+          pw.Expanded(
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  crew.crew?.team?.name ?? crew.team?.name ?? 'Unknown Team',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12),
+                ),
+                if (crew.lane != null)
+                  pw.Text(
+                    'Lane ${crew.lane}',
+                    style: pw.TextStyle(color: PdfColors.grey600, fontSize: 10),
+                  ),
+              ],
+            ),
+          ),
+
+          // Times section
+          if (isLastRound && isFinal && crew.hasFinalTime)
+            // Two-column format for accumulated rounds
+            pw.Row(
+              children: [
+                // Current round time
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    pw.Container(
+                      padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: pw.BoxDecoration(
+                        color: _getPDFStatusColor(crew.status),
+                        borderRadius: pw.BorderRadius.circular(4),
+                      ),
+                      child: pw.Text(
+                        crew.displayTime,
+                        style: pw.TextStyle(
+                          color: PdfColors.white,
+                          fontWeight: pw.FontWeight.bold,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                    if (crew.isFinished && crew.position != null && crew.position! > 1)
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.only(top: 2),
+                        child: pw.Text(
+                          _calculateCurrentRoundDelay(crew, race),
+                          style: pw.TextStyle(color: PdfColors.grey600, fontSize: 9),
+                        ),
+                      ),
+                  ],
+                ),
+                pw.SizedBox(width: 16),
+                // Accumulated time
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    pw.Container(
+                      padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: pw.BoxDecoration(
+                        color: _getPDFStatusColor(crew.finalStatus ?? crew.status, isTotal: true),
+                        borderRadius: pw.BorderRadius.circular(4),
+                      ),
+                      child: pw.Text(
+                        crew.displayFinalTime,
+                        style: pw.TextStyle(
+                          color: PdfColors.white,
+                          fontWeight: pw.FontWeight.bold,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                    if (crew.isFinished && crew.position != null && crew.position! > 1)
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.only(top: 2),
+                        child: pw.Text(
+                          _calculateDelay(crew, race, isFinalRound: isFinal),
+                          style: pw.TextStyle(color: PdfColors.grey600, fontSize: 9),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            )
+          else
+            // Single time format
+            pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.end,
+              children: [
+                pw.Container(
+                  padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: pw.BoxDecoration(
+                    color: _getPDFStatusColor(crew.status),
+                    borderRadius: pw.BorderRadius.circular(4),
+                  ),
+                  child: pw.Text(
+                    crew.displayTime,
+                    style: pw.TextStyle(
+                      color: PdfColors.white,
+                      fontWeight: pw.FontWeight.bold,
+                      fontSize: 10,
+                    ),
+                  ),
+                ),
+                if (crew.isFinished && crew.position != null && crew.position! > 1)
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.only(top: 2),
+                    child: pw.Text(
+                      _calculateDelay(crew, race, isFinalRound: isFinal),
+                      style: pw.TextStyle(color: PdfColors.grey600, fontSize: 9),
+                    ),
+                  ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  PdfColor _getPDFPositionColor(int? position, bool isFinal) {
+    switch (position) {
+      case 1:
+        return PdfColors.amber; // Gold
+      case 2:
+        return PdfColors.grey; // Silver
+      case 3:
+        return PdfColors.brown; // Bronze
+      default:
+        return PdfColors.blue;
+    }
+  }
+
+  PdfColor _getPDFStatusColor(String? status, {bool isTotal = false}) {
+    PdfColor baseColor;
+    switch (status) {
+      case 'FINISHED':
+        baseColor = PdfColors.green;
+        break;
+      case 'DNS':
+        baseColor = PdfColors.orange;
+        break;
+      case 'DNF':
+        baseColor = PdfColors.red;
+        break;
+      case 'DSQ':
+        baseColor = PdfColors.purple;
+        break;
+      case null:
+        baseColor = PdfColors.blue;
+        break;
+      default:
+        baseColor = PdfColors.grey;
+        break;
+    }
+
+    if (isTotal) {
+      // Create a darker version of the color for total times
+      switch (status) {
+        case 'FINISHED':
+          return PdfColors.green700;
+        case 'DNS':
+          return PdfColors.orange700;
+        case 'DNF':
+          return PdfColors.red700;
+        case 'DSQ':
+          return PdfColors.purple700;
+        case null:
+          return PdfColors.blue700;
+        default:
+          return PdfColors.grey700;
+      }
+    }
+    return baseColor;
   }
 
   void _calculatePositions(List<CrewResult> crewResults, {bool isFinalRound = false}) {
@@ -320,53 +752,60 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Column(
-                  children: [
-                    Text(
-                      _getEventTitle(),
-                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    Text(
-                      _getEventYear(),
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: Colors.black54,
-                        fontWeight: FontWeight.normal,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                Text(
+                  _getEventFullName(),
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    color: Colors.black87,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    ElevatedButton(
-                      onPressed: _expandAll,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1],
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(80, 28),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        textStyle: const TextStyle(fontSize: 12),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: const Text('Expand All'),
+                    // Left side: Expand/Collapse buttons
+                    Row(
+                      children: [
+                        ElevatedButton(
+                          onPressed: _expandAll,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1],
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size(80, 28),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            textStyle: const TextStyle(fontSize: 12),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: const Text('Expand All'),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: _collapseAll,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1],
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size(80, 28),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            textStyle: const TextStyle(fontSize: 12),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: const Text('Collapse All'),
+                        ),
+                      ],
                     ),
+                    // Right side: Export PDF button in green
                     ElevatedButton(
-                      onPressed: _collapseAll,
+                      onPressed: _exportToPDF,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1],
+                        backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
                         minimumSize: const Size(80, 28),
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                         textStyle: const TextStyle(fontSize: 12),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
-                      child: const Text('Collapse All'),
+                      child: const Text('Export PDF'),
                     ),
                   ],
                 ),
