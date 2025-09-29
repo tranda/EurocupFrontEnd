@@ -200,14 +200,12 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
       // For final rounds, use the backend-provided finalPosition
       // The backend calculates positions based on accumulated final times
 
-      // Check if we have valid finalPosition data from backend
-      final hasValidFinalPositions = crewResults.any((crew) => crew.finalPosition != null);
+      // Check if we have valid position data from backend
+      final hasValidPositions = crewResults.any((crew) => crew.position != null);
 
-      if (hasValidFinalPositions) {
-        // Use backend-provided finalPosition
-        for (var crew in crewResults) {
-          crew.position = crew.finalPosition;
-        }
+      if (hasValidPositions) {
+        // Use backend-provided positions - no need to change anything
+        return;
       } else {
         // Fallback: calculate positions based on finalTimeMs if finalPosition is missing
         final finishedCrews = crewResults
@@ -228,7 +226,15 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
             .forEach((crew) => crew.position = null);
       }
     } else {
-      // Regular round logic - use current round time
+      // Regular round logic - respect existing positions from database
+      final hasValidPositions = crewResults.any((crew) => crew.position != null);
+
+      if (hasValidPositions) {
+        // Use backend-provided positions - no need to change anything
+        return;
+      }
+
+      // Only calculate if no positions exist in database
       final finishedCrews = crewResults
           .where((crew) => crew.status == 'FINISHED' && crew.timeMs != null)
           .toList();
@@ -383,12 +389,12 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
 
           // Sort crew results based on position
           if (isFinal) {
-            // For final rounds, sort by finalPosition (based on accumulated final times)
+            // For final rounds, sort by position (based on accumulated final times)
             crewResults.sort((a, b) {
-              final aPos = a.finalPosition;
-              final bPos = b.finalPosition;
+              final aPos = a.position;
+              final bPos = b.position;
               if (aPos == null && bPos == null) {
-                // If both have no final position, sort by final time if available
+                // If both have no position, sort by final time if available
                 if (a.finalTimeMs != null && b.finalTimeMs != null) {
                   return a.finalTimeMs!.compareTo(b.finalTimeMs!);
                 }
@@ -852,7 +858,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
       // For accumulated rounds, use final times
       currentTime = crewResult.finalTimeMs;
       firstPlaceTime = raceResult.crewResults
-          ?.where((crew) => (crew.finalPosition ?? crew.position) == 1 && crew.finalTimeMs != null)
+          ?.where((crew) => crew.position == 1 && crew.finalTimeMs != null)
           .firstOrNull
           ?.finalTimeMs;
     } else if (crewResult.timeMs != null) {
