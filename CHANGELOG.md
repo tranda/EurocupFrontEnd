@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.6] - 2025-10-09
+
+### Fixed
+- Fixed race photos clickability on web platform
+  - Added transparent InkWell overlay to catch taps on WebImage elements
+  - Resolved CORS issues by using WebImage (HTML img tags) for thumbnails
+  - Race photos are now fully clickable and open full-screen viewer
+  - Full-screen viewer supports pinch-to-zoom and pan gestures
+
+### Changed
+- Improved race photo display architecture for better web compatibility
+
 ## [0.5.5] - 2025-10-09
 
 ### Added

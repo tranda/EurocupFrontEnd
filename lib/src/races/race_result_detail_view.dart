@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import '../athletes/image_widget_web.dart' if (dart.library.io) 'package:flutter/material.dart';
-import '../athletes/clickable_web_image.dart' if (dart.library.io) 'package:flutter/material.dart';
 
 class RaceResultDetailView extends StatefulWidget {
   const RaceResultDetailView({super.key});
@@ -263,9 +262,9 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
   }
 
   Widget _buildRaceImageWidget(String imageUrl) {
-    // Use web-specific HTML rendering for web platform
+    // Use web-specific HTML rendering for web platform (bypasses CORS)
     if (kIsWeb) {
-      return ClickableWebImage(
+      return WebImage(
         imageUrl: imageUrl,
         width: double.infinity,
         height: 300,
@@ -354,66 +353,76 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
             final imageUrl = 'https://$racePhotoPrefix/$imageFilename';
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: GestureDetector(
-                onTap: () {
-                  // Open image in full screen dialog
-                  showDialog(
-                    context: context,
-                    builder: (context) => Dialog(
-                      backgroundColor: Colors.black,
-                      insetPadding: EdgeInsets.zero,
-                      child: Stack(
-                        children: [
-                          Center(
-                            child: InteractiveViewer(
-                              child: kIsWeb
-                                  ? WebImage(
-                                      imageUrl: imageUrl,
-                                      width: MediaQuery.of(context).size.width,
-                                      height: MediaQuery.of(context).size.height,
-                                    )
-                                  : Image.network(
-                                      imageUrl,
-                                      fit: BoxFit.contain,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return Center(
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const Icon(
-                                                Icons.broken_image,
-                                                size: 64,
-                                                color: Colors.grey,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Stack(
+                  children: [
+                    _buildRaceImageWidget(imageUrl),
+                    // Transparent overlay to catch taps (WebImage blocks gestures)
+                    Positioned.fill(
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            // Open image in full screen dialog
+                            showDialog(
+                              context: context,
+                              builder: (context) => Dialog(
+                                backgroundColor: Colors.black,
+                                insetPadding: EdgeInsets.zero,
+                                child: Stack(
+                                  children: [
+                                    Center(
+                                      child: InteractiveViewer(
+                                        child: kIsWeb
+                                            ? WebImage(
+                                                imageUrl: imageUrl,
+                                                width: MediaQuery.of(context).size.width,
+                                                height: MediaQuery.of(context).size.height,
+                                              )
+                                            : Image.network(
+                                                imageUrl,
+                                                fit: BoxFit.contain,
+                                                errorBuilder: (context, error, stackTrace) {
+                                                  return Center(
+                                                    child: Column(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        const Icon(
+                                                          Icons.broken_image,
+                                                          size: 64,
+                                                          color: Colors.grey,
+                                                        ),
+                                                        const SizedBox(height: 8),
+                                                        Text(
+                                                          'Failed to load image\n$imageUrl',
+                                                          style: const TextStyle(color: Colors.white),
+                                                          textAlign: TextAlign.center,
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                },
                                               ),
-                                              const SizedBox(height: 8),
-                                              Text(
-                                                'Failed to load image\n$imageUrl',
-                                                style: const TextStyle(color: Colors.white),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      },
+                                      ),
                                     ),
-                            ),
-                          ),
-                          Positioned(
-                            top: 0,
-                            right: 0,
-                            child: IconButton(
-                              icon: const Icon(Icons.close, color: Colors.white, size: 32),
-                              onPressed: () => Navigator.pop(context),
-                            ),
-                          ),
-                        ],
+                                    Positioned(
+                                      top: 0,
+                                      right: 0,
+                                      child: IconButton(
+                                        icon: const Icon(Icons.close, color: Colors.white, size: 32),
+                                        onPressed: () => Navigator.pop(context),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ),
-                  );
-                },
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: _buildRaceImageWidget(imageUrl),
+                  ],
                 ),
               ),
             );
