@@ -1395,6 +1395,8 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                                   children: [
                                     Center(
                                       child: InteractiveViewer(
+                                        minScale: 0.5,
+                                        maxScale: 4.0,
                                         child: kIsWeb
                                             ? WebImage(
                                                 imageUrl: imageUrl,

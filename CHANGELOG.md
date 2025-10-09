@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.7] - 2025-10-09
+
+### Improved
+- Enhanced full-screen race photo viewer zoom capabilities
+  - Added configurable min/max zoom scale (0.5x to 4.0x)
+  - Improved zoom experience with mouse wheel on desktop
+  - Better zoom control for both mobile and desktop platforms
+
 ## [0.5.6] - 2025-10-09
 
 ### Fixed
