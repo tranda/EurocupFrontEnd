@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import '../athletes/image_widget_web.dart' if (dart.library.io) 'package:flutter/material.dart';
+import '../athletes/clickable_web_image.dart' if (dart.library.io) 'package:flutter/material.dart';
 
 class RaceResultDetailView extends StatefulWidget {
   const RaceResultDetailView({super.key});
@@ -264,7 +265,7 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
   Widget _buildRaceImageWidget(String imageUrl) {
     // Use web-specific HTML rendering for web platform
     if (kIsWeb) {
-      return WebImage(
+      return ClickableWebImage(
         imageUrl: imageUrl,
         width: double.infinity,
         height: 300,

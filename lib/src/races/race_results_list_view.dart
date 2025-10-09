@@ -10,6 +10,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import '../athletes/image_widget_web.dart' if (dart.library.io) 'package:flutter/material.dart';
+import '../athletes/clickable_web_image.dart' if (dart.library.io) 'package:flutter/material.dart';
 
 class RaceResultsListView extends StatefulWidget {
   const RaceResultsListView({super.key});
@@ -1285,7 +1286,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   Widget _buildRaceImageWidget(String imageUrl) {
     // Use web-specific HTML rendering for web platform
     if (kIsWeb) {
-      return WebImage(
+      return ClickableWebImage(
         imageUrl: imageUrl,
         width: double.infinity,
         height: 300,
@@ -1376,6 +1377,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
               padding: const EdgeInsets.only(bottom: 12),
               child: GestureDetector(
                 onTap: () {
+                  // Debug: Image tapped - $imageUrl
                   // Open image in full screen dialog
                   showDialog(
                     context: context,
