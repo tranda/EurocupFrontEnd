@@ -4,7 +4,9 @@ import 'package:eurocup_frontend/src/model/race/crew_result.dart';
 import 'package:eurocup_frontend/src/races/race_results_list_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
+import '../athletes/image_widget_web.dart' if (dart.library.io) 'package:flutter/material.dart';
 
 class RaceResultDetailView extends StatefulWidget {
   const RaceResultDetailView({super.key});
@@ -173,10 +175,15 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
             });
           }
 
+    final hasImages = raceResult.images != null && raceResult.images!.isNotEmpty;
+    final totalItems = crewResults.isEmpty
+        ? (hasImages ? 3 : 2) // header + empty message + images
+        : crewResults.length + (hasImages ? 2 : 1); // header + crews + images
+
     return RefreshIndicator(
       onRefresh: _refreshRaceResult,
       child: ListView.builder(
-        itemCount: crewResults.isEmpty ? 2 : crewResults.length + 1, // +1 for header, +1 for empty state
+        itemCount: totalItems,
         itemBuilder: (context, index) {
           // First item is the header
           if (index == 0) {
@@ -241,10 +248,176 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
             );
           }
 
+          // Images section - show after crew results or empty message
+          if (hasImages && index == (crewResults.isEmpty ? 2 : crewResults.length + 1)) {
+            return _buildRaceImages(raceResult.images!);
+          }
+
           // Adjust index for crew results (subtract 1 because of header)
           final crewResult = crewResults[index - 1];
           return _buildCrewResultItem(context, crewResult, raceResult, isFinal, isLastRound);
         },
+      ),
+    );
+  }
+
+  Widget _buildRaceImageWidget(String imageUrl) {
+    // Use web-specific HTML rendering for web platform
+    if (kIsWeb) {
+      return WebImage(
+        imageUrl: imageUrl,
+        width: double.infinity,
+        height: 300,
+      );
+    }
+
+    // For non-web platforms, use regular Image.network
+    return Image.network(
+      imageUrl,
+      width: double.infinity,
+      height: 300,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Container(
+          height: 300,
+          color: Colors.grey[200],
+          child: Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded /
+                      loadingProgress.expectedTotalBytes!
+                  : null,
+            ),
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        // Error loading image: $imageUrl - $error
+        return Container(
+          height: 300,
+          decoration: BoxDecoration(
+            color: Colors.grey[300],
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.broken_image,
+                size: 48,
+                color: Colors.grey,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Failed to load image',
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  imageUrl,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 10,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildRaceImages(List<String> images) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Race Photos',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Display images vertically, one below the other
+          ...images.map((imageFilename) {
+            final imageUrl = 'https://$racePhotoPrefix/$imageFilename';
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: GestureDetector(
+                onTap: () {
+                  // Open image in full screen dialog
+                  showDialog(
+                    context: context,
+                    builder: (context) => Dialog(
+                      backgroundColor: Colors.black,
+                      insetPadding: EdgeInsets.zero,
+                      child: Stack(
+                        children: [
+                          Center(
+                            child: InteractiveViewer(
+                              child: kIsWeb
+                                  ? WebImage(
+                                      imageUrl: imageUrl,
+                                      width: MediaQuery.of(context).size.width,
+                                      height: MediaQuery.of(context).size.height,
+                                    )
+                                  : Image.network(
+                                      imageUrl,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return Center(
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(
+                                                Icons.broken_image,
+                                                size: 64,
+                                                color: Colors.grey,
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                'Failed to load image\n$imageUrl',
+                                                style: const TextStyle(color: Colors.white),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    ),
+                            ),
+                          ),
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: IconButton(
+                              icon: const Icon(Icons.close, color: Colors.white, size: 32),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: _buildRaceImageWidget(imageUrl),
+                ),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }

@@ -57,6 +57,7 @@ List<Club> clubs = [];
 
 const String imagePrefix = 'events.motion.rs/photos';
 const String certificatePrefix = 'events.motion.rs/certificates';
+const String racePhotoPrefix = 'events.motion.rs/racephotos';
 const String registrationFormURL = 'https://forms.gle/24meGmPLJvVE1zRG9';
 
 const double horizontalPadding = 24.0;

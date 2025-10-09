@@ -13,6 +13,7 @@ class RaceResult {
   bool? showAccumulatedTime; // Indicates if accumulated/total times should be shown
   List<CrewResult>? crewResults;
   Discipline? discipline;
+  List<String>? images; // Array of image filenames to be displayed below the race
   DateTime? createdAt;
   DateTime? updatedAt;
 
@@ -27,6 +28,7 @@ class RaceResult {
     this.showAccumulatedTime,
     this.crewResults,
     this.discipline,
+    this.images,
     this.createdAt,
     this.updatedAt,
   });
@@ -48,6 +50,9 @@ class RaceResult {
         discipline: data['discipline'] == null
             ? null
             : Discipline.fromMap(data['discipline'] as Map<String, dynamic>),
+        images: (data['images'] as List<dynamic>?)
+            ?.map((e) => e as String)
+            .toList(),
         createdAt: data['created_at'] == null
             ? null
             : DateTime.parse(data['created_at'] as String),
@@ -67,6 +72,7 @@ class RaceResult {
         'show_accumulated_time': showAccumulatedTime,
         'crew_results': crewResults?.map((e) => e.toMap()).toList(),
         'discipline': discipline?.toMap(),
+        'images': images,
         'created_at': createdAt?.toIso8601String(),
         'updated_at': updatedAt?.toIso8601String(),
       };
