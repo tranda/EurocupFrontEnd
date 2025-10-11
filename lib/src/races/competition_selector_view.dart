@@ -26,7 +26,15 @@ class _CompetitionSelectorViewState extends State<CompetitionSelectorView> {
       ];
     }
 
-    return competitions.map((competition) => {
+    // Sort competitions by year in descending order (newest first)
+    final sortedCompetitions = List<Competition>.from(competitions);
+    sortedCompetitions.sort((a, b) {
+      final yearA = a.year ?? 0;
+      final yearB = b.year ?? 0;
+      return yearB.compareTo(yearA);
+    });
+
+    return sortedCompetitions.map((competition) => {
       "id": competition.id.toString(),
       "name": "${competition.name} ${competition.year}, ${competition.location}",
     }).toList();
