@@ -29,7 +29,7 @@ class _EventDetailViewState extends State<EventDetailView> {
   DateTime? _nameEntriesLock;
   DateTime? _crewEntriesLock;
   DateTime? _raceEntriesLock;
-  bool _isActive = true;
+  String _status = 'active';
   bool _isLoading = false;
   Competition? _event;
   bool _isEditMode = false;
@@ -87,8 +87,7 @@ class _EventDetailViewState extends State<EventDetailView> {
       _nameEntriesLock = _event!.nameEntriesLock;
       _crewEntriesLock = _event!.crewEntriesLock;
       _raceEntriesLock = _event!.raceEntriesLock;
-      _isActive = _event!.raceEntriesLock != null ? 
-        _event!.raceEntriesLock!.isAfter(DateTime.now()) : true;
+      _status = _event!.status ?? 'active';
     }
   }
 
@@ -244,17 +243,18 @@ class _EventDetailViewState extends State<EventDetailView> {
         name: _nameController.text.trim(),
         location: _locationController.text.trim(),
         year: int.parse(_yearController.text.trim()),
-        standardReserves: _standardReservesController.text.trim().isEmpty 
+        status: _status,
+        standardReserves: _standardReservesController.text.trim().isEmpty
           ? null : int.tryParse(_standardReservesController.text.trim()),
-        standardMinGender: _standardMinGenderController.text.trim().isEmpty 
+        standardMinGender: _standardMinGenderController.text.trim().isEmpty
           ? null : int.tryParse(_standardMinGenderController.text.trim()),
-        standardMaxGender: _standardMaxGenderController.text.trim().isEmpty 
+        standardMaxGender: _standardMaxGenderController.text.trim().isEmpty
           ? null : int.tryParse(_standardMaxGenderController.text.trim()),
-        smallReserves: _smallReservesController.text.trim().isEmpty 
+        smallReserves: _smallReservesController.text.trim().isEmpty
           ? null : int.tryParse(_smallReservesController.text.trim()),
-        smallMinGender: _smallMinGenderController.text.trim().isEmpty 
+        smallMinGender: _smallMinGenderController.text.trim().isEmpty
           ? null : int.tryParse(_smallMinGenderController.text.trim()),
-        smallMaxGender: _smallMaxGenderController.text.trim().isEmpty 
+        smallMaxGender: _smallMaxGenderController.text.trim().isEmpty
           ? null : int.tryParse(_smallMaxGenderController.text.trim()),
         nameEntriesLock: _nameEntriesLock,
         crewEntriesLock: _crewEntriesLock,
@@ -460,8 +460,8 @@ class _EventDetailViewState extends State<EventDetailView> {
                           ),
                           const SizedBox(width: 16),
                           Expanded(
-                            child: DropdownButtonFormField<bool>(
-                              value: _isActive,
+                            child: DropdownButtonFormField<String>(
+                              value: _status,
                               decoration: InputDecoration(
                                 labelText: 'Status',
                                 labelStyle: const TextStyle(
@@ -487,12 +487,12 @@ class _EventDetailViewState extends State<EventDetailView> {
                               style: const TextStyle(color: Colors.black87, fontSize: 16),
                               dropdownColor: Colors.white,
                               items: const [
-                                DropdownMenuItem(value: true, child: Text('Active')),
-                                DropdownMenuItem(value: false, child: Text('Inactive')),
+                                DropdownMenuItem(value: 'active', child: Text('Active')),
+                                DropdownMenuItem(value: 'inactive', child: Text('Inactive')),
                               ],
                               onChanged: (value) {
                                 setState(() {
-                                  _isActive = value ?? true;
+                                  _status = value ?? 'active';
                                 });
                               },
                             ),
