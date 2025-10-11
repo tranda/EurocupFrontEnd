@@ -50,7 +50,7 @@ class _CrewListViewState extends State<CrewListView> {
                       competitionColor[race.discipline!.eventId! - 1];
                   var standardSize = 22;
                   var smallSize = 12;
-                  var locked = DateTime.now().isAfter(competition.crewEntriesLock!);
+                  var locked = !competition.isCrewEntriesOpen;
 
                   return Column(
                     children: [

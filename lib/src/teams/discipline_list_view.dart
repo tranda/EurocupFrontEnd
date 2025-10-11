@@ -30,12 +30,8 @@ class _DisciplineListViewState extends State<DisciplineListView> {
       // Check for null values before using them
       if (currentUser.accessLevel != null) {
         bool accessLevelRestriction = (currentUser.accessLevel! > 0) && (currentUser.accessLevel! < 3);
-        bool dateRestriction = false;
-        
-        if (competition.raceEntriesLock != null && currentUser.accessLevel != null) {
-          dateRestriction = (currentUser.accessLevel! < 3) && DateTime.now().isAfter(competition.raceEntriesLock!);
-        }
-        
+        bool dateRestriction = (currentUser.accessLevel! < 3) && !competition.isRaceEntriesOpen;
+
         locked = accessLevelRestriction || dateRestriction;
       } else {
         locked = true; // Default to locked if access level is not set
