@@ -47,6 +47,37 @@ class Competition {
     return '${name ?? 'Event'} ${year ?? DateTime.now().year}';
   }
 
+  /// Returns true if the event is marked as active by admin
+  bool get isActive => status == 'active';
+
+  /// Returns true if name entries are still open (before lock date)
+  bool get isNameEntriesOpen {
+    if (nameEntriesLock == null) return true;
+    return DateTime.now().isBefore(nameEntriesLock!);
+  }
+
+  /// Returns true if crew entries are still open (before lock date)
+  bool get isCrewEntriesOpen {
+    if (crewEntriesLock == null) return true;
+    return DateTime.now().isBefore(crewEntriesLock!);
+  }
+
+  /// Returns true if race entries are still open (before lock date)
+  bool get isRaceEntriesOpen {
+    if (raceEntriesLock == null) return true;
+    return DateTime.now().isBefore(raceEntriesLock!);
+  }
+
+  /// Returns true if event is active AND race entries are still open
+  bool get canAcceptEntries => isActive && isRaceEntriesOpen;
+
+  /// Returns user-friendly status combining admin status and entry availability
+  String get displayStatus {
+    if (!isActive) return 'Inactive';
+    if (!isRaceEntriesOpen) return 'Entries Closed';
+    return 'Active - Entries Open';
+  }
+
   factory Competition.fromMap(Map<String, dynamic> data) => Competition(
         id: data['id'] as int?,
         name: data['name'] as String?,

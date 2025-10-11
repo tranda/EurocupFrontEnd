@@ -130,9 +130,58 @@ class _EventListViewState extends State<EventListView> {
                             '${event.name} ${event.year}',
                             style: Theme.of(context).textTheme.displaySmall,
                           ),
-                          subtitle: Text(
-                            event.location ?? 'No location',
-                            style: Theme.of(context).textTheme.headlineMedium,
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                event.location ?? 'No location',
+                                style: Theme.of(context).textTheme.headlineMedium,
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: event.isActive ? Colors.green.shade100 : Colors.grey.shade300,
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(
+                                        color: event.isActive ? Colors.green : Colors.grey,
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      event.status ?? 'active',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: event.isActive ? Colors.green.shade800 : Colors.grey.shade700,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: event.isRaceEntriesOpen ? Colors.blue.shade100 : Colors.orange.shade100,
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(
+                                        color: event.isRaceEntriesOpen ? Colors.blue : Colors.orange,
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      event.isRaceEntriesOpen ? 'Entries Open' : 'Entries Closed',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: event.isRaceEntriesOpen ? Colors.blue.shade800 : Colors.orange.shade800,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                           trailing: currentUser.accessLevel! >= 3 ? Row(
                             mainAxisSize: MainAxisSize.min,
