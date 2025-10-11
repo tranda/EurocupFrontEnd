@@ -219,7 +219,7 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
               return Column(
                 children: [
                   ColoredPageHeader(
-                    title: "${discipline.getDisplayName()} $inactiveStatus (${discipline.teamsCount})",
+                    title: "${discipline.getDisplayName()} $inactiveStatus (${discipline.teamsCount ?? teams?.length ?? 0})",
                     eventId: discipline.eventId,
                     leading: Text(
                       eventName,
