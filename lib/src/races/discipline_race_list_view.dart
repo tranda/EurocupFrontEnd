@@ -53,10 +53,12 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
         _initialEventSet = true;
       }
 
-      // Load all disciplines
-      final allDisciplines = await api.getDisciplinesAll();
-      _allDisciplines = allDisciplines;
-      _filteredDisciplines = _getFilteredDisciplines();
+      // Load disciplines for the selected event
+      if (_selectedEvent != null) {
+        final disciplines = await api.getDisciplinesAll(eventId: _selectedEvent!.id);
+        _allDisciplines = disciplines;
+        _filteredDisciplines = disciplines;
+      }
 
       setState(() {
         _isLoading = false;
@@ -71,13 +73,23 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
     }
   }
 
-  List<dynamic> _getFilteredDisciplines() {
-    if (_selectedEvent == null) {
-      return List.from(_allDisciplines);
-    } else {
-      return _allDisciplines
-          .where((d) => d.eventId == _selectedEvent!.id)
-          .toList();
+  Future<void> _loadDisciplinesForEvent(Competition event) async {
+    setState(() {
+      _isRefreshing = true;
+    });
+
+    try {
+      final disciplines = await api.getDisciplinesAll(eventId: event.id);
+      setState(() {
+        _allDisciplines = disciplines;
+        _filteredDisciplines = disciplines;
+        _isRefreshing = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+        _isRefreshing = false;
+      });
     }
   }
 
@@ -137,10 +149,10 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
               child: Text('${event.name} ${event.year}'),
             )).toList(),
             onChanged: (Competition? event) {
-              setState(() {
+              if (event != null) {
                 _selectedEvent = event;
-                _filteredDisciplines = _getFilteredDisciplines();
-              });
+                _loadDisciplinesForEvent(event);
+              }
             },
           ),
         ],
@@ -219,7 +231,7 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
               return Column(
                 children: [
                   ColoredPageHeader(
-                    title: "${discipline.getDisplayName()} $inactiveStatus (${discipline.teamsCount ?? teams?.length ?? 0})",
+                    title: "${discipline.getDisplayName()} $inactiveStatus (${discipline.teamsCount ?? 0})",
                     eventId: discipline.eventId,
                     leading: Text(
                       eventName,
