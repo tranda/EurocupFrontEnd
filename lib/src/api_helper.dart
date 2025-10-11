@@ -270,7 +270,7 @@ Future<List<Team>> getTeams(int accessLevel, {bool activeOnly = false}) async {
   return (teams);
 }
 
-Future createTeam(String name) async {
+Future createTeam(String name, {int? clubId}) async {
   var headers = {
     'Content-Type': 'application/x-www-form-urlencoded',
     'Authorization': 'Bearer $token'
@@ -279,6 +279,12 @@ Future createTeam(String name) async {
   request.bodyFields = {
     'name': name,
   };
+
+  // Add club_id if provided (for referees, event managers, and admins)
+  if (clubId != null) {
+    request.bodyFields['club_id'] = clubId.toString();
+  }
+
   request.headers.addAll(headers);
 
   http.StreamedResponse response = await request.send();

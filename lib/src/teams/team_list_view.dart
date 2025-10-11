@@ -21,6 +21,7 @@ class ListViewState extends State<TeamListView> {
   late TextEditingController controller;
   late Future<List<Team>> dataFuture;
   List<Team> list = [];
+  List<Club> clubs = [];
 
   String teamName = "";
 
@@ -28,8 +29,18 @@ class ListViewState extends State<TeamListView> {
   void initState() {
     super.initState();
     controller = TextEditingController();
-    locked = currentUser.accessLevel != 0;
+    // Allow team creation for club managers (0) and higher access levels (1+)
+    locked = false;
     dataFuture = api.getTeams(currentUser.accessLevel!, activeOnly: true);
+
+    // Load clubs if user has access level > 0 (referee, event manager, admin)
+    if (currentUser.accessLevel! > 0) {
+      api.getClubs(activeOnly: true).then((value) {
+        setState(() {
+          clubs = value;
+        });
+      });
+    }
   }
 
   @override
@@ -46,10 +57,11 @@ class ListViewState extends State<TeamListView> {
               ? () {}
               : () {
                   openDialog().then((value) {
-                    if (value != null && value.isNotEmpty) {
-                      api.createTeam(value).then((v) {
+                    if (value != null && value['name'] != null && value['name'].isNotEmpty) {
+                      api.createTeam(value['name'], clubId: value['clubId']).then((v) {
                         setState(() {
-                          teamName = value;
+                          teamName = value['name'];
+                          dataFuture = api.getTeams(currentUser.accessLevel!, activeOnly: true);
                         });
                         // Debug: team created
                       }).catchError((error) {
@@ -113,20 +125,54 @@ class ListViewState extends State<TeamListView> {
     );
   }
 
-  Future<String?> openDialog() async {
-    return await showDialog<String>(
+  Future<Map<String, dynamic>?> openDialog() async {
+    Club? selectedClub;
+
+    return await showDialog<Map<String, dynamic>>(
         context: context,
         builder: (context) => AlertDialog(
-                title: const Text("Team Name:"),
-                content: TextField(
-                  controller: controller,
-                  autofocus: true,
-                  decoration: buildStandardInputDecoration("Enter team name"),
-                  style: Theme.of(context).textTheme.displaySmall,
+                title: const Text("Create Team"),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: controller,
+                      autofocus: true,
+                      decoration: buildStandardInputDecoration("Enter team name"),
+                      style: Theme.of(context).textTheme.displaySmall,
+                    ),
+                    // Show club selector for users with access level > 0
+                    if (currentUser.accessLevel! > 0) ...[
+                      const SizedBox(height: 16),
+                      StatefulBuilder(
+                        builder: (context, setDialogState) {
+                          return DropdownButtonFormField<Club>(
+                            initialValue: selectedClub,
+                            decoration: buildStandardInputDecoration("Select Club"),
+                            hint: const Text("Select Club"),
+                            items: clubs.map((Club club) {
+                              return DropdownMenuItem<Club>(
+                                value: club,
+                                child: Text(club.name ?? ''),
+                              );
+                            }).toList(),
+                            onChanged: (Club? value) {
+                              setDialogState(() {
+                                selectedClub = value;
+                              });
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ],
                 ),
                 actions: <Widget>[
                   TextButton(onPressed: cancel, child: const Text("Cancel")),
-                  TextButton(onPressed: submit, child: const Text("OK")),
+                  TextButton(
+                    onPressed: () => submit(selectedClub),
+                    child: const Text("OK")
+                  ),
                 ],
               actionsAlignment: MainAxisAlignment.spaceBetween,
             ));
@@ -137,8 +183,11 @@ class ListViewState extends State<TeamListView> {
     controller.clear();
   }
 
-  void submit() {
-    Navigator.of(context).pop(controller.text);
+  void submit(Club? selectedClub) {
+    Navigator.of(context).pop({
+      'name': controller.text,
+      'clubId': selectedClub?.id,
+    });
     controller.clear();
   }
 }
