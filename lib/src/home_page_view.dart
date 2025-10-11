@@ -3,7 +3,7 @@ import 'package:eurocup_frontend/src/athletes/athlete_list_view.dart';
 import 'package:eurocup_frontend/src/crews/crew_list_view.dart';
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
 import 'package:eurocup_frontend/src/races/discipline_race_list_view.dart';
-import 'package:eurocup_frontend/src/races/race_results_list_view.dart';
+import 'package:eurocup_frontend/src/races/competition_selector_view.dart';
 import 'package:eurocup_frontend/src/teams/team_list_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:excel/excel.dart';
@@ -152,7 +152,7 @@ class _HomePageState extends State<HomePage> {
                     textAlign: TextAlign.left),
                 onTap: () {
                   Navigator.pushNamed(
-                      context, RaceResultsListView.routeName);
+                      context, CompetitionSelectorView.routeName);
                 },
                 leading: const Icon(
                   Icons.play_arrow,
