@@ -31,7 +31,11 @@ class ListViewState extends State<TeamListView> {
     controller = TextEditingController();
     // Allow team creation for club managers (0) and higher access levels (1+)
     locked = false;
-    dataFuture = api.getTeams(currentUser.accessLevel!, activeOnly: true);
+    // Show all teams for admins (access level >= 2), only active club teams for others
+    dataFuture = api.getTeams(
+      currentUser.accessLevel!,
+      activeOnly: currentUser.accessLevel != null && currentUser.accessLevel! >= 2 ? false : true
+    );
 
     // Load clubs if user has access level > 0 (referee, event manager, admin)
     if (currentUser.accessLevel! > 0) {
@@ -61,7 +65,10 @@ class ListViewState extends State<TeamListView> {
                       api.createTeam(value['name'], clubId: value['clubId']).then((v) {
                         setState(() {
                           teamName = value['name'];
-                          dataFuture = api.getTeams(currentUser.accessLevel!, activeOnly: true);
+                          dataFuture = api.getTeams(
+                            currentUser.accessLevel!,
+                            activeOnly: currentUser.accessLevel != null && currentUser.accessLevel! >= 2 ? false : true
+                          );
                         });
                         // Debug: team created
                       }).catchError((error) {
@@ -84,11 +91,21 @@ class ListViewState extends State<TeamListView> {
             }
             if (snapshot.hasData) {
               final teams = snapshot.data!;
+              // Sort teams: teams from active clubs first, then inactive clubs
+              teams.sort((a, b) {
+                final aClubActive = a.club?.active ?? false;
+                final bClubActive = b.club?.active ?? false;
+                if (aClubActive == bClubActive) return 0;
+                return aClubActive ? -1 : 1;
+              });
               // Debug: teams list
               return ListView.builder(
                 itemCount: teams.length,
                 itemBuilder: (BuildContext context, int index) {
-                  return Column(
+                  final isInactiveClub = teams[index].club?.active == false;
+                  return Opacity(
+                    opacity: isInactiveClub ? 0.5 : 1.0,
+                    child: Column(
                     children: [
                       ListTile(
                           // tileColor: Colors.blue,
@@ -130,7 +147,19 @@ class ListViewState extends State<TeamListView> {
                               setState(() {});
                             });
                           },
-                          trailing: const Icon(Icons.arrow_forward)),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (currentUser.accessLevel != null && currentUser.accessLevel! >= 2)
+                                IconButton(
+                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () {
+                                    _showDeleteConfirmation(context, teams[index]);
+                                  },
+                                ),
+                              const Icon(Icons.arrow_forward),
+                            ],
+                          )),
                       const Divider(
                         height: 4,
                       ),
@@ -138,10 +167,11 @@ class ListViewState extends State<TeamListView> {
                         height: smallSpace,
                       )
                     ],
-                  );
-                },
-              );
-            }
+                  ),
+                );
+              },
+            );
+          }
             return (const Text('No data'));
           },
         ),
@@ -213,5 +243,59 @@ class ListViewState extends State<TeamListView> {
       'clubId': selectedClub?.id,
     });
     controller.clear();
+  }
+
+  void _showDeleteConfirmation(BuildContext context, Team team) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Delete Team'),
+          content: Text(
+            'Are you sure you want to delete "${team.name}"?\n\nThis action cannot be undone.',
+            style: const TextStyle(color: Colors.black87),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(dialogContext);
+                try {
+                  await api.deleteTeam(team.id!);
+                  // Refresh the list
+                  setState(() {
+                    dataFuture = api.getTeams(
+                      currentUser.accessLevel!,
+                      activeOnly: currentUser.accessLevel != null && currentUser.accessLevel! >= 2 ? false : true
+                    );
+                  });
+                  // Show success message
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Team "${team.name}" deleted successfully')),
+                    );
+                  }
+                } catch (e) {
+                  // Show error message
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to delete team: ${e.toString()}'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

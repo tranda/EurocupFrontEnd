@@ -299,6 +299,22 @@ Future createTeam(String name, {int? clubId}) async {
   }
 }
 
+Future<void> deleteTeam(int teamId) async {
+  var headers = {
+    'Authorization': 'Bearer $token',
+  };
+
+  var request = http.Request('DELETE', Uri.parse('$apiURL/teams/$teamId'));
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+
+  if (response.statusCode != 200) {
+    String errorMessage = await response.stream.bytesToString();
+    throw Exception('Failed to delete team: $errorMessage');
+  }
+}
+
 Future<List<Discipline>> getDisciplinesAll({int? eventId}) async {
   var headers = {'Authorization': 'Bearer $token'};
   String url = '$apiURL/disciplinesAll';
@@ -678,6 +694,74 @@ Future<List<Club>> getClubsForAdel({bool adelOnly = false}) async {
     // Error: API request failed
   }
   return (clubs);
+}
+
+Future<Club> createClub(String name, String country, bool active) async {
+  var headers = {
+    'Authorization': 'Bearer $token',
+    'Content-Type': 'application/json',
+  };
+
+  var body = jsonEncode({
+    'name': name,
+    'country': country,
+    'active': active ? 1 : 0,
+  });
+
+  var request = http.Request('POST', Uri.parse('$apiURL/clubs'));
+  request.body = body;
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+
+  if (response.statusCode == 201) {
+    Map<String, dynamic> result = jsonDecode(await response.stream.bytesToString());
+    return Club.fromMap(result);
+  } else {
+    throw Exception('Failed to create club');
+  }
+}
+
+Future<Club> updateClub(int clubId, String name, String country, bool active) async {
+  var headers = {
+    'Authorization': 'Bearer $token',
+    'Content-Type': 'application/json',
+  };
+
+  var body = jsonEncode({
+    'name': name,
+    'country': country,
+    'active': active ? 1 : 0,
+  });
+
+  var request = http.Request('PUT', Uri.parse('$apiURL/clubs/$clubId'));
+  request.body = body;
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+
+  if (response.statusCode == 200) {
+    Map<String, dynamic> result = jsonDecode(await response.stream.bytesToString());
+    return Club.fromMap(result);
+  } else {
+    throw Exception('Failed to update club');
+  }
+}
+
+Future<void> deleteClub(int clubId) async {
+  var headers = {
+    'Authorization': 'Bearer $token',
+  };
+
+  var request = http.Request('DELETE', Uri.parse('$apiURL/clubs/$clubId'));
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+
+  if (response.statusCode != 200) {
+    String errorMessage = await response.stream.bytesToString();
+    throw Exception('Failed to delete club: $errorMessage');
+  }
 }
 
 Future<List<User>> getUsers() async {
