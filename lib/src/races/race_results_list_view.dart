@@ -32,12 +32,12 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   Competition? _competition;
   bool _hasInitialized = false; // Track if we've already loaded data
 
-  // Filter state
-  String? _filterAgeGroup;
-  String? _filterGenderGroup;
-  String? _filterBoatGroup;
-  int? _filterDistance;
-  String? _filterStage;
+  // Filter state - multiselect filters use lists (OR within, AND between)
+  final List<String> _filterAgeGroups = [];
+  final List<String> _filterGenderGroups = [];
+  final List<String> _filterBoatGroups = [];
+  final List<int> _filterDistances = [];
+  final List<String> _filterStages = [];
   String _filterTeamName = '';
   String _filterCountry = '';
 
@@ -191,9 +191,9 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
       setState(() {
         _raceResults = results;
         // If filters are active, reapply them to new data
-        if (_filterAgeGroup != null || _filterGenderGroup != null ||
-            _filterBoatGroup != null || _filterDistance != null ||
-            _filterStage != null || _filterTeamName.isNotEmpty ||
+        if (_filterAgeGroups.isNotEmpty || _filterGenderGroups.isNotEmpty ||
+            _filterBoatGroups.isNotEmpty || _filterDistances.isNotEmpty ||
+            _filterStages.isNotEmpty || _filterTeamName.isNotEmpty ||
             _filterCountry.isNotEmpty) {
           _applyFilters();
         } else {
@@ -240,12 +240,12 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     }
     final availableStages = stages.toList()..sort();
 
-    // Create local copies of filter values for the dialog
-    String? tempAgeGroup = _filterAgeGroup;
-    String? tempGenderGroup = _filterGenderGroup;
-    String? tempBoatGroup = _filterBoatGroup;
-    int? tempDistance = _filterDistance;
-    String? tempStage = _filterStage;
+    // Create local copies of filter values for the dialog (lists for multiselect)
+    List<String> tempAgeGroups = List.from(_filterAgeGroups);
+    List<String> tempGenderGroups = List.from(_filterGenderGroups);
+    List<String> tempBoatGroups = List.from(_filterBoatGroups);
+    List<int> tempDistances = List.from(_filterDistances);
+    List<String> tempStages = List.from(_filterStages);
     String tempTeamName = _filterTeamName;
     String tempCountry = _filterCountry;
 
@@ -265,71 +265,151 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Age Group filter
-                    DropdownButtonFormField<String?>(
-                      value: tempAgeGroup,
-                      decoration: const InputDecoration(labelText: 'Age Group'),
-                      items: [
-                        const DropdownMenuItem(value: null, child: Text('All')),
-                        ...disciplineAgeGroups.map((age) =>
-                          DropdownMenuItem(value: age, child: Text(age))
+                    // Age Group filter (multiselect with chips)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Age Group', style: TextStyle(fontSize: 12, color: Colors.black54)),
+                        const SizedBox(height: 4),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: disciplineAgeGroups.map((age) {
+                            final isSelected = tempAgeGroups.contains(age);
+                            return FilterChip(
+                              label: Text(age),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setDialogState(() {
+                                  if (selected) {
+                                    tempAgeGroups.add(age);
+                                  } else {
+                                    tempAgeGroups.remove(age);
+                                  }
+                                });
+                              },
+                            );
+                          }).toList(),
                         ),
                       ],
-                      onChanged: (value) => setDialogState(() => tempAgeGroup = value),
                     ),
-                    const SizedBox(height: 12),
-                    // Gender Group filter
-                    DropdownButtonFormField<String?>(
-                      value: tempGenderGroup,
-                      decoration: const InputDecoration(labelText: 'Gender Group'),
-                      items: [
-                        const DropdownMenuItem(value: null, child: Text('All')),
-                        ...disciplineGenderGroups.map((gender) =>
-                          DropdownMenuItem(value: gender, child: Text(gender))
+                    const SizedBox(height: 16),
+                    // Gender Group filter (multiselect with chips)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Gender Group', style: TextStyle(fontSize: 12, color: Colors.black54)),
+                        const SizedBox(height: 4),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: disciplineGenderGroups.map((gender) {
+                            final isSelected = tempGenderGroups.contains(gender);
+                            return FilterChip(
+                              label: Text(gender),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setDialogState(() {
+                                  if (selected) {
+                                    tempGenderGroups.add(gender);
+                                  } else {
+                                    tempGenderGroups.remove(gender);
+                                  }
+                                });
+                              },
+                            );
+                          }).toList(),
                         ),
                       ],
-                      onChanged: (value) => setDialogState(() => tempGenderGroup = value),
                     ),
-                    const SizedBox(height: 12),
-                    // Boat Group filter
-                    DropdownButtonFormField<String?>(
-                      value: tempBoatGroup,
-                      decoration: const InputDecoration(labelText: 'Boat Size'),
-                      items: [
-                        const DropdownMenuItem(value: null, child: Text('All')),
-                        ...disciplineBoatGroups.map((boat) =>
-                          DropdownMenuItem(value: boat, child: Text(boat))
+                    const SizedBox(height: 16),
+                    // Boat Size filter (multiselect with chips)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Boat Size', style: TextStyle(fontSize: 12, color: Colors.black54)),
+                        const SizedBox(height: 4),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: disciplineBoatGroups.map((boat) {
+                            final isSelected = tempBoatGroups.contains(boat);
+                            return FilterChip(
+                              label: Text(boat),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setDialogState(() {
+                                  if (selected) {
+                                    tempBoatGroups.add(boat);
+                                  } else {
+                                    tempBoatGroups.remove(boat);
+                                  }
+                                });
+                              },
+                            );
+                          }).toList(),
                         ),
                       ],
-                      onChanged: (value) => setDialogState(() => tempBoatGroup = value),
                     ),
-                    const SizedBox(height: 12),
-                    // Distance filter
-                    DropdownButtonFormField<int?>(
-                      value: tempDistance,
-                      decoration: const InputDecoration(labelText: 'Distance'),
-                      items: [
-                        const DropdownMenuItem(value: null, child: Text('All')),
-                        ...disciplineDistanceOptions.map((dist) =>
-                          DropdownMenuItem(value: dist, child: Text('${dist}m'))
+                    const SizedBox(height: 16),
+                    // Distance filter (multiselect with chips)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Distance', style: TextStyle(fontSize: 12, color: Colors.black54)),
+                        const SizedBox(height: 4),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: disciplineDistanceOptions.map((dist) {
+                            final isSelected = tempDistances.contains(dist);
+                            return FilterChip(
+                              label: Text('${dist}m'),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setDialogState(() {
+                                  if (selected) {
+                                    tempDistances.add(dist);
+                                  } else {
+                                    tempDistances.remove(dist);
+                                  }
+                                });
+                              },
+                            );
+                          }).toList(),
                         ),
                       ],
-                      onChanged: (value) => setDialogState(() => tempDistance = value),
                     ),
-                    const SizedBox(height: 12),
-                    // Stage filter
-                    DropdownButtonFormField<String?>(
-                      value: tempStage,
-                      decoration: const InputDecoration(labelText: 'Stage'),
-                      items: [
-                        const DropdownMenuItem(value: null, child: Text('All')),
-                        ...availableStages.map((stage) =>
-                          DropdownMenuItem(value: stage, child: Text(stage))
+                    const SizedBox(height: 16),
+                    // Stage filter (multiselect with chips)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Stage', style: TextStyle(fontSize: 12, color: Colors.black54)),
+                        const SizedBox(height: 4),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: availableStages.map((stage) {
+                            final isSelected = tempStages.contains(stage);
+                            return FilterChip(
+                              label: Text(stage),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setDialogState(() {
+                                  if (selected) {
+                                    tempStages.add(stage);
+                                  } else {
+                                    tempStages.remove(stage);
+                                  }
+                                });
+                              },
+                            );
+                          }).toList(),
                         ),
                       ],
-                      onChanged: (value) => setDialogState(() => tempStage = value),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     // Team Name filter
                     TextField(
                       controller: teamNameController,
@@ -370,11 +450,11 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                 TextButton(
                   onPressed: () {
                     setDialogState(() {
-                      tempAgeGroup = null;
-                      tempGenderGroup = null;
-                      tempBoatGroup = null;
-                      tempDistance = null;
-                      tempStage = null;
+                      tempAgeGroups.clear();
+                      tempGenderGroups.clear();
+                      tempBoatGroups.clear();
+                      tempDistances.clear();
+                      tempStages.clear();
                       tempTeamName = '';
                       tempCountry = '';
                       teamNameController.clear();
@@ -389,24 +469,29 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    print('Apply clicked - temp values: Age=$tempAgeGroup, Gender=$tempGenderGroup, Boat=$tempBoatGroup, Distance=$tempDistance, Stage=$tempStage, Team=$tempTeamName, Country=$tempCountry');
+                    print('Apply clicked - temp values: Ages=$tempAgeGroups, Genders=$tempGenderGroups, Boats=$tempBoatGroups, Distances=$tempDistances, Stages=$tempStages, Team=$tempTeamName, Country=$tempCountry');
                     Navigator.of(context).pop();
                     setState(() {
                       // Copy temp values to actual filter state
-                      _filterAgeGroup = tempAgeGroup;
-                      _filterGenderGroup = tempGenderGroup;
-                      _filterBoatGroup = tempBoatGroup;
-                      _filterDistance = tempDistance;
-                      _filterStage = tempStage;
+                      _filterAgeGroups.clear();
+                      _filterAgeGroups.addAll(tempAgeGroups);
+                      _filterGenderGroups.clear();
+                      _filterGenderGroups.addAll(tempGenderGroups);
+                      _filterBoatGroups.clear();
+                      _filterBoatGroups.addAll(tempBoatGroups);
+                      _filterDistances.clear();
+                      _filterDistances.addAll(tempDistances);
+                      _filterStages.clear();
+                      _filterStages.addAll(tempStages);
                       _filterTeamName = tempTeamName;
-                      _filterCountry = tempCountry ?? '';
-                      print('After copying - actual values: Age=$_filterAgeGroup, Gender=$_filterGenderGroup, Boat=$_filterBoatGroup, Distance=$_filterDistance, Stage=$_filterStage, Team=$_filterTeamName, Country=$_filterCountry');
+                      _filterCountry = tempCountry;
+                      print('After copying - actual values: Ages=$_filterAgeGroups, Genders=$_filterGenderGroups, Boats=$_filterBoatGroups, Distances=$_filterDistances, Stages=$_filterStages, Team=$_filterTeamName, Country=$_filterCountry');
                       // Apply the filters
                       _applyFilters();
                       // Check if any filters are active
-                      final hasActiveFilters = _filterAgeGroup != null || _filterGenderGroup != null ||
-                          _filterBoatGroup != null || _filterDistance != null ||
-                          _filterStage != null || _filterTeamName.isNotEmpty ||
+                      final hasActiveFilters = _filterAgeGroups.isNotEmpty || _filterGenderGroups.isNotEmpty ||
+                          _filterBoatGroups.isNotEmpty || _filterDistances.isNotEmpty ||
+                          _filterStages.isNotEmpty || _filterTeamName.isNotEmpty ||
                           _filterCountry.isNotEmpty;
                       // Expand all if filters are active, collapse all if no filters
                       if (hasActiveFilters) {
@@ -429,35 +514,34 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   void _applyFilters() {
     if (_raceResults == null) return;
 
-    print('Applying filters: Age=$_filterAgeGroup, Gender=$_filterGenderGroup, Boat=$_filterBoatGroup, Distance=$_filterDistance, Stage=$_filterStage, Team=$_filterTeamName, Country=$_filterCountry');
+    print('Applying filters: Ages=$_filterAgeGroups, Genders=$_filterGenderGroups, Boats=$_filterBoatGroups, Distances=$_filterDistances, Stages=$_filterStages, Team=$_filterTeamName, Country=$_filterCountry');
 
     _filteredRaceResults = _raceResults!.where((race) {
       final discipline = race.discipline;
       if (discipline == null) return true;
 
-      // Age group filter
-      if (_filterAgeGroup != null && discipline.ageGroup != _filterAgeGroup) {
+      // Age group filter (OR logic - match any selected age)
+      if (_filterAgeGroups.isNotEmpty && !_filterAgeGroups.contains(discipline.ageGroup)) {
         return false;
       }
 
-      // Gender group filter
-      if (_filterGenderGroup != null && discipline.genderGroup != _filterGenderGroup) {
-        print('Filtering out ${discipline.genderGroup} because filter is $_filterGenderGroup');
+      // Gender group filter (OR logic - match any selected gender)
+      if (_filterGenderGroups.isNotEmpty && !_filterGenderGroups.contains(discipline.genderGroup)) {
         return false;
       }
 
-      // Boat group filter
-      if (_filterBoatGroup != null && discipline.boatGroup != _filterBoatGroup) {
+      // Boat group filter (OR logic - match any selected boat size)
+      if (_filterBoatGroups.isNotEmpty && !_filterBoatGroups.contains(discipline.boatGroup)) {
         return false;
       }
 
-      // Distance filter
-      if (_filterDistance != null && discipline.distance != _filterDistance) {
+      // Distance filter (OR logic - match any selected distance)
+      if (_filterDistances.isNotEmpty && !_filterDistances.contains(discipline.distance)) {
         return false;
       }
 
-      // Stage filter
-      if (_filterStage != null && race.stage != _filterStage) {
+      // Stage filter (OR logic - match any selected stage)
+      if (_filterStages.isNotEmpty && !_filterStages.contains(race.stage)) {
         return false;
       }
 
