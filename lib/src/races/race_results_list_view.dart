@@ -1596,17 +1596,17 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                         ),
                         if (crewResult.crew?.team?.club?.country != null)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: Colors.blue.shade50,
                               borderRadius: BorderRadius.circular(4),
                               border: Border.all(color: Colors.blue.shade200),
                             ),
                             child: Text(
-                              crewResult.crew!.team!.club!.country!,
+                              '${getCountryFlag(crewResult.crew!.team!.club!.country)} ${getCountryCode(crewResult.crew!.team!.club!.country)}',
                               style: TextStyle(
                                 color: Colors.blue.shade700,
-                                fontSize: 11,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -1782,17 +1782,17 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                 ),
                 if (crewResult.crew?.team?.club?.country != null)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: Colors.blue.shade50,
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(color: Colors.blue.shade200),
                     ),
                     child: Text(
-                      crewResult.crew!.team!.club!.country!,
+                      '${getCountryFlag(crewResult.crew!.team!.club!.country)} ${getCountryCode(crewResult.crew!.team!.club!.country)}',
                       style: TextStyle(
                         color: Colors.blue.shade700,
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

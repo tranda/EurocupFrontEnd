@@ -72,17 +72,17 @@ class ListViewState extends State<ClubAdelListView> {
                               if (clubs[index].country != null)
                                 Container(
                                   margin: const EdgeInsets.only(right: 8),
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
                                     color: Colors.blue.shade50,
                                     borderRadius: BorderRadius.circular(4),
                                     border: Border.all(color: Colors.blue.shade200),
                                   ),
                                   child: Text(
-                                    clubs[index].country!,
+                                    '${getCountryFlag(clubs[index].country)} ${getCountryCode(clubs[index].country)}',
                                     style: TextStyle(
                                       color: Colors.blue.shade700,
-                                      fontSize: 11,
+                                      fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
