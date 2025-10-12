@@ -238,9 +238,11 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
 
     return Container(
       padding: const EdgeInsets.only(top: 8, bottom: 4),
+      alignment: Alignment.centerLeft,
       child: Wrap(
         spacing: 8,
         runSpacing: 4,
+        alignment: WrapAlignment.start,
         children: [
           // Age group chips
           ..._filterAgeGroups.map((age) => Chip(
