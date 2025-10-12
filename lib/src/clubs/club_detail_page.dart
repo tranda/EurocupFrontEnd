@@ -201,15 +201,37 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
             FloatingActionButton(
               heroTag: "saveClubBtn",
               backgroundColor: Colors.blue,
-              onPressed: () {
+              onPressed: () async {
                 if (_formKey.currentState!.validate()) {
-                  // TODO: Implement update club API call
-                  setState(() {
-                    mode = 'r';
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Club updated successfully')),
-                  );
+                  try {
+                    await api.updateClub(
+                      club.id!,
+                      nameController.text,
+                      countryController.text,
+                    );
+                    if (mounted) {
+                      setState(() {
+                        club = Club(
+                          id: club.id,
+                          name: nameController.text,
+                          country: countryController.text,
+                          req_adel: club.req_adel,
+                          createdAt: club.createdAt,
+                          updatedAt: club.updatedAt,
+                        );
+                        mode = 'r';
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Club updated successfully')),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to update club: $e')),
+                      );
+                    }
+                  }
                 }
               },
               child: const Icon(Icons.save),
@@ -230,13 +252,24 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
                           child: const Text('Cancel'),
                         ),
                         TextButton(
-                          onPressed: () {
-                            // TODO: Implement delete club API call
-                            Navigator.pop(context);
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Club deleted successfully')),
-                            );
+                          onPressed: () async {
+                            try {
+                              await api.deleteClub(club.id!);
+                              if (context.mounted) {
+                                Navigator.pop(context); // Close dialog
+                                Navigator.pop(context); // Go back to list
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Club deleted successfully')),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                Navigator.pop(context); // Close dialog
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Failed to delete club: $e')),
+                                );
+                              }
+                            }
                           },
                           child: const Text('Delete'),
                         ),
