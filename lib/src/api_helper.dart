@@ -680,6 +680,32 @@ Future<List<Club>> getClubsForAdel({bool adelOnly = false}) async {
   return (clubs);
 }
 
+Future<Club> createClub(String name, String country, bool active) async {
+  var headers = {
+    'Authorization': 'Bearer $token',
+    'Content-Type': 'application/json',
+  };
+
+  var body = jsonEncode({
+    'name': name,
+    'country': country,
+    'active': active ? 1 : 0,
+  });
+
+  var request = http.Request('POST', Uri.parse('$apiURL/clubs'));
+  request.body = body;
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+
+  if (response.statusCode == 201) {
+    Map<String, dynamic> result = jsonDecode(await response.stream.bytesToString());
+    return Club.fromMap(result);
+  } else {
+    throw Exception('Failed to create club');
+  }
+}
+
 Future<Club> updateClub(int clubId, String name, String country, bool active) async {
   var headers = {
     'Authorization': 'Bearer $token',
