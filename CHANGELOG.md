@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.6.4] - 2025-10-12
+
+### Changed
+- Event sorting improvements across all views
+  - Events now sorted by year in descending order (newest first)
+  - Applied to event dropdowns in discipline race list and admin discipline list
+  - Applied to event list in admin event management
+  - Default event selection now consistently selects newest event (not oldest)
+
 ## [0.6.3] - 2025-10-12
 
 ### Added

@@ -119,6 +119,8 @@ class _EventListViewState extends State<EventListView> {
                 }
 
                 events = snapshot.data!;
+                // Sort events by year (newest first)
+                events.sort((a, b) => (b.year ?? 0).compareTo(a.year ?? 0));
                 return ListView.builder(
                   itemCount: events.length,
                   itemBuilder: (BuildContext context, int index) {

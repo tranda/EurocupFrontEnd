@@ -46,11 +46,13 @@ class _AdminDisciplineListViewState extends State<AdminDisciplineListView> {
 
       // Load competitions first
       final competitions = await api.getCompetitions();
+      // Sort events by year (newest first)
+      competitions.sort((a, b) => (b.year ?? 0).compareTo(a.year ?? 0));
       events = competitions;
 
-      // Set initial selectedEvent to the last item if not already set
+      // Set initial selectedEvent to the first item (newest year) if not already set
       if (!_initialEventSet && events.isNotEmpty) {
-        selectedEvent = events.last;
+        selectedEvent = events.first;
         _initialEventSet = true;
       }
 

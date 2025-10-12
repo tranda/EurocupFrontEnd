@@ -42,13 +42,15 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
 
       // Load competitions first
       final competitions = await api.getCompetitions();
+      // Sort events by year (newest first)
+      competitions.sort((a, b) => (b.year ?? 0).compareTo(a.year ?? 0));
       _events = competitions;
 
       // Set initial selectedEvent to EVENTID if not already set
       if (!_initialEventSet && _events.isNotEmpty) {
         _selectedEvent = _events.firstWhere(
           (event) => event.id == EVENTID,
-          orElse: () => _events.last,
+          orElse: () => _events.first, // Default to first (newest year)
         );
         _initialEventSet = true;
       }
