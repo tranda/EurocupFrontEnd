@@ -63,12 +63,6 @@ class ListViewState extends State<ClubAdelListView> {
                           // tileColor: Colors.blue,
                           title: Row(
                             children: [
-                              Expanded(
-                                child: Text(
-                                  clubs[index].name!,
-                                  style: Theme.of(context).textTheme.displaySmall,
-                                ),
-                              ),
                               if (clubs[index].country != null)
                                 Container(
                                   margin: const EdgeInsets.only(right: 8),
@@ -87,6 +81,12 @@ class ListViewState extends State<ClubAdelListView> {
                                     ),
                                   ),
                                 ),
+                              Expanded(
+                                child: Text(
+                                  clubs[index].name!,
+                                  style: Theme.of(context).textTheme.displaySmall,
+                                ),
+                              ),
                             ],
                           ),
                           onTap: () {

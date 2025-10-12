@@ -1586,16 +1586,9 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                     // Team name with country
                     Row(
                       children: [
-                        Expanded(
-                          child: Text(
-                            crewResult.crew?.team?.name ?? crewResult.team?.name ?? 'Unknown Team',
-                            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
                         if (crewResult.crew?.team?.club?.country != null)
                           Container(
+                            margin: const EdgeInsets.only(right: 8),
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: Colors.blue.shade50,
@@ -1611,6 +1604,14 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                               ),
                             ),
                           ),
+                        Expanded(
+                          child: Text(
+                            crewResult.crew?.team?.name ?? crewResult.team?.name ?? 'Unknown Team',
+                            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -1774,14 +1775,9 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
             ),
             title: Row(
               children: [
-                Expanded(
-                  child: Text(
-                    crewResult.crew?.team?.name ?? crewResult.team?.name ?? 'Unknown Team',
-                    style: Theme.of(context).textTheme.displaySmall,
-                  ),
-                ),
                 if (crewResult.crew?.team?.club?.country != null)
                   Container(
+                    margin: const EdgeInsets.only(right: 8),
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: Colors.blue.shade50,
@@ -1797,6 +1793,12 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                       ),
                     ),
                   ),
+                Expanded(
+                  child: Text(
+                    crewResult.crew?.team?.name ?? crewResult.team?.name ?? 'Unknown Team',
+                    style: Theme.of(context).textTheme.displaySmall,
+                  ),
+                ),
               ],
             ),
             subtitle: crewResult.lane != null

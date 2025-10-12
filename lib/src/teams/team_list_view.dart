@@ -94,12 +94,6 @@ class ListViewState extends State<TeamListView> {
                           // tileColor: Colors.blue,
                           title: Row(
                             children: [
-                              Expanded(
-                                child: Text(
-                                  teams[index].name!,
-                                  style: Theme.of(context).textTheme.displaySmall,
-                                ),
-                              ),
                               if (teams[index].club?.country != null)
                                 Container(
                                   margin: const EdgeInsets.only(right: 8),
@@ -118,6 +112,12 @@ class ListViewState extends State<TeamListView> {
                                     ),
                                   ),
                                 ),
+                              Expanded(
+                                child: Text(
+                                  teams[index].name!,
+                                  style: Theme.of(context).textTheme.displaySmall,
+                                ),
+                              ),
                             ],
                           ),
                           onTap: () {
