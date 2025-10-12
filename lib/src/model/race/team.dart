@@ -1,18 +1,23 @@
 import 'dart:convert';
+import '../club/club.dart';
 
 class Team {
   int? id;
   int? clubId;
   String? name;
+  Club? club;
   DateTime? createdAt;
   DateTime? updatedAt;
 
-  Team({this.id, this.clubId, this.name, this.createdAt, this.updatedAt});
+  Team({this.id, this.clubId, this.name, this.club, this.createdAt, this.updatedAt});
 
   factory Team.fromMap(Map<String, dynamic> data) => Team(
         id: data['id'] as int?,
         clubId: data['club_id'] as int?,
         name: data['name'] as String?,
+        club: data['club'] == null
+            ? null
+            : Club.fromMap(data['club'] as Map<String, dynamic>),
         createdAt: data['created_at'] == null
             ? null
             : DateTime.parse(data['created_at'] as String),
@@ -25,6 +30,7 @@ class Team {
         'id': id,
         'club_id': clubId,
         'name': name,
+        'club': club?.toMap(),
         'created_at': createdAt?.toIso8601String(),
         'updated_at': updatedAt?.toIso8601String(),
       };

@@ -23,12 +23,23 @@ class RaceResultsListView extends StatefulWidget {
 class _RaceResultsListViewState extends State<RaceResultsListView> {
   final Set<int?> _expandedRaces = <int?>{};
   List<RaceResult>? _raceResults;
+  List<RaceResult>? _filteredRaceResults;
   bool _isLoading = true;
   bool _isRefreshing = false;
   String? _errorMessage;
   String? _eventId;
   String? _eventName;
   Competition? _competition;
+  bool _hasInitialized = false; // Track if we've already loaded data
+
+  // Filter state
+  String? _filterAgeGroup;
+  String? _filterGenderGroup;
+  String? _filterBoatGroup;
+  int? _filterDistance;
+  String? _filterStage;
+  String _filterTeamName = '';
+  String _filterCountry = '';
 
 
   /// Returns event title without year
@@ -118,17 +129,24 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
+
+    // Only load data once - prevent reloading when dialog closes
+    if (_hasInitialized) {
+      print('Skipping didChangeDependencies reload - already initialized');
+      return;
+    }
+
     // Extract navigation arguments if available
     final arguments = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     if (arguments != null) {
       _eventId = arguments['eventId'] as String?;
       _eventName = arguments['eventName'] as String?;
     }
-    
+
     // Default to current EVENTID if no event ID provided
     _eventId ??= EVENTID.toString();
 
+    _hasInitialized = true;
     _loadEventData();
   }
 
@@ -172,6 +190,14 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
 
       setState(() {
         _raceResults = results;
+        // If filters are active, reapply them to new data
+        if (_filterAgeGroup != null || _filterGenderGroup != null ||
+            _filterBoatGroup != null || _filterDistance != null ||
+            _filterTeamName.isNotEmpty || _filterCountry.isNotEmpty) {
+          _applyFilters();
+        } else {
+          _filteredRaceResults = null; // No filters active
+        }
         _isLoading = false;
         _isRefreshing = false;
       });
@@ -190,7 +216,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
 
   void _expandAll() {
     setState(() {
-      final races = _raceResults ?? [];
+      final races = _filteredRaceResults ?? _raceResults ?? [];
       _expandedRaces.addAll(races.map((race) => race.id));
     });
   }
@@ -199,6 +225,230 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     setState(() {
       _expandedRaces.clear();
     });
+  }
+
+  void _showFilters() {
+    // Create local copies of filter values for the dialog
+    String? tempAgeGroup = _filterAgeGroup;
+    String? tempGenderGroup = _filterGenderGroup;
+    String? tempBoatGroup = _filterBoatGroup;
+    int? tempDistance = _filterDistance;
+    String tempTeamName = _filterTeamName;
+    String tempCountry = _filterCountry;
+
+    // Create controllers for text inputs
+    final teamNameController = TextEditingController(text: tempTeamName);
+    final countryController = TextEditingController(text: tempCountry);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Filter Race Results'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Age Group filter
+                    DropdownButtonFormField<String?>(
+                      value: tempAgeGroup,
+                      decoration: const InputDecoration(labelText: 'Age Group'),
+                      items: [
+                        const DropdownMenuItem(value: null, child: Text('All')),
+                        ...disciplineAgeGroups.map((age) =>
+                          DropdownMenuItem(value: age, child: Text(age))
+                        ),
+                      ],
+                      onChanged: (value) => setDialogState(() => tempAgeGroup = value),
+                    ),
+                    const SizedBox(height: 12),
+                    // Gender Group filter
+                    DropdownButtonFormField<String?>(
+                      value: tempGenderGroup,
+                      decoration: const InputDecoration(labelText: 'Gender Group'),
+                      items: [
+                        const DropdownMenuItem(value: null, child: Text('All')),
+                        ...disciplineGenderGroups.map((gender) =>
+                          DropdownMenuItem(value: gender, child: Text(gender))
+                        ),
+                      ],
+                      onChanged: (value) => setDialogState(() => tempGenderGroup = value),
+                    ),
+                    const SizedBox(height: 12),
+                    // Boat Group filter
+                    DropdownButtonFormField<String?>(
+                      value: tempBoatGroup,
+                      decoration: const InputDecoration(labelText: 'Boat Size'),
+                      items: [
+                        const DropdownMenuItem(value: null, child: Text('All')),
+                        ...disciplineBoatGroups.map((boat) =>
+                          DropdownMenuItem(value: boat, child: Text(boat))
+                        ),
+                      ],
+                      onChanged: (value) => setDialogState(() => tempBoatGroup = value),
+                    ),
+                    const SizedBox(height: 12),
+                    // Distance filter
+                    DropdownButtonFormField<int?>(
+                      value: tempDistance,
+                      decoration: const InputDecoration(labelText: 'Distance'),
+                      items: [
+                        const DropdownMenuItem(value: null, child: Text('All')),
+                        ...disciplineDistanceOptions.map((dist) =>
+                          DropdownMenuItem(value: dist, child: Text('${dist}m'))
+                        ),
+                      ],
+                      onChanged: (value) => setDialogState(() => tempDistance = value),
+                    ),
+                    const SizedBox(height: 12),
+                    // Team Name filter
+                    TextField(
+                      controller: teamNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Team Name',
+                        hintText: 'Enter team name or part of it',
+                      ),
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 16,
+                      ),
+                      textDirection: TextDirection.ltr,
+                      onChanged: (value) {
+                        tempTeamName = value;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    // Country filter
+                    TextField(
+                      controller: countryController,
+                      decoration: const InputDecoration(
+                        labelText: 'Country',
+                        hintText: 'Enter country name or part of it',
+                      ),
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 16,
+                      ),
+                      textDirection: TextDirection.ltr,
+                      onChanged: (value) {
+                        tempCountry = value;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    setDialogState(() {
+                      tempAgeGroup = null;
+                      tempGenderGroup = null;
+                      tempBoatGroup = null;
+                      tempDistance = null;
+                      tempTeamName = '';
+                      tempCountry = '';
+                      teamNameController.clear();
+                      countryController.clear();
+                    });
+                  },
+                  child: const Text('Clear All'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    print('Apply clicked - temp values: Age=$tempAgeGroup, Gender=$tempGenderGroup, Boat=$tempBoatGroup, Distance=$tempDistance, Team=$tempTeamName, Country=$tempCountry');
+                    Navigator.of(context).pop();
+                    setState(() {
+                      // Copy temp values to actual filter state
+                      _filterAgeGroup = tempAgeGroup;
+                      _filterGenderGroup = tempGenderGroup;
+                      _filterBoatGroup = tempBoatGroup;
+                      _filterDistance = tempDistance;
+                      _filterTeamName = tempTeamName;
+                      _filterCountry = tempCountry ?? '';
+                      print('After copying - actual values: Age=$_filterAgeGroup, Gender=$_filterGenderGroup, Boat=$_filterBoatGroup, Distance=$_filterDistance, Team=$_filterTeamName, Country=$_filterCountry');
+                      // Apply the filters
+                      _applyFilters();
+                      // Expand all races after applying filters
+                      _expandAll();
+                    });
+                  },
+                  child: const Text('Apply'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _applyFilters() {
+    if (_raceResults == null) return;
+
+    print('Applying filters: Age=$_filterAgeGroup, Gender=$_filterGenderGroup, Boat=$_filterBoatGroup, Distance=$_filterDistance, Team=$_filterTeamName, Country=$_filterCountry');
+
+    _filteredRaceResults = _raceResults!.where((race) {
+      final discipline = race.discipline;
+      if (discipline == null) return true;
+
+      // Age group filter
+      if (_filterAgeGroup != null && discipline.ageGroup != _filterAgeGroup) {
+        return false;
+      }
+
+      // Gender group filter
+      if (_filterGenderGroup != null && discipline.genderGroup != _filterGenderGroup) {
+        print('Filtering out ${discipline.genderGroup} because filter is $_filterGenderGroup');
+        return false;
+      }
+
+      // Boat group filter
+      if (_filterBoatGroup != null && discipline.boatGroup != _filterBoatGroup) {
+        return false;
+      }
+
+      // Distance filter
+      if (_filterDistance != null && discipline.distance != _filterDistance) {
+        return false;
+      }
+
+      // Team name filter
+      if (_filterTeamName.isNotEmpty) {
+        final filterLower = _filterTeamName.toLowerCase();
+        final hasMatchingTeam = race.crewResults?.any((crewResult) {
+          // Check crewResult.crew.team.name (the correct path based on backend structure)
+          final teamName = crewResult.crew?.team?.name?.toLowerCase() ?? '';
+          final country = crewResult.crew?.team?.club?.country ?? 'N/A';
+          print('Checking team: "$teamName" (country: $country) contains "$filterLower" = ${teamName.contains(filterLower)}');
+          return teamName.contains(filterLower);
+        }) ?? false;
+
+        print('Race ${race.raceNumber}: hasMatchingTeam = $hasMatchingTeam');
+        if (!hasMatchingTeam) return false;
+      }
+
+      // Country filter
+      if (_filterCountry.isNotEmpty) {
+        final filterLower = _filterCountry.toLowerCase();
+        final hasMatchingCountry = race.crewResults?.any((crewResult) {
+          final country = crewResult.crew?.team?.club?.country?.toLowerCase() ?? '';
+          return country.contains(filterLower);
+        }) ?? false;
+
+        if (!hasMatchingCountry) return false;
+      }
+
+      return true;
+    }).toList();
+
+    print('Filtered results: ${_filteredRaceResults?.length} out of ${_raceResults?.length}');
   }
 
   /// Check if the race stage is a final round (uses backend determination)
@@ -745,19 +995,14 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
       );
     }
 
-    final races = _raceResults ?? [];
+    final races = _filteredRaceResults ?? _raceResults ?? [];
+    print('Building UI - using ${_filteredRaceResults != null ? "FILTERED" : "UNFILTERED"} results: ${races.length} races');
     races.sort((a, b) => (a.raceNumber ?? 0).compareTo(b.raceNumber ?? 0));
-
-    if (races.isEmpty) {
-      return const Center(
-        child: Text('No race results available'),
-      );
-    }
 
     return RefreshIndicator(
       onRefresh: _refreshResults,
       child: ListView.builder(
-        itemCount: races.length + 1, // +1 for the header
+        itemCount: races.isEmpty ? 2 : races.length + 1, // +1 for header, +1 for empty message if no races
         itemBuilder: (context, index) {
         // First item is the header
         if (index == 0) {
@@ -780,7 +1025,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Left side: Expand/Collapse buttons
+                    // Left side: Expand/Collapse/Filter buttons
                     Row(
                       children: [
                         ElevatedButton(
@@ -808,6 +1053,19 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                           ),
                           child: const Text('Collapse All'),
                         ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: _showFilters,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1],
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size(70, 28),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            textStyle: const TextStyle(fontSize: 12),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: const Text('Filters'),
+                        ),
                       ],
                     ),
                     // Right side: Export PDF button in green
@@ -826,6 +1084,23 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                   ],
                 ),
               ],
+            ),
+          );
+        }
+
+        // If there are no races, show a message
+        if (races.isEmpty && index == 1) {
+          return Container(
+            padding: const EdgeInsets.all(32),
+            child: Center(
+              child: Text(
+                _filteredRaceResults != null
+                    ? 'No race results match your filters'
+                    : 'No race results available',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  color: Colors.black54,
+                ),
+              ),
             ),
           );
         }
@@ -1066,12 +1341,35 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Team name
-                    Text(
-                      crewResult.crew?.team?.name ?? crewResult.team?.name ?? 'Unknown Team',
-                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    // Team name with country
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            crewResult.crew?.team?.name ?? crewResult.team?.name ?? 'Unknown Team',
+                            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        if (crewResult.crew?.team?.club?.country != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: Colors.blue.shade200),
+                            ),
+                            child: Text(
+                              crewResult.crew!.team!.club!.country!,
+                              style: TextStyle(
+                                color: Colors.blue.shade700,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     // Lane info if available
@@ -1232,9 +1530,32 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                 ),
               ),
             ),
-            title: Text(
-              crewResult.crew?.team?.name ?? crewResult.team?.name ?? 'Unknown Team',
-              style: Theme.of(context).textTheme.displaySmall,
+            title: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    crewResult.crew?.team?.name ?? crewResult.team?.name ?? 'Unknown Team',
+                    style: Theme.of(context).textTheme.displaySmall,
+                  ),
+                ),
+                if (crewResult.crew?.team?.club?.country != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: Text(
+                      crewResult.crew!.team!.club!.country!,
+                      style: TextStyle(
+                        color: Colors.blue.shade700,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+              ],
             ),
             subtitle: crewResult.lane != null
                 ? Text(

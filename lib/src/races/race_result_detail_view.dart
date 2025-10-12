@@ -557,12 +557,35 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Team name
-                    Text(
-                      crewResult.crew?.team?.name ?? crewResult.team?.name ?? 'Unknown Team',
-                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    // Team name with country
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            crewResult.crew?.team?.name ?? crewResult.team?.name ?? 'Unknown Team',
+                            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        if (crewResult.crew?.team?.club?.country != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: Colors.blue.shade200),
+                            ),
+                            child: Text(
+                              crewResult.crew!.team!.club!.country!,
+                              style: TextStyle(
+                                color: Colors.blue.shade700,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     // Lane info if available
@@ -723,9 +746,32 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
               ),
             ),
           ),
-          title: Text(
-            crewResult.crew?.team?.name ?? crewResult.team?.name ?? 'Unknown Team',
-            style: Theme.of(context).textTheme.displaySmall,
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  crewResult.crew?.team?.name ?? crewResult.team?.name ?? 'Unknown Team',
+                  style: Theme.of(context).textTheme.displaySmall,
+                ),
+              ),
+              if (crewResult.crew?.team?.club?.country != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: Colors.blue.shade200),
+                  ),
+                  child: Text(
+                    crewResult.crew!.team!.club!.country!,
+                    style: TextStyle(
+                      color: Colors.blue.shade700,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
           ),
           subtitle: crewResult.lane != null
               ? Text(
