@@ -185,6 +185,8 @@ const Map<String, String> countryNameToCode = {
   'Philippines': 'PHI',
   'India': 'IND',
   'South Africa': 'RSA',
+  'Cyprus': 'CYP',
+  'United Arab Emirates': 'UAE',
 };
 
 // ISO 3166-1 alpha-2 codes for flag emojis
@@ -230,6 +232,8 @@ const Map<String, String> countryCodeToAlpha2 = {
   'PHI': 'PH',
   'IND': 'IN',
   'RSA': 'ZA',
+  'CYP': 'CY',
+  'UAE': 'AE',
 };
 
 /// Get 3-letter country code from country name
