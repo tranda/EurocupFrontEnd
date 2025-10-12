@@ -21,6 +21,7 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
 
   bool editable = false;
   late Club club;
+  bool _isActive = true;
   String mode = 'r'; // 'r' for read, 'm' for modify
   bool _isInitialized = false;
 
@@ -41,6 +42,7 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
           club = foundClub;
           nameController.text = club.name ?? '';
           countryController.text = club.country ?? '';
+          _isActive = club.active ?? true;
         });
       });
 
@@ -137,6 +139,17 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
                             // Update country
                           },
                         ),
+                        const SizedBox(height: 16),
+                        SwitchListTile(
+                          title: const Text('Active'),
+                          subtitle: Text(_isActive ? 'Club is active' : 'Club is inactive'),
+                          value: _isActive,
+                          onChanged: editable ? (bool value) {
+                            setState(() {
+                              _isActive = value;
+                            });
+                          } : null,
+                        ),
                       ],
                     ),
                   ),
@@ -208,6 +221,7 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
                       club.id!,
                       nameController.text,
                       countryController.text,
+                      _isActive,
                     );
                     if (mounted) {
                       setState(() {
@@ -215,6 +229,7 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
                           id: club.id,
                           name: nameController.text,
                           country: countryController.text,
+                          active: _isActive,
                           req_adel: club.req_adel,
                           createdAt: club.createdAt,
                           updatedAt: club.updatedAt,

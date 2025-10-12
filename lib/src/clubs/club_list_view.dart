@@ -20,7 +20,8 @@ class ListViewState extends State<ClubListView> {
   @override
   void initState() {
     super.initState();
-    dataFuture = api.getClubs(activeOnly: true);
+    // Show all clubs for admins, only active for others
+    dataFuture = api.getClubs(activeOnly: currentUser.accessLevel != null && currentUser.accessLevel! >= 2 ? false : true);
   }
 
   @override

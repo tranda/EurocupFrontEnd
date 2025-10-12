@@ -680,7 +680,7 @@ Future<List<Club>> getClubsForAdel({bool adelOnly = false}) async {
   return (clubs);
 }
 
-Future<Club> updateClub(int clubId, String name, String country) async {
+Future<Club> updateClub(int clubId, String name, String country, bool active) async {
   var headers = {
     'Authorization': 'Bearer $token',
     'Content-Type': 'application/json',
@@ -689,6 +689,7 @@ Future<Club> updateClub(int clubId, String name, String country) async {
   var body = jsonEncode({
     'name': name,
     'country': country,
+    'active': active ? 1 : 0,
   });
 
   var request = http.Request('PUT', Uri.parse('$apiURL/clubs/$clubId'));
