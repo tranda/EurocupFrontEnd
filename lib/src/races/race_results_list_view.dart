@@ -403,8 +403,17 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                       print('After copying - actual values: Age=$_filterAgeGroup, Gender=$_filterGenderGroup, Boat=$_filterBoatGroup, Distance=$_filterDistance, Stage=$_filterStage, Team=$_filterTeamName, Country=$_filterCountry');
                       // Apply the filters
                       _applyFilters();
-                      // Expand all races after applying filters
-                      _expandAll();
+                      // Check if any filters are active
+                      final hasActiveFilters = _filterAgeGroup != null || _filterGenderGroup != null ||
+                          _filterBoatGroup != null || _filterDistance != null ||
+                          _filterStage != null || _filterTeamName.isNotEmpty ||
+                          _filterCountry.isNotEmpty;
+                      // Expand all if filters are active, collapse all if no filters
+                      if (hasActiveFilters) {
+                        _expandAll();
+                      } else {
+                        _collapseAll();
+                      }
                     });
                   },
                   child: const Text('Apply'),
