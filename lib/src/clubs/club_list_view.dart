@@ -61,6 +61,11 @@ class ListViewState extends State<ClubListView> {
             }
             if (snapshot.hasData) {
               final clubs = snapshot.data!;
+              // Sort clubs: active first, then inactive
+              clubs.sort((a, b) {
+                if (a.active == b.active) return 0;
+                return (a.active ?? false) ? -1 : 1;
+              });
               // Debug: clubs list
               return ListView.builder(
                 itemCount: clubs.length,
