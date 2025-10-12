@@ -8,6 +8,7 @@ import 'package:eurocup_frontend/src/athletes/athlete_list_view.dart';
 import 'package:eurocup_frontend/src/model/user.dart';
 import 'package:eurocup_frontend/src/clubs/club_adel_list_view.dart';
 import 'package:eurocup_frontend/src/clubs/club_details_view.dart';
+import 'package:eurocup_frontend/src/clubs/club_detail_page.dart';
 import 'package:eurocup_frontend/src/clubs/club_list_view.dart';
 import 'package:eurocup_frontend/src/crews/athlete_picker_view.dart';
 import 'package:eurocup_frontend/src/crews/crew_detail_view.dart';
@@ -344,6 +345,8 @@ class MyApp extends StatelessWidget {
                         return const BarCodeScannerController();
                       case ClubDetailView.routeName:
                         return const ClubDetailView();
+                      case ClubDetailPage.routeName:
+                        return const ClubDetailPage();
                       case CrewDetailPrint.routeName:
                         return const CrewDetailPrint();
                       case ClubAdelListView.routeName:

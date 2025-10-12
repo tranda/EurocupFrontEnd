@@ -3,8 +3,7 @@ import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
-import '../model/club/club.dart';
-import 'club_athlete_list_view.dart';
+import 'club_detail_page.dart';
 
 class ClubListView extends StatefulWidget {
   const ClubListView({super.key});
@@ -91,10 +90,9 @@ class ListViewState extends State<ClubListView> {
                           ),
                           onTap: () {
                             Navigator.pushNamed(
-                                context, ClubAthleteListView.routeName,
+                                context, ClubDetailPage.routeName,
                                 arguments: {
                                   'clubId': clubs[index].id,
-                                  'title': clubs[index].name!
                                 }).then((value) {
                               setState(() {});
                             });
