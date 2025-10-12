@@ -187,6 +187,7 @@ const Map<String, String> countryNameToCode = {
   'South Africa': 'RSA',
   'Cyprus': 'CYP',
   'United Arab Emirates': 'UAE',
+  'Neutral': 'AIN',
 };
 
 // ISO 3166-1 alpha-2 codes for flag emojis
@@ -247,6 +248,10 @@ String getCountryFlag(String? countryName) {
   if (countryName == null) return '';
 
   final code3 = getCountryCode(countryName);
+
+  // Special case for Neutral - return white flag
+  if (code3 == 'AIN') return '🏳️';
+
   final code2 = countryCodeToAlpha2[code3];
 
   if (code2 == null) return '';
