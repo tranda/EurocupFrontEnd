@@ -20,16 +20,16 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
   final TextEditingController countryController = TextEditingController();
 
   bool editable = false;
-  late Club club;
+  Club? club;
   bool _isActive = true;
   String mode = 'r'; // 'r' for read, 'm' for modify
-  bool _isInitialized = false;
+  bool _isLoading = true;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    if (!_isInitialized) {
+    if (_isLoading) {
       final args = ModalRoute.of(context)!.settings.arguments as Map;
       final int clubId = args['clubId'];
 
@@ -40,13 +40,12 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
 
         setState(() {
           club = foundClub;
-          nameController.text = club.name ?? '';
-          countryController.text = club.country ?? '';
-          _isActive = club.active ?? true;
+          nameController.text = foundClub.name ?? '';
+          countryController.text = foundClub.country ?? '';
+          _isActive = foundClub.active ?? true;
+          _isLoading = false;
         });
       });
-
-      _isInitialized = true;
     }
   }
 
@@ -59,7 +58,7 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_isInitialized) {
+    if (_isLoading || club == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Club Details')),
         body: const Center(child: CircularProgressIndicator()),
@@ -77,7 +76,7 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(club.name ?? 'Club Details'),
+        title: Text(club!.name ?? 'Club Details'),
         actions: [
           if (!editable && currentUser.accessLevel != null && currentUser.accessLevel! >= 2)
             IconButton(
@@ -173,8 +172,8 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
                               context,
                               ClubAthleteListView.routeName,
                               arguments: {
-                                'clubId': club.id,
-                                'title': club.name!
+                                'clubId': club!.id,
+                                'title': club!.name!
                               },
                             );
                           },
@@ -190,8 +189,8 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
                               context,
                               ClubDetailView.routeName,
                               arguments: {
-                                'clubId': club.id,
-                                'title': club.name!
+                                'clubId': club!.id,
+                                'title': club!.name!
                               },
                             );
                           },
@@ -218,7 +217,7 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
                 if (_formKey.currentState!.validate()) {
                   try {
                     await api.updateClub(
-                      club.id!,
+                      club!.id!,
                       nameController.text,
                       countryController.text,
                       _isActive,
@@ -226,13 +225,13 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
                     if (mounted) {
                       setState(() {
                         club = Club(
-                          id: club.id,
+                          id: club!.id,
                           name: nameController.text,
                           country: countryController.text,
                           active: _isActive,
-                          req_adel: club.req_adel,
-                          createdAt: club.createdAt,
-                          updatedAt: club.updatedAt,
+                          req_adel: club!.req_adel,
+                          createdAt: club!.createdAt,
+                          updatedAt: club!.updatedAt,
                         );
                         mode = 'r';
                       });
@@ -269,7 +268,7 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
                         TextButton(
                           onPressed: () async {
                             try {
-                              await api.deleteClub(club.id!);
+                              await api.deleteClub(club!.id!);
                               if (context.mounted) {
                                 Navigator.pop(context); // Close dialog
                                 Navigator.pop(context); // Go back to list
