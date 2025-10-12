@@ -257,9 +257,32 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
                     children: discipline.teams?.map<Widget>((team) {
                       return PageListItem(
                         child: ListTile(
-                          title: Text(
-                            team.team?.name ?? '',
-                            style: Theme.of(context).textTheme.displaySmall,
+                          title: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  team.team?.name ?? '',
+                                  style: Theme.of(context).textTheme.displaySmall,
+                                ),
+                              ),
+                              if (team.team?.club?.country != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: Colors.blue.shade200),
+                                  ),
+                                  child: Text(
+                                    team.team!.club!.country!,
+                                    style: TextStyle(
+                                      color: Colors.blue.shade700,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                       );

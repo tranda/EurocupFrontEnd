@@ -92,9 +92,33 @@ class ListViewState extends State<TeamListView> {
                     children: [
                       ListTile(
                           // tileColor: Colors.blue,
-                          title: Text(
-                            teams[index].name!,
-                            style: Theme.of(context).textTheme.displaySmall,
+                          title: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  teams[index].name!,
+                                  style: Theme.of(context).textTheme.displaySmall,
+                                ),
+                              ),
+                              if (teams[index].club?.country != null)
+                                Container(
+                                  margin: const EdgeInsets.only(right: 8),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: Colors.blue.shade200),
+                                  ),
+                                  child: Text(
+                                    teams[index].club!.country!,
+                                    style: TextStyle(
+                                      color: Colors.blue.shade700,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                           onTap: () {
                             Navigator.pushNamed(
