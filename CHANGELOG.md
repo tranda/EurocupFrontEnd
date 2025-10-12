@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.5] - 2025-10-12
+
+### Fixed
+- Club detail page initialization error
+  - Fixed LateInitializationError causing red error screen on page load
+  - Changed from late initialization to nullable with proper null checks
+  - Added loading indicator while fetching club data
+
 ## [0.6.4] - 2025-10-12
 
 ### Changed
