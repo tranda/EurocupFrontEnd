@@ -228,6 +228,118 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     });
   }
 
+  Widget _buildActiveFiltersChips() {
+    final hasFilters = _filterAgeGroups.isNotEmpty || _filterGenderGroups.isNotEmpty ||
+        _filterBoatGroups.isNotEmpty || _filterDistances.isNotEmpty ||
+        _filterStages.isNotEmpty || _filterTeamName.isNotEmpty ||
+        _filterCountry.isNotEmpty;
+
+    if (!hasFilters) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.only(top: 8, bottom: 4),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 4,
+        children: [
+          // Age group chips
+          ..._filterAgeGroups.map((age) => Chip(
+            label: Text('Age: $age', style: const TextStyle(fontSize: 11)),
+            deleteIcon: const Icon(Icons.close, size: 16),
+            onDeleted: () {
+              setState(() {
+                _filterAgeGroups.remove(age);
+                _applyFilters();
+              });
+            },
+            backgroundColor: Colors.blue.shade50,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          )),
+          // Gender group chips
+          ..._filterGenderGroups.map((gender) => Chip(
+            label: Text('Gender: $gender', style: const TextStyle(fontSize: 11)),
+            deleteIcon: const Icon(Icons.close, size: 16),
+            onDeleted: () {
+              setState(() {
+                _filterGenderGroups.remove(gender);
+                _applyFilters();
+              });
+            },
+            backgroundColor: Colors.purple.shade50,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          )),
+          // Boat group chips
+          ..._filterBoatGroups.map((boat) => Chip(
+            label: Text('Boat: $boat', style: const TextStyle(fontSize: 11)),
+            deleteIcon: const Icon(Icons.close, size: 16),
+            onDeleted: () {
+              setState(() {
+                _filterBoatGroups.remove(boat);
+                _applyFilters();
+              });
+            },
+            backgroundColor: Colors.orange.shade50,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          )),
+          // Distance chips
+          ..._filterDistances.map((dist) => Chip(
+            label: Text('Distance: ${dist}m', style: const TextStyle(fontSize: 11)),
+            deleteIcon: const Icon(Icons.close, size: 16),
+            onDeleted: () {
+              setState(() {
+                _filterDistances.remove(dist);
+                _applyFilters();
+              });
+            },
+            backgroundColor: Colors.green.shade50,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          )),
+          // Stage chips
+          ..._filterStages.map((stage) => Chip(
+            label: Text('Stage: $stage', style: const TextStyle(fontSize: 11)),
+            deleteIcon: const Icon(Icons.close, size: 16),
+            onDeleted: () {
+              setState(() {
+                _filterStages.remove(stage);
+                _applyFilters();
+              });
+            },
+            backgroundColor: Colors.teal.shade50,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          )),
+          // Team name chip
+          if (_filterTeamName.isNotEmpty)
+            Chip(
+              label: Text('Team: $_filterTeamName', style: const TextStyle(fontSize: 11)),
+              deleteIcon: const Icon(Icons.close, size: 16),
+              onDeleted: () {
+                setState(() {
+                  _filterTeamName = '';
+                  _applyFilters();
+                });
+              },
+              backgroundColor: Colors.pink.shade50,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          // Country chip
+          if (_filterCountry.isNotEmpty)
+            Chip(
+              label: Text('Country: $_filterCountry', style: const TextStyle(fontSize: 11)),
+              deleteIcon: const Icon(Icons.close, size: 16),
+              onDeleted: () {
+                setState(() {
+                  _filterCountry = '';
+                  _applyFilters();
+                });
+              },
+              backgroundColor: Colors.amber.shade50,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+        ],
+      ),
+    );
+  }
+
   void _showFilters() {
     // Populate available stages from current race results
     final stages = <String>{};
@@ -1209,6 +1321,8 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                     ),
                   ],
                 ),
+                // Active filters chips display
+                _buildActiveFiltersChips(),
               ],
             ),
           );
