@@ -193,7 +193,8 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
         // If filters are active, reapply them to new data
         if (_filterAgeGroup != null || _filterGenderGroup != null ||
             _filterBoatGroup != null || _filterDistance != null ||
-            _filterTeamName.isNotEmpty || _filterCountry.isNotEmpty) {
+            _filterStage != null || _filterTeamName.isNotEmpty ||
+            _filterCountry.isNotEmpty) {
           _applyFilters();
         } else {
           _filteredRaceResults = null; // No filters active
@@ -228,11 +229,23 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   }
 
   void _showFilters() {
+    // Populate available stages from current race results
+    final stages = <String>{};
+    if (_raceResults != null) {
+      for (var race in _raceResults!) {
+        if (race.stage != null && race.stage!.isNotEmpty) {
+          stages.add(race.stage!);
+        }
+      }
+    }
+    final availableStages = stages.toList()..sort();
+
     // Create local copies of filter values for the dialog
     String? tempAgeGroup = _filterAgeGroup;
     String? tempGenderGroup = _filterGenderGroup;
     String? tempBoatGroup = _filterBoatGroup;
     int? tempDistance = _filterDistance;
+    String? tempStage = _filterStage;
     String tempTeamName = _filterTeamName;
     String tempCountry = _filterCountry;
 
@@ -304,6 +317,19 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                       onChanged: (value) => setDialogState(() => tempDistance = value),
                     ),
                     const SizedBox(height: 12),
+                    // Stage filter
+                    DropdownButtonFormField<String?>(
+                      value: tempStage,
+                      decoration: const InputDecoration(labelText: 'Stage'),
+                      items: [
+                        const DropdownMenuItem(value: null, child: Text('All')),
+                        ...availableStages.map((stage) =>
+                          DropdownMenuItem(value: stage, child: Text(stage))
+                        ),
+                      ],
+                      onChanged: (value) => setDialogState(() => tempStage = value),
+                    ),
+                    const SizedBox(height: 12),
                     // Team Name filter
                     TextField(
                       controller: teamNameController,
@@ -348,6 +374,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                       tempGenderGroup = null;
                       tempBoatGroup = null;
                       tempDistance = null;
+                      tempStage = null;
                       tempTeamName = '';
                       tempCountry = '';
                       teamNameController.clear();
@@ -362,7 +389,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    print('Apply clicked - temp values: Age=$tempAgeGroup, Gender=$tempGenderGroup, Boat=$tempBoatGroup, Distance=$tempDistance, Team=$tempTeamName, Country=$tempCountry');
+                    print('Apply clicked - temp values: Age=$tempAgeGroup, Gender=$tempGenderGroup, Boat=$tempBoatGroup, Distance=$tempDistance, Stage=$tempStage, Team=$tempTeamName, Country=$tempCountry');
                     Navigator.of(context).pop();
                     setState(() {
                       // Copy temp values to actual filter state
@@ -370,9 +397,10 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                       _filterGenderGroup = tempGenderGroup;
                       _filterBoatGroup = tempBoatGroup;
                       _filterDistance = tempDistance;
+                      _filterStage = tempStage;
                       _filterTeamName = tempTeamName;
                       _filterCountry = tempCountry ?? '';
-                      print('After copying - actual values: Age=$_filterAgeGroup, Gender=$_filterGenderGroup, Boat=$_filterBoatGroup, Distance=$_filterDistance, Team=$_filterTeamName, Country=$_filterCountry');
+                      print('After copying - actual values: Age=$_filterAgeGroup, Gender=$_filterGenderGroup, Boat=$_filterBoatGroup, Distance=$_filterDistance, Stage=$_filterStage, Team=$_filterTeamName, Country=$_filterCountry');
                       // Apply the filters
                       _applyFilters();
                       // Expand all races after applying filters
@@ -392,7 +420,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   void _applyFilters() {
     if (_raceResults == null) return;
 
-    print('Applying filters: Age=$_filterAgeGroup, Gender=$_filterGenderGroup, Boat=$_filterBoatGroup, Distance=$_filterDistance, Team=$_filterTeamName, Country=$_filterCountry');
+    print('Applying filters: Age=$_filterAgeGroup, Gender=$_filterGenderGroup, Boat=$_filterBoatGroup, Distance=$_filterDistance, Stage=$_filterStage, Team=$_filterTeamName, Country=$_filterCountry');
 
     _filteredRaceResults = _raceResults!.where((race) {
       final discipline = race.discipline;
@@ -416,6 +444,11 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
 
       // Distance filter
       if (_filterDistance != null && discipline.distance != _filterDistance) {
+        return false;
+      }
+
+      // Stage filter
+      if (_filterStage != null && race.stage != _filterStage) {
         return false;
       }
 
