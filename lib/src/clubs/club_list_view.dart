@@ -42,6 +42,14 @@ class ListViewState extends State<ClubListView> {
             },
           ),
         ),
+        actions: currentUser.accessLevel != null && currentUser.accessLevel! >= 2 ? [
+          IconButton(
+            onPressed: () {
+              _showCreateClubDialog(context);
+            },
+            icon: const Icon(Icons.add),
+          ),
+        ] : [],
       ),
       body: Container(
         decoration: bckDecoration(),
@@ -57,11 +65,14 @@ class ListViewState extends State<ClubListView> {
               return ListView.builder(
                 itemCount: clubs.length,
                 itemBuilder: (BuildContext context, int index) {
-                  return Column(
-                    children: [
-                      ListTile(
-                          // tileColor: Colors.blue,
-                          title: Row(
+                  final isInactive = clubs[index].active == false;
+                  return Opacity(
+                    opacity: isInactive ? 0.5 : 1.0,
+                    child: Column(
+                      children: [
+                        ListTile(
+                            // tileColor: Colors.blue,
+                            title: Row(
                             children: [
                               if (clubs[index].country != null)
                                 Container(
@@ -106,23 +117,16 @@ class ListViewState extends State<ClubListView> {
                         height: smallSpace,
                       )
                     ],
-                  );
-                },
-              );
-            }
-            return (const Text('No data'));
-          },
-        ),
-      ),
-      floatingActionButton: currentUser.accessLevel != null && currentUser.accessLevel! >= 2
-          ? FloatingActionButton(
-              onPressed: () {
-                _showCreateClubDialog(context);
+                  ),
+                );
               },
-              child: const Icon(Icons.add),
-            )
-          : null,
-    );
+            );
+          }
+          return (const Text('No data'));
+        },
+      ),
+    ),
+  );
   }
 
   void _showCreateClubDialog(BuildContext context) {
