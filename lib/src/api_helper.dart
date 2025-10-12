@@ -299,6 +299,22 @@ Future createTeam(String name, {int? clubId}) async {
   }
 }
 
+Future<void> deleteTeam(int teamId) async {
+  var headers = {
+    'Authorization': 'Bearer $token',
+  };
+
+  var request = http.Request('DELETE', Uri.parse('$apiURL/teams/$teamId'));
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+
+  if (response.statusCode != 200) {
+    String errorMessage = await response.stream.bytesToString();
+    throw Exception('Failed to delete team: $errorMessage');
+  }
+}
+
 Future<List<Discipline>> getDisciplinesAll({int? eventId}) async {
   var headers = {'Authorization': 'Bearer $token'};
   String url = '$apiURL/disciplinesAll';

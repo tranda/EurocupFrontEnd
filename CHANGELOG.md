@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.6.3] - 2025-10-12
+
+### Added
+- Club management features (Admin only)
+  - Create, edit, and delete clubs with active status toggle
+  - Club detail page with edit/delete functionality
+  - Visual indicators: inactive clubs appear dimmed (50% opacity)
+  - Clubs sorted by active status (active first)
+  - Admins can view all clubs; regular users see only active clubs
+
+- Team management features (Admin only)
+  - Delete teams with validation (prevents deletion if crews exist)
+  - Visual indicators: teams from inactive clubs appear dimmed (50% opacity)
+  - Teams sorted by club active status (active club teams first)
+  - Admins can view all teams; regular users see only teams from active clubs
+  - Delete confirmation dialog with darker, more readable text
+
+### Changed
+- Enhanced club list view with add button in AppBar (upper right corner)
+- Team list view now includes delete button for admins
+- Both clubs and teams automatically clean up related records on deletion
+
+### Fixed
+- Team deletion now properly handles team_clubs records (auto-deleted with team)
+
 ## [0.6.2] - 2025-10-12
 
 ### Added
