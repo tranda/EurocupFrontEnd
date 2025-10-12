@@ -141,3 +141,124 @@ void clearToken() {
     html.window.localStorage.remove('auth_token');
   }
 }
+
+// Country code mappings and flag utilities
+const Map<String, String> countryNameToCode = {
+  'Serbia': 'SRB',
+  'Croatia': 'CRO',
+  'Slovenia': 'SLO',
+  'Bosnia and Herzegovina': 'BIH',
+  'Montenegro': 'MNE',
+  'North Macedonia': 'MKD',
+  'Albania': 'ALB',
+  'Greece': 'GRE',
+  'Bulgaria': 'BUL',
+  'Romania': 'ROU',
+  'Hungary': 'HUN',
+  'Austria': 'AUT',
+  'Germany': 'GER',
+  'Italy': 'ITA',
+  'France': 'FRA',
+  'Spain': 'ESP',
+  'Portugal': 'POR',
+  'United Kingdom': 'GBR',
+  'Netherlands': 'NED',
+  'Belgium': 'BEL',
+  'Switzerland': 'SUI',
+  'Czech Republic': 'CZE',
+  'Slovakia': 'SVK',
+  'Poland': 'POL',
+  'Ukraine': 'UKR',
+  'Russia': 'RUS',
+  'Turkey': 'TUR',
+  'USA': 'USA',
+  'Canada': 'CAN',
+  'Australia': 'AUS',
+  'New Zealand': 'NZL',
+  'China': 'CHN',
+  'Japan': 'JPN',
+  'South Korea': 'KOR',
+  'Thailand': 'THA',
+  'Singapore': 'SGP',
+  'Malaysia': 'MAS',
+  'Indonesia': 'INA',
+  'Philippines': 'PHI',
+  'India': 'IND',
+  'South Africa': 'RSA',
+  'Cyprus': 'CYP',
+  'United Arab Emirates': 'UAE',
+  'Neutral': 'AIN',
+};
+
+// ISO 3166-1 alpha-2 codes for flag emojis
+const Map<String, String> countryCodeToAlpha2 = {
+  'SRB': 'RS',
+  'CRO': 'HR',
+  'SLO': 'SI',
+  'BIH': 'BA',
+  'MNE': 'ME',
+  'MKD': 'MK',
+  'ALB': 'AL',
+  'GRE': 'GR',
+  'BUL': 'BG',
+  'ROU': 'RO',
+  'HUN': 'HU',
+  'AUT': 'AT',
+  'GER': 'DE',
+  'ITA': 'IT',
+  'FRA': 'FR',
+  'ESP': 'ES',
+  'POR': 'PT',
+  'GBR': 'GB',
+  'NED': 'NL',
+  'BEL': 'BE',
+  'SUI': 'CH',
+  'CZE': 'CZ',
+  'SVK': 'SK',
+  'POL': 'PL',
+  'UKR': 'UA',
+  'RUS': 'RU',
+  'TUR': 'TR',
+  'USA': 'US',
+  'CAN': 'CA',
+  'AUS': 'AU',
+  'NZL': 'NZ',
+  'CHN': 'CN',
+  'JPN': 'JP',
+  'KOR': 'KR',
+  'THA': 'TH',
+  'SGP': 'SG',
+  'MAS': 'MY',
+  'INA': 'ID',
+  'PHI': 'PH',
+  'IND': 'IN',
+  'RSA': 'ZA',
+  'CYP': 'CY',
+  'UAE': 'AE',
+};
+
+/// Get 3-letter country code from country name
+String getCountryCode(String? countryName) {
+  if (countryName == null) return '';
+  return countryNameToCode[countryName] ?? countryName.substring(0, countryName.length > 3 ? 3 : countryName.length).toUpperCase();
+}
+
+/// Get flag emoji from country name
+String getCountryFlag(String? countryName) {
+  if (countryName == null) return '';
+
+  final code3 = getCountryCode(countryName);
+
+  // Special case for Neutral - return white flag
+  if (code3 == 'AIN') return '🏳️';
+
+  final code2 = countryCodeToAlpha2[code3];
+
+  if (code2 == null) return '';
+
+  // Convert ISO 3166-1 alpha-2 to flag emoji
+  // Flag emoji = Regional Indicator Symbol Letter for each character
+  return String.fromCharCodes(
+    code2.codeUnits.map((u) => 0x1F1E6 + (u - 0x41))
+  );
+}

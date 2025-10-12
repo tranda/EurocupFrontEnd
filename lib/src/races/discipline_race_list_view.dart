@@ -257,9 +257,33 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
                     children: discipline.teams?.map<Widget>((team) {
                       return PageListItem(
                         child: ListTile(
-                          title: Text(
-                            team.team?.name ?? '',
-                            style: Theme.of(context).textTheme.displaySmall,
+                          title: Row(
+                            children: [
+                              if (team.team?.club?.country != null)
+                                Container(
+                                  margin: const EdgeInsets.only(right: 8),
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: Colors.blue.shade200),
+                                  ),
+                                  child: Text(
+                                    '${getCountryFlag(team.team!.club!.country)} ${getCountryCode(team.team!.club!.country)}',
+                                    style: TextStyle(
+                                      color: Colors.blue.shade700,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              Expanded(
+                                child: Text(
+                                  team.team?.name ?? '',
+                                  style: Theme.of(context).textTheme.displaySmall,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       );

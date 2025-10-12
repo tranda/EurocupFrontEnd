@@ -61,9 +61,33 @@ class ListViewState extends State<ClubListView> {
                     children: [
                       ListTile(
                           // tileColor: Colors.blue,
-                          title: Text(
-                            clubs[index].name!,
-                            style: Theme.of(context).textTheme.displaySmall,
+                          title: Row(
+                            children: [
+                              if (clubs[index].country != null)
+                                Container(
+                                  margin: const EdgeInsets.only(right: 8),
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: Colors.blue.shade200),
+                                  ),
+                                  child: Text(
+                                    '${getCountryFlag(clubs[index].country)} ${getCountryCode(clubs[index].country)}',
+                                    style: TextStyle(
+                                      color: Colors.blue.shade700,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              Expanded(
+                                child: Text(
+                                  clubs[index].name!,
+                                  style: Theme.of(context).textTheme.displaySmall,
+                                ),
+                              ),
+                            ],
                           ),
                           onTap: () {
                             Navigator.pushNamed(

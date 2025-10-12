@@ -1,5 +1,41 @@
 # Changelog
 
+## [0.6.2] - 2025-10-12
+
+### Added
+- Country flag emoji and 3-letter code display across all team and club views
+  - Added comprehensive country mapping (40+ countries) with flag emojis
+  - Supports Cyprus (CYP), UAE (UAE), and Neutral athletes (AIN with white flag)
+  - Country badges now show flag emoji + 3-letter ISO code (e.g., 🇷🇸 SRB)
+
+### Changed
+- Replaced full country names with compact flag + code format
+- Moved country badges before team/club names for better readability
+- Applied consistent styling across all views:
+  - Race results list and detail views
+  - Team list and discipline race lists
+  - Club list and ADEL club list
+- Enhanced visual hierarchy with country identifier appearing first
+
+## [0.6.1] - 2025-10-11
+
+### Changed
+- Left-aligned active filter chips for better visual layout in race results
+
+## [0.6.0] - 2025-10-11
+
+### Added
+- Multiselect chip-based filtering system for race results
+  - Age group, gender, boat size, distance, and stage filters now support multiple selections
+  - OR logic within same filter category, AND logic between different categories
+  - Visual filter chips with color coding (blue=age, purple=gender, orange=boat, green=distance, teal=stage)
+  - Individual chip removal with automatic filter reapplication
+  - Team name and country remain as text search fields
+
+### Changed
+- Converted single-select dropdown filters to multi-select FilterChips for better UX
+- Active filters now display as removable chips outside the filter dialog
+
 ## [0.5.7] - 2025-10-09
 
 ### Improved
