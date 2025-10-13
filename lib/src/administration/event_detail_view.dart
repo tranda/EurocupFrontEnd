@@ -30,6 +30,7 @@ class _EventDetailViewState extends State<EventDetailView> {
   DateTime? _crewEntriesLock;
   DateTime? _raceEntriesLock;
   String _status = 'active';
+  bool _available = true;
   bool _isLoading = false;
   Competition? _event;
   bool _isEditMode = false;
@@ -88,6 +89,7 @@ class _EventDetailViewState extends State<EventDetailView> {
       _crewEntriesLock = _event!.crewEntriesLock;
       _raceEntriesLock = _event!.raceEntriesLock;
       _status = _event!.status ?? 'active';
+      _available = _event!.available ?? true;
     }
   }
 
@@ -244,6 +246,7 @@ class _EventDetailViewState extends State<EventDetailView> {
         location: _locationController.text.trim(),
         year: int.parse(_yearController.text.trim()),
         status: _status,
+        available: _available,
         standardReserves: _standardReservesController.text.trim().isEmpty
           ? null : int.tryParse(_standardReservesController.text.trim()),
         standardMinGender: _standardMinGenderController.text.trim().isEmpty
@@ -499,6 +502,39 @@ class _EventDetailViewState extends State<EventDetailView> {
                           ),
                         ],
                       ),
+                    ),
+                  ),
+
+                  // Available Toggle
+                  Container(
+                    decoration: const BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(color: Colors.grey, width: 0.5),
+                      ),
+                    ),
+                    child: SwitchListTile(
+                      title: const Text(
+                        'Available',
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 0, 80, 150),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      subtitle: Text(
+                        _available
+                          ? 'Event is visible in public views'
+                          : 'Event is hidden from public views (admin only)',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _available ? Colors.teal.shade700 : Colors.red.shade700,
+                        ),
+                      ),
+                      value: _available,
+                      onChanged: (bool value) {
+                        setState(() {
+                          _available = value;
+                        });
+                      },
                     ),
                   ),
 

@@ -625,11 +625,15 @@ Future<List<Athlete>> getEligibleAthletesForCombinedCrew(
   return (athletes);
 }
 
-Future<List<Competition>> getCompetitions() async {
+Future<List<Competition>> getCompetitions({bool allEvents = false}) async {
   var headers = {
     'Authorization': 'Bearer $token',
   };
-  var request = http.Request('GET', Uri.parse('$apiURL/events'));
+  var url = '$apiURL/events';
+  if (allEvents) {
+    url += '?all=true';
+  }
+  var request = http.Request('GET', Uri.parse(url));
   request.bodyFields = {};
   request.headers.addAll(headers);
 

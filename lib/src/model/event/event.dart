@@ -6,6 +6,7 @@ class Competition {
   final String? location;
   final int? year;
   final String? status;
+  final bool? available;
   final int? standardReserves;
   final int? standardMinGender;
   final int? standardMaxGender;
@@ -24,6 +25,7 @@ class Competition {
     this.location,
     this.year,
     this.status,
+    this.available,
     this.standardReserves,
     this.standardMinGender,
     this.standardMaxGender,
@@ -84,6 +86,7 @@ class Competition {
         location: data['location'] as String?,
         year: data['year'] as int?,
         status: data['status'] as String?,
+        available: data['available'] == 1 ? true : (data['available'] == 0 ? false : null),
         standardReserves: data['standard_reserves'] as int?,
         standardMinGender: data['standard_min_gender'] as int?,
         standardMaxGender: data['standard_max_gender'] as int?,
@@ -113,6 +116,7 @@ class Competition {
         'location': location,
         'year': year,
         'status': status,
+        'available': available,
         'standard_reserves': standardReserves,
         'standard_min_gender': standardMinGender,
         'standard_max_gender': standardMaxGender,

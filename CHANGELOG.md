@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.6.6] - 2025-10-13
+
+### Added
+- Event availability filtering system
+  - Added 'available' flag to events (boolean, default TRUE)
+  - Events can be marked as Available/Unavailable in admin event detail form
+  - Public views now only show available events by default
+  - Admin event list shows all events with visual indicators (teal for available, red for unavailable)
+  - Backend /events endpoint accepts 'all' parameter for admin views
+
+### Changed
+- Event list view now uses 'allEvents' parameter to fetch all events for admin management
+- Event detail form includes Available toggle with descriptive status text
+
 ## [0.6.5] - 2025-10-12
 
 ### Fixed

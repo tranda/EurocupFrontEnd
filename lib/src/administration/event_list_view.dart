@@ -28,7 +28,8 @@ class _EventListViewState extends State<EventListView> {
 
   void _loadEvents() {
     setState(() {
-      dataFuture = api.getCompetitions();
+      // Load all events (including unavailable) for admin management
+      dataFuture = api.getCompetitions(allEvents: true);
     });
   }
 
@@ -178,6 +179,26 @@ class _EventListViewState extends State<EventListView> {
                                         fontSize: 11,
                                         fontWeight: FontWeight.w500,
                                         color: event.isRaceEntriesOpen ? Colors.blue.shade800 : Colors.orange.shade800,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: (event.available ?? true) ? Colors.teal.shade100 : Colors.red.shade100,
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(
+                                        color: (event.available ?? true) ? Colors.teal : Colors.red,
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      (event.available ?? true) ? 'Available' : 'Unavailable',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: (event.available ?? true) ? Colors.teal.shade800 : Colors.red.shade800,
                                       ),
                                     ),
                                   ),
