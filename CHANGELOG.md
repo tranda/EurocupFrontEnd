@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.7] - 2025-10-13
+
+### Fixed
+- Alternative migration file for event availability column
+  - Added column existence check to prevent errors
+  - Removed positioning constraint that could cause migration failures
+
 ## [0.6.6] - 2025-10-13
 
 ### Added
