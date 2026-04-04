@@ -108,13 +108,12 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
                           ),
                         const SizedBox(height: 10),
                         ElevatedButton(
-                          onPressed: () async {
-                            await controller.start();
+                          onPressed: () {
                             setState(() {
                               isProcessing = false;
                             });
                           },
-                          child: const Text('Resume Camera'),
+                          child: const Text('Scan Again'),
                         ),
                       ],
                     ),
@@ -132,8 +131,6 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
         setState(() {
           isProcessing = true;
         });
-
-        controller.stop();
 
         final qrValue = barcodes.first.rawValue;
         // Debug: QR Code detected
@@ -170,7 +167,6 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
     // Resume scanning after error
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
-        controller.start();
         setState(() {
           isProcessing = false;
         });
