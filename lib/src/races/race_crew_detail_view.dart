@@ -24,8 +24,7 @@ class RaceCrewDetailView extends StatefulWidget {
 
 class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
   late Crew crew;
-
-  // Removed unused variables related to old barcode scanning
+  List<Athlete> listAthlete = [];
 
   @override
   void initState() {
@@ -56,8 +55,6 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
 
   @override
   Widget build(BuildContext context) {
-    List<int> listAthleteIds = [];
-    List<Athlete> listAthlete = [];
     final args = ModalRoute.of(context)!.settings.arguments as Map;
     int size = args['size'];
     int crewId = args['crewId'];
@@ -90,10 +87,7 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
                 listAthlete = crewAthletes.values
                     .map<Athlete>((innerMap) => innerMap['athlete'] as Athlete)
                     .toList();
-                listAthleteIds = listAthlete.map((e) => e.id as int).toList();
-                // Debug: athlete IDs list
                 // Debug: check mix validation
-                // Debug: crew athletes data
                 return ListView.builder(
                   itemCount: size,
                   itemBuilder: (context, index) {

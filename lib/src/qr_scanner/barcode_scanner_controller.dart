@@ -71,18 +71,7 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
           ),
         ],
       ),
-      body: listAthlete.isEmpty
-          ? const Center(
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  'No athletes available for scanning. Please go back and try again.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16),
-                ),
-              ),
-            )
-          : Column(
+      body: Column(
               children: [
                 Expanded(
                   flex: 4,
@@ -133,23 +122,18 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
         });
 
         final qrValue = barcodes.first.rawValue;
-        // Debug: QR Code detected
 
         try {
           final qrcode = jsonDecode(qrValue ?? '');
           final id = qrcode['id'];
-          // Debug: Athlete ID extracted
 
           Athlete? athlete = findAthleteById(listAthlete, id);
           if (athlete != null) {
-            // Debug: Athlete found
             Navigator.pop(context, {'success': true, 'athlete': athlete});
           } else {
-            // Debug: Athlete not found
             _showErrorAndResume('Athlete not found');
           }
         } catch (e) {
-          // Debug: Error processing QR code
           _showErrorAndResume('Invalid QR code format');
         }
       }
@@ -160,12 +144,12 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        duration: const Duration(seconds: 2),
+        duration: const Duration(seconds: 3),
       ),
     );
 
-    // Resume scanning after error
-    Future.delayed(const Duration(seconds: 2), () {
+    // Resume scanning after delay
+    Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
         setState(() {
           isProcessing = false;
