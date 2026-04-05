@@ -3,7 +3,9 @@ import 'package:eurocup_frontend/src/athletes/athlete_detail_view.dart';
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'image_widget_web.dart' if (dart.library.io) 'package:flutter/material.dart';
 
 class AthleteListView extends StatefulWidget {
   AthleteListView({super.key});
@@ -24,6 +26,31 @@ class _AthleteListViewState extends State<AthleteListView> {
     super.initState();
     var competition = competitions.first;
     // locked = DateTime.now().isAfter(competition.nameEntriesLock!);
+  }
+
+  Widget _athleteAvatar(String photoUrl, bool hasCertificate) {
+    return Stack(
+      children: [
+        CircleAvatar(
+          radius: 24,
+          backgroundColor: Colors.grey.shade200,
+          backgroundImage: photoUrl.isNotEmpty
+              ? (kIsWeb ? null : NetworkImage(photoUrl))
+              : null,
+          child: photoUrl.isNotEmpty && kIsWeb
+              ? ClipOval(child: WebImage(imageUrl: photoUrl, width: 48, height: 48))
+              : photoUrl.isEmpty
+                  ? const Icon(Icons.person, size: 28, color: Colors.grey)
+                  : null,
+        ),
+        if (hasCertificate)
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: Icon(Icons.verified, size: 16, color: Colors.green.shade600),
+          ),
+      ],
+    );
   }
 
   @override
@@ -58,12 +85,14 @@ class _AthleteListViewState extends State<AthleteListView> {
                   // Debug: athlete data
                   final coach = athlete.coach! ? ' (Coach)' : "";
 
+                  final photoUrl = athlete.photo != null && athlete.photo!.isNotEmpty
+                      ? "https://$imagePrefix/${athlete.photo}"
+                      : "";
+
                   return Column(
                     children: [
                       ListTile(
-                        leading: Icon(athlete.certificate == null
-                              ? Icons.not_interested
-                              : Icons.verified_user),
+                        leading: _athleteAvatar(photoUrl, athlete.certificate != null),
                           title: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Text(

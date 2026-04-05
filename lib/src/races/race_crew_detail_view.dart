@@ -1,3 +1,4 @@
+import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/model/race/crew.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
@@ -65,10 +66,14 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
           if (value != null && value is Map && value['success'] == true) {
             final athlete = value['athlete'] as Athlete;
             final isInCrew = listAthlete.any((a) => a.id == athlete.id);
+            final photoUrl = athlete.photo != null && athlete.photo!.isNotEmpty
+                ? "https://$imagePrefix/${athlete.photo}"
+                : "";
             _showScanResult(
               context,
               passed: isInCrew,
               athleteName: '${athlete.firstName} ${athlete.lastName}',
+              photoUrl: photoUrl,
             );
           }
         });
@@ -152,7 +157,7 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
     );
   }
 
-  void _showScanResult(BuildContext context, {required bool passed, required String athleteName}) {
+  void _showScanResult(BuildContext context, {required bool passed, required String athleteName, String photoUrl = ''}) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -160,6 +165,15 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (photoUrl.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: CircleAvatar(
+                  radius: 45,
+                  backgroundColor: Colors.grey.shade200,
+                  backgroundImage: NetworkImage(photoUrl),
+                ),
+              ),
             Icon(
               passed ? Icons.check_circle : Icons.cancel,
               color: passed ? Colors.green : Colors.red,
