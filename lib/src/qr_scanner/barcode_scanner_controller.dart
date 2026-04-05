@@ -144,7 +144,7 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
         if (athlete != null) {
           Navigator.pop(context, {'success': true, 'athlete': athlete});
         } else {
-          _showResultAndResume(passed: false, message: 'NOT IN THIS CREW');
+          Navigator.pop(context, {'success': false, 'athleteId': athleteId});
         }
       }
     }

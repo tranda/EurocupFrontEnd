@@ -65,18 +65,25 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
           BarCodeScannerController.routeName,
           arguments: {'list': listAthlete},
         ).then((value) async {
-          if (value != null && value is Map && value['success'] == true) {
-            final athlete = value['athlete'] as Athlete;
-            final isInCrew = listAthlete.any((a) => a.id == athlete.id);
-            final photoUrl = athlete.photo != null && athlete.photo!.isNotEmpty
-                ? "https://$imagePrefix/${athlete.photo}"
-                : "";
-            _showScanResult(
-              context,
-              passed: isInCrew,
-              athleteName: '${athlete.firstName} ${athlete.lastName}',
-              photoUrl: photoUrl,
-            );
+          if (value != null && value is Map) {
+            if (value['success'] == true) {
+              final athlete = value['athlete'] as Athlete;
+              final photoUrl = athlete.photo != null && athlete.photo!.isNotEmpty
+                  ? "https://$imagePrefix/${athlete.photo}"
+                  : "";
+              _showScanResult(
+                context,
+                passed: true,
+                athleteName: '${athlete.firstName} ${athlete.lastName}',
+                photoUrl: photoUrl,
+              );
+            } else {
+              _showScanResult(
+                context,
+                passed: false,
+                athleteName: 'Athlete ID: ${value['athleteId']}',
+              );
+            }
           }
         });
       }, title: title, icon: Icons.qr_code_scanner),
