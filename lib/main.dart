@@ -2,12 +2,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 import 'src/app.dart';
 import 'src/settings/settings_controller.dart';
 import 'src/settings/settings_service.dart';
 
 void main() async {
+  // Explicitly use hash URL strategy for web (e.g., /#/home)
+  // This prevents server-side routing issues on refresh
+  if (kIsWeb) {
+    setUrlStrategy(const HashUrlStrategy());
+  }
   // Load environment variables in debug mode (local development)
   if (kDebugMode) {
     try {
