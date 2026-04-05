@@ -18,7 +18,7 @@ class QrCodeUtil {
       't': DateTime.now().millisecondsSinceEpoch ~/ 1000,
     };
 
-    final payloadBase64 = base64Url.encode(utf8.encode(jsonEncode(payload)));
+    final payloadBase64 = base64Url.encode(utf8.encode(jsonEncode(payload))).replaceAll('=', '');
     final signature = _sign(payloadBase64);
 
     return '$_prefix.$payloadBase64.$signature';
@@ -36,7 +36,9 @@ class QrCodeUtil {
       // Verify signature
       if (_sign(payloadBase64) != signature) return null;
 
-      final payload = jsonDecode(utf8.decode(base64Url.decode(payloadBase64)));
+      // Re-add base64 padding if needed
+      final padded = payloadBase64.padRight((payloadBase64.length + 3) & ~3, '=');
+      final payload = jsonDecode(utf8.decode(base64Url.decode(padded)));
       return payload['id'] as int?;
     } catch (e) {
       return null;
