@@ -49,10 +49,10 @@ class _CompetitionSelectorViewState extends State<CompetitionSelectorView> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          // Set default to EVENTID if it exists in competitions, otherwise first competition
+          // Set default to first active competition, otherwise first competition
           if (competitions.isNotEmpty) {
             final defaultCompetition = competitions.firstWhere(
-              (comp) => comp.id == EVENTID,
+              (comp) => comp.isActive,
               orElse: () => competitions.first,
             );
             selectedEventId = defaultCompetition.id.toString();

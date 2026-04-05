@@ -4,6 +4,7 @@ import 'package:eurocup_frontend/src/model/race/discipline_crew.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
+import 'package:eurocup_frontend/src/model/race/race.dart';
 
 class CrewListView extends StatefulWidget {
   const CrewListView({super.key});
@@ -18,9 +19,16 @@ class _CrewListViewState extends State<CrewListView> {
   @override
   void initState() {
     super.initState();
-    // setState(() {
-    //   getAthletes();
-    // });
+  }
+
+  Future<List<Race>> _getActiveEventDisciplines() async {
+    final activeEvents = competitions.where((c) => c.isActive).toList();
+    List<Race> allRaces = [];
+    for (var event in activeEvents) {
+      final races = await api.getDisciplinesCombined(event.id!);
+      allRaces.addAll(races);
+    }
+    return allRaces;
   }
 
   @override
@@ -30,7 +38,7 @@ class _CrewListViewState extends State<CrewListView> {
       body: Container(
         decoration: bckDecoration(),
         child: FutureBuilder(
-          future: api.getDisciplinesCombined(EVENTID),
+          future: _getActiveEventDisciplines(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());

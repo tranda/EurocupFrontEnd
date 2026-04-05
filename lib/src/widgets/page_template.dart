@@ -39,7 +39,7 @@ class PageTemplate extends StatelessWidget {
   /// Message to show when items list is empty
   final String emptyMessage;
 
-  /// Event ID for color theming (defaults to EVENTID)
+  /// Event ID for color theming
   final int? eventId;
 
   /// Whether to show refresh button in app bar
@@ -47,7 +47,7 @@ class PageTemplate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveEventId = eventId ?? EVENTID;
+    final effectiveEventId = eventId ?? 1;
     final colorIndex = (effectiveEventId - 1).clamp(0, competitionColor.length - 1);
 
     return Scaffold(
@@ -127,7 +127,7 @@ class PageHeader extends StatelessWidget {
   /// Optional subtitle text
   final String? subtitle;
 
-  /// Event ID for color theming (defaults to EVENTID)
+  /// Event ID for color theming
   final int? eventId;
 
   /// Optional action widgets (like buttons)
@@ -135,7 +135,7 @@ class PageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveEventId = eventId ?? EVENTID;
+    final effectiveEventId = eventId ?? 1;
     final colorIndex = (effectiveEventId - 1).clamp(0, competitionColor.length - 1);
 
     return Container(
@@ -194,7 +194,7 @@ class ColoredPageHeader extends StatelessWidget {
   /// Optional subtitle text
   final String? subtitle;
 
-  /// Event ID for color theming (defaults to EVENTID)
+  /// Event ID for color theming
   final int? eventId;
 
   /// Optional leading widget
@@ -208,7 +208,7 @@ class ColoredPageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveEventId = eventId ?? EVENTID;
+    final effectiveEventId = eventId ?? 1;
     final colorIndex = (effectiveEventId - 1).clamp(0, competitionColor.length - 1);
 
     return Container(

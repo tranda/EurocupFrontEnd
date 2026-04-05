@@ -2,6 +2,7 @@ import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
+import 'package:eurocup_frontend/src/model/race/race.dart';
 
 class DisciplineListView extends StatefulWidget {
   const DisciplineListView({super.key});
@@ -24,22 +25,32 @@ class _DisciplineListViewState extends State<DisciplineListView> {
     //   getAthletes();
     // });
     try {
-      var competition = competitions
-          .firstWhere((element) => element.id == EVENTID, orElse: () => competitions.first);
-      
+      // Check if any active competition has open entries
+      var activeCompetitions = competitions.where((c) => c.isActive).toList();
+      bool anyEntriesOpen = activeCompetitions.any((c) => c.isRaceEntriesOpen);
+
       // Check for null values before using them
       if (currentUser.accessLevel != null) {
         bool accessLevelRestriction = (currentUser.accessLevel! > 0) && (currentUser.accessLevel! < 3);
-        bool dateRestriction = (currentUser.accessLevel! < 3) && !competition.isRaceEntriesOpen;
+        bool dateRestriction = (currentUser.accessLevel! < 3) && !anyEntriesOpen;
 
         locked = accessLevelRestriction || dateRestriction;
       } else {
         locked = true; // Default to locked if access level is not set
       }
     } catch (e) {
-      // Error in initState
       locked = true; // Default to locked on error
     }
+  }
+
+  Future<List<Race>> _getTeamDisciplinesForActiveEvents(int teamId) async {
+    final activeEvents = competitions.where((c) => c.isActive).toList();
+    List<Race> allRaces = [];
+    for (var event in activeEvents) {
+      final races = await api.getTeamDisciplines(teamId, event.id!);
+      allRaces.addAll(races);
+    }
+    return allRaces;
   }
 
   Future<bool> _onWillPop() async {
@@ -105,15 +116,16 @@ class _DisciplineListViewState extends State<DisciplineListView> {
           //     image: DecorationImage(
           //         image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
           child: FutureBuilder(
-            future: api.getTeamDisciplines(teamId, EVENTID),
+            future: _getTeamDisciplinesForActiveEvents(teamId),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
               if (snapshot.hasData) {
                 final teamDisciplines = snapshot.data!;
-                // Filter disciplines to only show those from the active event
-                final activeDisciplines = disciplines.where((d) => d.eventId == EVENTID).toList();
+                // Filter disciplines to only show those from active events
+                final activeEventIds = competitions.where((c) => c.isActive).map((c) => c.id).toSet();
+                final activeDisciplines = disciplines.where((d) => activeEventIds.contains(d.eventId)).toList();
                 // Debug: discipline counts
                 return ListView.builder(
                   itemCount: activeDisciplines.length,

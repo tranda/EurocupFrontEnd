@@ -87,7 +87,7 @@ class _LoginViewState extends State<LoginView> {
         });
       }
     });
-    api.getDisciplinesAll(eventId: EVENTID);
+    api.getDisciplinesAll();
     super.initState();
 
     currentUser = lastUser ?? "";

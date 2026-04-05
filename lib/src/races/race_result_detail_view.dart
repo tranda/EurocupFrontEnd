@@ -188,7 +188,7 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
           // First item is the header
           if (index == 0) {
             return Container(
-              color: competitionColor[(int.tryParse(EVENTID.toString()) ?? 1) - 1],
+              color: competitionColor[0],
               child: ListTile(
                 title: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

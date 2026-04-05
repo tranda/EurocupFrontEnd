@@ -68,7 +68,7 @@ class StartupService {
 
         // Step 4: Load disciplines (for authenticated users)
         try {
-          disciplines = await api.getDisciplinesAll(eventId: EVENTID);
+          disciplines = await api.getDisciplinesAll();
         } catch (e) {
           // Warning: Failed to load disciplines
           disciplines = []; // Continue with empty list

@@ -143,8 +143,11 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
       _eventName = arguments['eventName'] as String?;
     }
 
-    // Default to current EVENTID if no event ID provided
-    _eventId ??= EVENTID.toString();
+    // Default to first active competition if no event ID provided
+    if (_eventId == null && competitions.isNotEmpty) {
+      final active = competitions.where((c) => c.isActive).toList();
+      _eventId = (active.isNotEmpty ? active.first.id : competitions.first.id).toString();
+    }
 
     _hasInitialized = true;
     _loadEventData();
@@ -154,7 +157,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     try {
       // Try to get event data from public competitions API (since public APIs work correctly)
       final competitions = await api.getCompetitions();
-      final eventIdInt = int.tryParse(_eventId ?? EVENTID.toString()) ?? EVENTID;
+      final eventIdInt = int.tryParse(_eventId ?? '0') ?? 0;
       final competition = competitions.firstWhere((comp) => comp.id == eventIdInt);
 
       setState(() {
@@ -184,7 +187,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
         _errorMessage = null;
       });
 
-      final eventIdInt = int.tryParse(_eventId ?? EVENTID.toString()) ?? EVENTID;
+      final eventIdInt = int.tryParse(_eventId ?? '0') ?? 0;
       // Always use public API since it works correctly for both authenticated and non-authenticated users
       final results = await api.getPublicRaceResults(eventId: eventIdInt);
 

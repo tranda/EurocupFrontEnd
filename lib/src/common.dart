@@ -15,8 +15,6 @@ String imagesPath = 'assets/images/';
 
 String DATEFORMAT = "yyyy-mm-dd";
 
-int EVENTID = 8;
-
 var TEST = _getBoolFromEnv('TEST_MODE');
 var ADMINTEST = _getBoolFromEnv('ADMIN_TEST_MODE');
 var testUser = _getStringFromEnv('TEST_USERNAME', '');
