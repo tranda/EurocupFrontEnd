@@ -13,10 +13,21 @@ class BarCodeScannerController extends StatefulWidget {
 }
 
 class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
-  MobileScannerController controller = MobileScannerController(
-    detectionSpeed: DetectionSpeed.normal,
-  );
+  late MobileScannerController controller;
   bool isProcessing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initController();
+  }
+
+  void _initController() {
+    controller = MobileScannerController(
+      detectionSpeed: DetectionSpeed.normal,
+      facing: CameraFacing.back,
+    );
+  }
 
   Athlete? findAthleteById(List<Athlete> list, int searchId) {
     try {
@@ -75,6 +86,7 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
                 Expanded(
                   flex: 4,
                   child: MobileScanner(
+                    key: ValueKey(controller.hashCode),
                     controller: controller,
                     onDetect: (capture) {
                       _onBarcodeDetect(capture, listAthlete);
@@ -124,7 +136,7 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
         final athleteId = QrCodeUtil.verify(qrValue);
 
         if (athleteId == null) {
-          _showErrorAndResume('Invalid or tampered QR code');
+          _showResultAndResume(passed: false, message: 'INVALID QR CODE');
           return;
         }
 
@@ -132,28 +144,52 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
         if (athlete != null) {
           Navigator.pop(context, {'success': true, 'athlete': athlete});
         } else {
-          _showErrorAndResume('Athlete not found in crew');
+          _showResultAndResume(passed: false, message: 'NOT IN THIS CREW');
         }
       }
     }
   }
 
-  void _showErrorAndResume(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 3),
+  void _showResultAndResume({required bool passed, required String message}) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              passed ? Icons.check_circle : Icons.cancel,
+              color: passed ? Colors.green : Colors.red,
+              size: 80,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: passed ? Colors.green.shade700 : Colors.red.shade700,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          Center(
+            child: TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                setState(() {
+                  isProcessing = false;
+                });
+              },
+              child: const Text('OK', style: TextStyle(fontSize: 18)),
+            ),
+          ),
+        ],
       ),
     );
-
-    // Resume scanning after delay
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        setState(() {
-          isProcessing = false;
-        });
-      }
-    });
   }
 
   @override

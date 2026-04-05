@@ -6,10 +6,7 @@ import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import '../athletes/athlete_detail_view.dart';
 import '../model/athlete/athlete.dart';
 
-import 'package:collection/collection.dart';
-
 import '../qr_scanner/barcode_scanner_controller.dart';
-import '../qr_scanner/qr_code_util.dart';
 
 class RaceCrewDetailView extends StatefulWidget {
   const RaceCrewDetailView({super.key});
@@ -65,9 +62,14 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
           BarCodeScannerController.routeName,
           arguments: {'list': listAthlete},
         ).then((value) async {
-          // Debug: QR scan result
-          if (value != null && value.toString().isNotEmpty) {
-            checkForPresence(value.toString(), listAthlete);
+          if (value != null && value is Map && value['success'] == true) {
+            final athlete = value['athlete'] as Athlete;
+            final isInCrew = listAthlete.any((a) => a.id == athlete.id);
+            _showScanResult(
+              context,
+              passed: isInCrew,
+              athleteName: '${athlete.firstName} ${athlete.lastName}',
+            );
           }
         });
       }, title: title, icon: Icons.qr_code_scanner),
@@ -150,27 +152,47 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
     );
   }
 
-  bool checkForPresence(String? code, List<Athlete> listAthlete) {
-    var result = false;
-    if (code != null && code.isNotEmpty) {
-      final athleteId = QrCodeUtil.verify(code);
-      if (athleteId == null) {
-        showInfoDialog(context, 'INVALID QR CODE', '', () {});
-        return result;
-      }
-      Athlete? athlete = findAthleteById(listAthlete, athleteId);
-      if (athlete != null) {
-        result = true;
-        showInfoDialog(context, 'PASSED', '', () {});
-      } else {
-        showInfoDialog(context, 'NOT IN THIS CREW!', '', () {});
-      }
-    }
-    return (result);
-  }
-
-  Athlete? findAthleteById(List<Athlete> list, int searchId) {
-    return list.firstWhereOrNull((athlete) => athlete.id == searchId);
+  void _showScanResult(BuildContext context, {required bool passed, required String athleteName}) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              passed ? Icons.check_circle : Icons.cancel,
+              color: passed ? Colors.green : Colors.red,
+              size: 80,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              passed ? 'PASSED' : 'NOT IN THIS CREW',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: passed ? Colors.green.shade700 : Colors.red.shade700,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              athleteName,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: Colors.black87),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK', style: TextStyle(fontSize: 18)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<bool?> openDialog() async {
