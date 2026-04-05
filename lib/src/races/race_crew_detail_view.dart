@@ -1,11 +1,7 @@
-import 'dart:convert';
-
 import 'package:eurocup_frontend/src/model/race/crew.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
-import 'package:flutter/services.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../athletes/athlete_detail_view.dart';
 import '../model/athlete/athlete.dart';
@@ -13,6 +9,7 @@ import '../model/athlete/athlete.dart';
 import 'package:collection/collection.dart';
 
 import '../qr_scanner/barcode_scanner_controller.dart';
+import '../qr_scanner/qr_code_util.dart';
 
 class RaceCrewDetailView extends StatefulWidget {
   const RaceCrewDetailView({super.key});
@@ -156,17 +153,16 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
   bool checkForPresence(String? code, List<Athlete> listAthlete) {
     var result = false;
     if (code != null && code.isNotEmpty) {
-      // Debug: QR code content
-      final qrcode = jsonDecode(code);
-      final id = qrcode['id'];
-      // Debug: athlete ID from QR code
-      Athlete? athlete = findAthleteById(listAthlete, id);
+      final athleteId = QrCodeUtil.verify(code);
+      if (athleteId == null) {
+        showInfoDialog(context, 'INVALID QR CODE', '', () {});
+        return result;
+      }
+      Athlete? athlete = findAthleteById(listAthlete, athleteId);
       if (athlete != null) {
         result = true;
-        // Debug: athlete validation passed
         showInfoDialog(context, 'PASSED', '', () {});
       } else {
-        // Debug: athlete validation failed
         showInfoDialog(context, 'NOT IN THIS CREW!', '', () {});
       }
     }

@@ -1,9 +1,8 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../model/athlete/athlete.dart';
+import 'qr_code_util.dart';
 
 class BarCodeScannerController extends StatefulWidget {
   const BarCodeScannerController({super.key});
@@ -121,20 +120,19 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
           isProcessing = true;
         });
 
-        final qrValue = barcodes.first.rawValue;
+        final qrValue = barcodes.first.rawValue ?? '';
+        final athleteId = QrCodeUtil.verify(qrValue);
 
-        try {
-          final qrcode = jsonDecode(qrValue ?? '');
-          final id = qrcode['id'];
+        if (athleteId == null) {
+          _showErrorAndResume('Invalid or tampered QR code');
+          return;
+        }
 
-          Athlete? athlete = findAthleteById(listAthlete, id);
-          if (athlete != null) {
-            Navigator.pop(context, {'success': true, 'athlete': athlete});
-          } else {
-            _showErrorAndResume('Athlete not found');
-          }
-        } catch (e) {
-          _showErrorAndResume('Invalid QR code format');
+        Athlete? athlete = findAthleteById(listAthlete, athleteId);
+        if (athlete != null) {
+          Navigator.pop(context, {'success': true, 'athlete': athlete});
+        } else {
+          _showErrorAndResume('Athlete not found in crew');
         }
       }
     }

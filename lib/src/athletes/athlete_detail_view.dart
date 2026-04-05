@@ -4,13 +4,18 @@ import 'dart:typed_data';
 
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
+import 'package:eurocup_frontend/src/qr_scanner/qr_code_util.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/services.dart';
 
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:file_picker/file_picker.dart';
 import 'image_widget_web.dart' if (dart.library.io) 'package:flutter/material.dart';
@@ -69,6 +74,13 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
           title: Text(
               '${currentAthlete.firstName ?? ""} ${currentAthlete.lastName ?? ""}'),
           actions: [
+            Visibility(
+              visible: !editable && currentAthlete.id != null,
+              child: IconButton(
+                icon: const Icon(Icons.qr_code),
+                onPressed: () => _showQrCode(currentAthlete),
+              ),
+            ),
             Visibility(
               visible: !editable && allowEdit,
               child: IconButton(
@@ -558,6 +570,51 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
             ],
           ),
         ));
+  }
+
+  void _showQrCode(Athlete athlete) {
+    final qrData = QrCodeUtil.generate(
+      athleteId: athlete.id!,
+      clubId: athlete.clubId ?? 0,
+    );
+    _printQrCode(athlete, qrData);
+  }
+
+  Future<void> _printQrCode(Athlete athlete, String qrData) async {
+    final fontData = await rootBundle.load('assets/fonts/Roboto-Bold.ttf');
+    final ttf = pw.Font.ttf(fontData);
+    final fontDataRegular = await rootBundle.load('assets/fonts/Roboto-Regular.ttf');
+    final ttfRegular = pw.Font.ttf(fontDataRegular);
+
+    final doc = pw.Document();
+    doc.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return pw.Center(
+            child: pw.Column(
+              mainAxisAlignment: pw.MainAxisAlignment.center,
+              children: [
+                pw.Text(
+                  '${athlete.firstName} ${athlete.lastName}',
+                  style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, font: ttf),
+                ),
+                pw.SizedBox(height: 20),
+                pw.BarcodeWidget(
+                  barcode: pw.Barcode.qrCode(),
+                  data: qrData,
+                  width: 200,
+                  height: 200,
+                ),
+                pw.SizedBox(height: 10),
+                pw.Text('ID: ${athlete.id}', style: pw.TextStyle(fontSize: 12, font: ttfRegular)),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+    await Printing.layoutPdf(onLayout: (format) async => doc.save());
   }
 
   Future<void> _launchUrl(String url) async {
