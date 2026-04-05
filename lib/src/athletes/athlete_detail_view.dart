@@ -16,6 +16,7 @@ import 'package:intl/intl.dart';
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:file_picker/file_picker.dart';
 import 'image_widget_web.dart' if (dart.library.io) 'package:flutter/material.dart';
@@ -577,7 +578,49 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
       athleteId: athlete.id!,
       clubId: athlete.clubId ?? 0,
     );
-    _printQrCode(athlete, qrData);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          '${athlete.firstName} ${athlete.lastName}',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.displaySmall,
+        ),
+        content: SizedBox(
+          width: 280,
+          height: 300,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              QrImageView(
+                data: qrData,
+                version: QrVersions.auto,
+                size: 250,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'ID: ${athlete.id}',
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _printQrCode(athlete, qrData);
+            },
+            child: const Text('Print'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _printQrCode(Athlete athlete, String qrData) async {
