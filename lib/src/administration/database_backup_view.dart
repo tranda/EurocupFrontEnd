@@ -238,20 +238,33 @@ class _DatabaseBackupViewState extends State<DatabaseBackupView> {
                             return Card(
                               margin: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 4),
-                              child: ListTile(
-                                leading: const Icon(Icons.storage,
-                                    color: Color.fromARGB(255, 0, 80, 150)),
-                                title: Text(
-                                  backup['filename'] ?? 'Unknown',
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.w500),
-                                ),
-                                subtitle: Text(
-                                  '${backup['created_at'] ?? ''} - ${_formatSize(backup['size'])}',
-                                ),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                                child: Row(
                                   children: [
+                                    const Icon(Icons.storage,
+                                        color: Color.fromARGB(255, 0, 80, 150)),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            backup['filename'] ?? 'Unknown',
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.w500),
+                                          ),
+                                          Text(
+                                            '${backup['created_at'] ?? ''} - ${_formatSize(backup['size'])}',
+                                            style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                     IconButton(
                                       icon: const Icon(Icons.download,
                                           color: Colors.blue),
