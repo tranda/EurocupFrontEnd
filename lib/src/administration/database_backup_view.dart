@@ -259,46 +259,40 @@ class _DatabaseBackupViewState extends State<DatabaseBackupView> {
                                     const SizedBox(height: 12),
                                     Row(
                                       children: [
-                                        ElevatedButton.icon(
+                                        ElevatedButton(
                                           onPressed: () => _downloadBackup(
                                               backup['filename']),
-                                          icon: const Icon(Icons.file_download,
-                                              size: 18, color: Colors.white),
-                                          label: const Text('Download'),
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: Colors.blue.shade700,
                                             foregroundColor: Colors.white,
                                             padding: const EdgeInsets.symmetric(
-                                                horizontal: 16, vertical: 12),
+                                                horizontal: 20, vertical: 12),
                                           ),
+                                          child: const Text('Download'),
                                         ),
                                         const SizedBox(width: 8),
-                                        ElevatedButton.icon(
+                                        ElevatedButton(
                                           onPressed: () => _restoreBackup(
                                               backup['filename']),
-                                          icon: const Icon(Icons.settings_backup_restore,
-                                              size: 18, color: Colors.white),
-                                          label: const Text('Restore'),
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: Colors.orange.shade700,
                                             foregroundColor: Colors.white,
                                             padding: const EdgeInsets.symmetric(
-                                                horizontal: 16, vertical: 12),
+                                                horizontal: 20, vertical: 12),
                                           ),
+                                          child: const Text('Restore'),
                                         ),
                                         const SizedBox(width: 8),
-                                        ElevatedButton.icon(
+                                        ElevatedButton(
                                           onPressed: () => _deleteBackup(
                                               backup['filename']),
-                                          icon: const Icon(Icons.delete,
-                                              size: 18, color: Colors.white),
-                                          label: const Text('Delete'),
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: Colors.red.shade700,
                                             foregroundColor: Colors.white,
                                             padding: const EdgeInsets.symmetric(
-                                                horizontal: 16, vertical: 12),
+                                                horizontal: 20, vertical: 12),
                                           ),
+                                          child: const Text('Delete'),
                                         ),
                                       ],
                                     ),
