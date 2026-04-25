@@ -1,4 +1,5 @@
 import 'dart:html' as html;
+import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
@@ -202,13 +203,34 @@ class _DatabaseBackupViewState extends State<DatabaseBackupView> {
     return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
+  Widget _badge(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color, width: 1),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: HSLColor.fromColor(color).withLightness(0.3).toColor(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: appBar(title: 'Database Backups'),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
+      body: Container(
+        decoration: bckDecoration(),
+        child: Stack(
+          children: [
+            Column(
               children: [
                 Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -224,7 +246,7 @@ class _DatabaseBackupViewState extends State<DatabaseBackupView> {
                     ),
                   ),
                 ),
-                const Divider(),
+                const Divider(height: 4),
                 Expanded(
                   child: backups.isEmpty
                       ? const Center(
@@ -235,76 +257,67 @@ class _DatabaseBackupViewState extends State<DatabaseBackupView> {
                           itemCount: backups.length,
                           itemBuilder: (context, index) {
                             final backup = backups[index];
-                            return Card(
-                              margin: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 4),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      backup['filename'] ?? 'Unknown',
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: Color.fromARGB(255, 0, 80, 150)),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '${backup['created_at'] ?? ''} - ${_formatSize(backup['size'])}',
-                                      style: const TextStyle(
-                                          fontSize: 13, color: Colors.grey),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Row(
+                            return Column(
+                              children: [
+                                ListTile(
+                                  title: Text(
+                                    backup['filename'] ?? 'Unknown',
+                                    style: Theme.of(context).textTheme.displaySmall,
+                                  ),
+                                  subtitle: Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Row(
                                       children: [
-                                        ElevatedButton(
-                                          onPressed: () => _downloadBackup(
-                                              backup['filename']),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.blue.shade700,
-                                            foregroundColor: Colors.white,
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 20, vertical: 12),
-                                          ),
-                                          child: const Text('Download'),
-                                        ),
+                                        _badge(
+                                            backup['created_at'] ?? '',
+                                            Colors.blue),
                                         const SizedBox(width: 8),
-                                        ElevatedButton(
-                                          onPressed: () => _restoreBackup(
-                                              backup['filename']),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.orange.shade700,
-                                            foregroundColor: Colors.white,
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 20, vertical: 12),
-                                          ),
-                                          child: const Text('Restore'),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        ElevatedButton(
-                                          onPressed: () => _deleteBackup(
-                                              backup['filename']),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.red.shade700,
-                                            foregroundColor: Colors.white,
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 20, vertical: 12),
-                                          ),
-                                          child: const Text('Delete'),
-                                        ),
+                                        _badge(
+                                            _formatSize(backup['size']),
+                                            Colors.teal),
                                       ],
                                     ),
-                                  ],
+                                  ),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.save,
+                                            color: Colors.blue),
+                                        tooltip: 'Download',
+                                        onPressed: () => _downloadBackup(
+                                            backup['filename']),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.refresh,
+                                            color: Colors.orange),
+                                        tooltip: 'Restore',
+                                        onPressed: () => _restoreBackup(
+                                            backup['filename']),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.delete,
+                                            color: Colors.red),
+                                        tooltip: 'Delete',
+                                        onPressed: () => _deleteBackup(
+                                            backup['filename']),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
+                                const Divider(height: 4),
+                                const Divider(height: smallSpace),
+                              ],
                             );
                           },
                         ),
                 ),
               ],
             ),
+            if (isLoading) busyOverlay(context),
+          ],
+        ),
+      ),
     );
   }
 }
