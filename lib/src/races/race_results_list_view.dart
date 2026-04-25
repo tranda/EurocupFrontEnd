@@ -260,8 +260,8 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
             });
           },
           child: Container(
-            constraints: const BoxConstraints(minHeight: 28),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            height: 28,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
               color: isSelected ? color.shade100 : Colors.white,
               borderRadius: BorderRadius.circular(14),
