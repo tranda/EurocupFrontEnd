@@ -1133,6 +1133,7 @@ Future createDiscipline(Discipline discipline) async {
     'age_group': discipline.ageGroup as String,
     'gender_group': discipline.genderGroup as String,
     'boat_group': discipline.boatGroup as String,
+    'competition': discipline.competition ?? '',
     'status': discipline.status ?? 'active',
   };
   request.headers.addAll(headers);
@@ -1163,6 +1164,7 @@ Future updateDiscipline(Discipline discipline) async {
     'age_group': discipline.ageGroup as String,
     'gender_group': discipline.genderGroup as String,
     'boat_group': discipline.boatGroup as String,
+    'competition': discipline.competition ?? '',
     'status': discipline.status ?? 'active',
   };
   request.headers.addAll(headers);

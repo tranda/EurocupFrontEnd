@@ -19,7 +19,8 @@ class DisciplineDetailView extends StatefulWidget {
 class _DisciplineDetailViewState extends State<DisciplineDetailView> {
   final _formKey = GlobalKey<FormState>();
   final _distanceController = TextEditingController();
-  
+  final _competitionController = TextEditingController();
+
   Competition? _selectedEvent;
   String _selectedAgeGroup = 'Junior';  // First item in disciplineAgeGroups
   String _selectedGenderGroup = 'Mixed';  // First item in disciplineGenderGroups
@@ -55,6 +56,7 @@ class _DisciplineDetailViewState extends State<DisciplineDetailView> {
   void _populateForm() {
     if (_discipline != null) {
       _distanceController.text = _discipline!.distance?.toString() ?? '';
+      _competitionController.text = _discipline!.competition ?? '';
       
       // Find the matching event
       if (_discipline!.eventId != null) {
@@ -89,6 +91,7 @@ class _DisciplineDetailViewState extends State<DisciplineDetailView> {
   @override
   void dispose() {
     _distanceController.dispose();
+    _competitionController.dispose();
     super.dispose();
   }
 
@@ -109,6 +112,9 @@ class _DisciplineDetailViewState extends State<DisciplineDetailView> {
         ageGroup: _selectedAgeGroup,
         genderGroup: _selectedGenderGroup,
         boatGroup: _selectedBoatGroup,
+        competition: _competitionController.text.trim().isEmpty
+            ? null
+            : _competitionController.text.trim(),
         status: _selectedStatus,
       );
 
@@ -362,6 +368,48 @@ class _DisciplineDetailViewState extends State<DisciplineDetailView> {
                           }
                           return null;
                         },
+                      ),
+                    ),
+                  ),
+
+                  Container(
+                    decoration: const BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: Colors.grey,
+                          width: 0.5,
+                        ),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      child: TextFormField(
+                        controller: _competitionController,
+                        textCapitalization: TextCapitalization.words,
+                        decoration: InputDecoration(
+                          labelText: 'Competition (optional)',
+                          hintText: 'e.g. Club, Corporate',
+                          labelStyle: const TextStyle(
+                            color: Color.fromARGB(255, 0, 80, 150),
+                            fontWeight: FontWeight.w500,
+                          ),
+                          contentPadding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
+                          fillColor: Colors.white,
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: const BorderSide(color: Colors.grey, width: 1.0),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: const BorderSide(color: Colors.grey, width: 1.0),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: const BorderSide(color: Color.fromARGB(255, 0, 80, 150), width: 2.0),
+                          ),
+                        ),
+                        style: const TextStyle(color: Colors.black87, fontSize: 16),
                       ),
                     ),
                   ),
