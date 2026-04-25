@@ -246,8 +246,9 @@ class _DatabaseBackupViewState extends State<DatabaseBackupView> {
                                     Text(
                                       backup['filename'] ?? 'Unknown',
                                       style: const TextStyle(
-                                          fontWeight: FontWeight.w500,
-                                          fontSize: 16),
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Color.fromARGB(255, 0, 80, 150)),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
