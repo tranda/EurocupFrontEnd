@@ -262,7 +262,7 @@ class _DatabaseBackupViewState extends State<DatabaseBackupView> {
                                         ElevatedButton.icon(
                                           onPressed: () => _downloadBackup(
                                               backup['filename']),
-                                          icon: const Icon(Icons.download,
+                                          icon: const Icon(Icons.file_download,
                                               size: 18, color: Colors.white),
                                           label: const Text('Download'),
                                           style: ElevatedButton.styleFrom(
@@ -276,7 +276,7 @@ class _DatabaseBackupViewState extends State<DatabaseBackupView> {
                                         ElevatedButton.icon(
                                           onPressed: () => _restoreBackup(
                                               backup['filename']),
-                                          icon: const Icon(Icons.restore,
+                                          icon: const Icon(Icons.settings_backup_restore,
                                               size: 18, color: Colors.white),
                                           label: const Text('Restore'),
                                           style: ElevatedButton.styleFrom(
