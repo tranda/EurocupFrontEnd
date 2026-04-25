@@ -136,14 +136,12 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
             });
           },
           child: Container(
-            height: 28,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
             decoration: BoxDecoration(
               color: isSelected ? color.shade100 : Colors.white,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: color, width: 1),
             ),
-            alignment: Alignment.center,
             child: Text(
               comp,
               style: TextStyle(
@@ -221,10 +219,12 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
             if (chips.isEmpty) return const SizedBox.shrink();
             return Padding(
               padding: const EdgeInsets.only(top: 12),
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                runSpacing: 8,
-                children: chips,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Wrap(
+                  runSpacing: 8,
+                  children: chips,
+                ),
               ),
             );
           }),
