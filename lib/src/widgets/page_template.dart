@@ -185,6 +185,7 @@ class ColoredPageHeader extends StatelessWidget {
     this.eventId,
     this.leading,
     this.trailing,
+    this.titleBadge,
     this.onTap,
   });
 
@@ -203,6 +204,9 @@ class ColoredPageHeader extends StatelessWidget {
   /// Optional trailing widget
   final Widget? trailing;
 
+  /// Optional widget shown right after the title (e.g. a competition badge)
+  final Widget? titleBadge;
+
   /// Optional tap handler
   final VoidCallback? onTap;
 
@@ -219,11 +223,20 @@ class ColoredPageHeader extends StatelessWidget {
         title: FittedBox(
           fit: BoxFit.scaleDown,
           alignment: Alignment.centerLeft,
-          child: Text(
-            title,
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-              color: Colors.white,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                      color: Colors.white,
+                    ),
+              ),
+              if (titleBadge != null) ...[
+                const SizedBox(width: 10),
+                titleBadge!,
+              ],
+            ],
           ),
         ),
         subtitle: subtitle != null

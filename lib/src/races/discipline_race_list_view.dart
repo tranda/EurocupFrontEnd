@@ -162,6 +162,36 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
     );
   }
 
+  Widget _competitionBadge(String competition) {
+    const palette = [
+      Colors.purple,
+      Colors.teal,
+      Colors.indigo,
+      Colors.deepOrange,
+      Colors.pink,
+      Colors.brown,
+    ];
+    final hash = competition.toLowerCase().codeUnits.fold(0, (a, b) => a + b);
+    final color = palette[hash % palette.length];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.shade100,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white, width: 1.5),
+      ),
+      child: Text(
+        competition,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: color.shade900,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -235,6 +265,9 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
                   ColoredPageHeader(
                     title: "${discipline.getDisplayName()} $inactiveStatus (${discipline.teamsCount ?? 0})",
                     eventId: discipline.eventId,
+                    titleBadge: (discipline.competition != null && discipline.competition!.isNotEmpty)
+                        ? _competitionBadge(discipline.competition!)
+                        : null,
                     leading: Text(
                       eventName,
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
