@@ -232,6 +232,57 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     });
   }
 
+  Widget _buildCompetitionFilter() {
+    if (_raceResults == null) return const SizedBox.shrink();
+    final competitionsSet = <String>{};
+    for (var race in _raceResults!) {
+      final c = race.discipline?.competition;
+      if (c != null && c.isNotEmpty) competitionsSet.add(c);
+    }
+    if (competitionsSet.isEmpty) return const SizedBox.shrink();
+    final available = competitionsSet.toList()..sort();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.only(top: 8),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 4,
+        alignment: WrapAlignment.center,
+        children: available.map((comp) {
+          final isSelected = _filterCompetitions.contains(comp);
+          final color = competitionBadgeColor(comp);
+          return FilterChip(
+            label: Text(
+              comp,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? color.shade900 : color.shade800,
+              ),
+            ),
+            selected: isSelected,
+            showCheckmark: false,
+            backgroundColor: Colors.white,
+            selectedColor: color.shade100,
+            side: BorderSide(color: color, width: 1),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            onSelected: (selected) {
+              setState(() {
+                if (selected) {
+                  _filterCompetitions.add(comp);
+                } else {
+                  _filterCompetitions.remove(comp);
+                }
+                _applyFilters();
+              });
+            },
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   Widget _competitionBadge(String competition) {
     final color = competitionBadgeColor(competition);
     return Container(
@@ -255,8 +306,8 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   Widget _buildActiveFiltersChips() {
     final hasFilters = _filterAgeGroups.isNotEmpty || _filterGenderGroups.isNotEmpty ||
         _filterBoatGroups.isNotEmpty || _filterDistances.isNotEmpty ||
-        _filterStages.isNotEmpty || _filterCompetitions.isNotEmpty ||
-        _filterTeamName.isNotEmpty || _filterCountry.isNotEmpty;
+        _filterStages.isNotEmpty || _filterTeamName.isNotEmpty ||
+        _filterCountry.isNotEmpty;
 
     if (!hasFilters) return const SizedBox.shrink();
 
@@ -333,22 +384,6 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
             backgroundColor: Colors.teal.shade50,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           )),
-          // Competition chips
-          ..._filterCompetitions.map((comp) {
-            final color = competitionBadgeColor(comp);
-            return Chip(
-              label: Text('Competition: $comp', style: const TextStyle(fontSize: 11)),
-              deleteIcon: const Icon(Icons.close, size: 16),
-              onDeleted: () {
-                setState(() {
-                  _filterCompetitions.remove(comp);
-                  _applyFilters();
-                });
-              },
-              backgroundColor: color.shade100,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            );
-          }),
           // Team name chip
           if (_filterTeamName.isNotEmpty)
             Chip(
@@ -394,23 +429,12 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     }
     final availableStages = stages.toList()..sort();
 
-    // Build available competitions from current race results
-    final competitionsSet = <String>{};
-    if (_raceResults != null) {
-      for (var race in _raceResults!) {
-        final c = race.discipline?.competition;
-        if (c != null && c.isNotEmpty) competitionsSet.add(c);
-      }
-    }
-    final availableCompetitions = competitionsSet.toList()..sort();
-
     // Create local copies of filter values for the dialog (lists for multiselect)
     List<String> tempAgeGroups = List.from(_filterAgeGroups);
     List<String> tempGenderGroups = List.from(_filterGenderGroups);
     List<String> tempBoatGroups = List.from(_filterBoatGroups);
     List<int> tempDistances = List.from(_filterDistances);
     List<String> tempStages = List.from(_filterStages);
-    List<String> tempCompetitions = List.from(_filterCompetitions);
     String tempTeamName = _filterTeamName;
     String tempCountry = _filterCountry;
 
@@ -574,40 +598,6 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                         ),
                       ],
                     ),
-                    if (availableCompetitions.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      // Competition filter (multiselect with chips)
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Competition', style: TextStyle(fontSize: 12, color: Colors.black54)),
-                          const SizedBox(height: 4),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 4,
-                            children: availableCompetitions.map((comp) {
-                              final isSelected = tempCompetitions.contains(comp);
-                              final color = competitionBadgeColor(comp);
-                              return FilterChip(
-                                label: Text(comp),
-                                selected: isSelected,
-                                selectedColor: color.shade100,
-                                checkmarkColor: color.shade800,
-                                onSelected: (selected) {
-                                  setDialogState(() {
-                                    if (selected) {
-                                      tempCompetitions.add(comp);
-                                    } else {
-                                      tempCompetitions.remove(comp);
-                                    }
-                                  });
-                                },
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                      ),
-                    ],
                     const SizedBox(height: 16),
                     // Team Name filter
                     TextField(
@@ -654,7 +644,6 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                       tempBoatGroups.clear();
                       tempDistances.clear();
                       tempStages.clear();
-                      tempCompetitions.clear();
                       tempTeamName = '';
                       tempCountry = '';
                       teamNameController.clear();
@@ -683,8 +672,6 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                       _filterDistances.addAll(tempDistances);
                       _filterStages.clear();
                       _filterStages.addAll(tempStages);
-                      _filterCompetitions.clear();
-                      _filterCompetitions.addAll(tempCompetitions);
                       _filterTeamName = tempTeamName;
                       _filterCountry = tempCountry;
                       print('After copying - actual values: Ages=$_filterAgeGroups, Genders=$_filterGenderGroups, Boats=$_filterBoatGroups, Distances=$_filterDistances, Stages=$_filterStages, Team=$_filterTeamName, Country=$_filterCountry');
@@ -1417,6 +1404,8 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                     ),
                   ],
                 ),
+                // Competition selector (separate from other filters)
+                _buildCompetitionFilter(),
                 // Active filters chips display
                 _buildActiveFiltersChips(),
               ],
