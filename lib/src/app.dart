@@ -265,21 +265,45 @@ class MyApp extends StatelessWidget {
                           child: const HomePage(),
                         );
                       case AdministrationPage.routeName:
-                        return const AdministrationPage();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const AdministrationPage(),
+                        );
                       case DatabaseBackupView.routeName:
-                        return const DatabaseBackupView();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const DatabaseBackupView(),
+                        );
                       case EventListView.routeName:
-                        return const EventListView();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const EventListView(),
+                        );
                       case EventDetailView.routeName:
-                        return const EventDetailView();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const EventDetailView(),
+                        );
                       case admin.AdminDisciplineListView.routeName:
-                        return const admin.AdminDisciplineListView();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const admin.AdminDisciplineListView(),
+                        );
                       case DisciplineDetailView.routeName:
-                        return const DisciplineDetailView();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const DisciplineDetailView(),
+                        );
                       case DisciplineListView.routeName:
-                        return const DisciplineListView();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const DisciplineListView(),
+                        );
                       case UserListView.routeName:
-                        return const UserListView();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const UserListView(),
+                        );
                       case UserDetailView.routeName:
                         print('Route: UserDetailView');
                         print('Original routeSettings.arguments: ${routeSettings.arguments}');
@@ -287,26 +311,50 @@ class MyApp extends StatelessWidget {
                         print('Final arguments: $finalArguments');
                         // Pass the user directly if available
                         final userArg = updatedSettings.arguments is User ? updatedSettings.arguments as User : null;
-                        return UserDetailView(user: userArg);
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: UserDetailView(user: userArg),
+                        );
                       case AthleteListView.routeName:
-                        return AthleteListView();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: AthleteListView(),
+                        );
                       case ClubListView.routeName:
-                        return const ClubListView();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const ClubListView(),
+                        );
                       case ClubAthleteListView.routeName:
-                        return ClubAthleteListView();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: ClubAthleteListView(),
+                        );
                       case AthleteDetailView.routeName:
-                        return const AthleteDetailView();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const AthleteDetailView(),
+                        );
                       case CrewListView.routeName:
                         return StartupWrapper(
                           targetRoute: routeSettings.name,
                           child: const CrewListView(),
                         );
                       case CrewDetailView.routeName:
-                        return const CrewDetailView();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const CrewDetailView(),
+                        );
                       case AthletePickerView.routeName:
-                        return const AthletePickerView();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const AthletePickerView(),
+                        );
                       case TeamListView.routeName:
-                        return const TeamListView();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const TeamListView(),
+                        );
                       case DisciplineRaceListView.routeName:
                         return StartupWrapper(
                           targetRoute: routeSettings.name,
@@ -345,17 +393,35 @@ class MyApp extends StatelessWidget {
                         loadToken();
                         return const RaceResultDetailView();
                       case BarCodeScannerController.routeName:
-                        return const BarCodeScannerController();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const BarCodeScannerController(),
+                        );
                       case ClubDetailView.routeName:
-                        return const ClubDetailView();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const ClubDetailView(),
+                        );
                       case ClubDetailPage.routeName:
-                        return const ClubDetailPage();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const ClubDetailPage(),
+                        );
                       case CrewDetailPrint.routeName:
-                        return const CrewDetailPrint();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const CrewDetailPrint(),
+                        );
                       case ClubAdelListView.routeName:
-                        return const ClubAdelListView();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const ClubAdelListView(),
+                        );
                       case AiBarcodeScanner.routeName:
-                        return const AiBarcodeScanner();
+                        return StartupWrapper(
+                          targetRoute: routeSettings.name,
+                          child: const AiBarcodeScanner(),
+                        );
                       default:
                         // For unknown routes, redirect to home page instead of login
                         // Router: Unknown route ${routeSettings.name}, redirecting to HomePage
