@@ -259,36 +259,42 @@ class _DatabaseBackupViewState extends State<DatabaseBackupView> {
                                     const SizedBox(height: 12),
                                     Row(
                                       children: [
-                                        OutlinedButton.icon(
+                                        ElevatedButton.icon(
                                           onPressed: () => _downloadBackup(
                                               backup['filename']),
                                           icon: const Icon(Icons.download, size: 18),
                                           label: const Text('Download'),
-                                          style: OutlinedButton.styleFrom(
-                                            foregroundColor: Colors.blue,
-                                            side: const BorderSide(color: Colors.blue),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.blue.shade700,
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 16, vertical: 12),
                                           ),
                                         ),
                                         const SizedBox(width: 8),
-                                        OutlinedButton.icon(
+                                        ElevatedButton.icon(
                                           onPressed: () => _restoreBackup(
                                               backup['filename']),
                                           icon: const Icon(Icons.restore, size: 18),
                                           label: const Text('Restore'),
-                                          style: OutlinedButton.styleFrom(
-                                            foregroundColor: Colors.orange,
-                                            side: const BorderSide(color: Colors.orange),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.orange.shade700,
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 16, vertical: 12),
                                           ),
                                         ),
                                         const SizedBox(width: 8),
-                                        OutlinedButton.icon(
+                                        ElevatedButton.icon(
                                           onPressed: () => _deleteBackup(
                                               backup['filename']),
                                           icon: const Icon(Icons.delete, size: 18),
                                           label: const Text('Delete'),
-                                          style: OutlinedButton.styleFrom(
-                                            foregroundColor: Colors.red,
-                                            side: const BorderSide(color: Colors.red),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.red.shade700,
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 16, vertical: 12),
                                           ),
                                         ),
                                       ],
