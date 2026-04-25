@@ -327,6 +327,29 @@ class _AdminDisciplineListViewState extends State<AdminDisciplineListView> {
                                   'Teams: ${discipline.teamsCount}',
                                   style: Theme.of(context).textTheme.headlineMedium,
                                 ),
+                              if (discipline.competition != null &&
+                                  discipline.competition!.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: Colors.purple.shade100,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                          color: Colors.purple, width: 1),
+                                    ),
+                                    child: Text(
+                                      discipline.competition!,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.purple.shade800,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
                           trailing: currentUser.accessLevel! >= 3 ? Row(

@@ -9,6 +9,7 @@ class Discipline {
   String? ageGroup;
   String? genderGroup;
   String? boatGroup;
+  String? competition;
   String? status;
   DateTime? createdAt;
   DateTime? updatedAt;
@@ -22,6 +23,7 @@ class Discipline {
     this.ageGroup,
     this.genderGroup,
     this.boatGroup,
+    this.competition,
     this.status,
     this.createdAt,
     this.updatedAt,
@@ -36,6 +38,7 @@ class Discipline {
         ageGroup: data['age_group'] as String?,
         genderGroup: data['gender_group'] as String?,
         boatGroup: data['boat_group'] as String?,
+        competition: data['competition'] as String?,
         status: data['status'] as String?,
         createdAt: data['created_at'] == null
             ? null
@@ -57,6 +60,7 @@ class Discipline {
         'age_group': ageGroup,
         'gender_group': genderGroup,
         'boat_group': boatGroup,
+        'competition': competition,
         'status': status,
         'created_at': createdAt?.toIso8601String(),
         'updated_at': updatedAt?.toIso8601String(),
@@ -77,6 +81,10 @@ class Discipline {
   String toJson() => json.encode(toMap());
 
   String getDisplayName() {
-    return ('$boatGroup $ageGroup $genderGroup ${distance}m');
+    final base = '$boatGroup $ageGroup $genderGroup ${distance}m';
+    if (competition != null && competition!.isNotEmpty) {
+      return '$base [$competition]';
+    }
+    return base;
   }
 }
