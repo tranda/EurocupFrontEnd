@@ -137,6 +137,37 @@ class _AdminDisciplineListViewState extends State<AdminDisciplineListView> {
     ) ?? false;
   }
 
+  Widget _competitionBadge(String competition) {
+    // Stable color per competition name
+    const palette = [
+      Colors.purple,
+      Colors.teal,
+      Colors.indigo,
+      Colors.deepOrange,
+      Colors.pink,
+      Colors.brown,
+    ];
+    final hash = competition.toLowerCase().codeUnits.fold(0, (a, b) => a + b);
+    final color = palette[hash % palette.length];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.shade100,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color, width: 1),
+      ),
+      child: Text(
+        competition,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: color.shade800,
+        ),
+      ),
+    );
+  }
+
   Widget _buildEventFilter() {
     if (events.isEmpty) {
       return const SizedBox.shrink();
@@ -310,7 +341,7 @@ class _AdminDisciplineListViewState extends State<AdminDisciplineListView> {
                           title: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Expanded(
+                              Flexible(
                                 child: Text(
                                   discipline.getDisplayName(),
                                   style:
@@ -318,25 +349,10 @@ class _AdminDisciplineListViewState extends State<AdminDisciplineListView> {
                                 ),
                               ),
                               if (discipline.competition != null &&
-                                  discipline.competition!.isNotEmpty)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: Colors.purple.shade100,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                        color: Colors.purple, width: 1),
-                                  ),
-                                  child: Text(
-                                    discipline.competition!,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.purple.shade800,
-                                    ),
-                                  ),
-                                ),
+                                  discipline.competition!.isNotEmpty) ...[
+                                const SizedBox(width: 10),
+                                _competitionBadge(discipline.competition!),
+                              ],
                             ],
                           ),
                           subtitle: Column(
