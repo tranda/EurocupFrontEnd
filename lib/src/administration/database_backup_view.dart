@@ -262,7 +262,8 @@ class _DatabaseBackupViewState extends State<DatabaseBackupView> {
                                         ElevatedButton.icon(
                                           onPressed: () => _downloadBackup(
                                               backup['filename']),
-                                          icon: const Icon(Icons.download, size: 18),
+                                          icon: const Icon(Icons.download,
+                                              size: 18, color: Colors.white),
                                           label: const Text('Download'),
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: Colors.blue.shade700,
@@ -275,7 +276,8 @@ class _DatabaseBackupViewState extends State<DatabaseBackupView> {
                                         ElevatedButton.icon(
                                           onPressed: () => _restoreBackup(
                                               backup['filename']),
-                                          icon: const Icon(Icons.restore, size: 18),
+                                          icon: const Icon(Icons.restore,
+                                              size: 18, color: Colors.white),
                                           label: const Text('Restore'),
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: Colors.orange.shade700,
@@ -288,7 +290,8 @@ class _DatabaseBackupViewState extends State<DatabaseBackupView> {
                                         ElevatedButton.icon(
                                           onPressed: () => _deleteBackup(
                                               backup['filename']),
-                                          icon: const Icon(Icons.delete, size: 18),
+                                          icon: const Icon(Icons.delete,
+                                              size: 18, color: Colors.white),
                                           label: const Text('Delete'),
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: Colors.red.shade700,
