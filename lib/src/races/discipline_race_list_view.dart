@@ -22,6 +22,7 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
   bool _isRefreshing = false;
   bool _initialEventSet = false;
   String? _errorMessage;
+  final List<String> _filterCompetitions = [];
 
   @override
   void initState() {
@@ -59,7 +60,8 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
       if (_selectedEvent != null) {
         final disciplines = await api.getDisciplinesAll(eventId: _selectedEvent!.id);
         _allDisciplines = disciplines;
-        _filteredDisciplines = disciplines;
+        _filterCompetitions.clear();
+        _filteredDisciplines = _applyCompetitionFilter();
       }
 
       setState(() {
@@ -84,7 +86,8 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
       final disciplines = await api.getDisciplinesAll(eventId: event.id);
       setState(() {
         _allDisciplines = disciplines;
-        _filteredDisciplines = disciplines;
+        _filterCompetitions.clear();
+        _filteredDisciplines = _applyCompetitionFilter();
         _isRefreshing = false;
       });
     } catch (e) {
@@ -97,6 +100,62 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
 
   Future<void> _refreshDisciplines() async {
     await _loadDisciplines(isRefresh: true);
+  }
+
+  List<dynamic> _applyCompetitionFilter() {
+    if (_filterCompetitions.isEmpty) return List.from(_allDisciplines);
+    return _allDisciplines
+        .where((d) => _filterCompetitions.contains(d.competition))
+        .toList();
+  }
+
+  List<Widget> _buildCompetitionChips() {
+    final competitionsSet = <String>{};
+    for (var d in _allDisciplines) {
+      final c = d.competition as String?;
+      if (c != null && c.isNotEmpty) competitionsSet.add(c);
+    }
+    if (competitionsSet.isEmpty) return const [];
+    final available = competitionsSet.toList()..sort();
+
+    return available.map((comp) {
+      final isSelected = _filterCompetitions.contains(comp);
+      final color = competitionBadgeColor(comp);
+      return Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () {
+            setState(() {
+              if (isSelected) {
+                _filterCompetitions.remove(comp);
+              } else {
+                _filterCompetitions.add(comp);
+              }
+              _filteredDisciplines = _applyCompetitionFilter();
+            });
+          },
+          child: Container(
+            height: 28,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: isSelected ? color.shade100 : Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: color, width: 1),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              comp,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? color.shade900 : color.shade800,
+              ),
+            ),
+          ),
+        ),
+      );
+    }).toList();
   }
 
   Widget _buildEventFilter() {
@@ -157,6 +216,18 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
               }
             },
           ),
+          Builder(builder: (context) {
+            final chips = _buildCompetitionChips();
+            if (chips.isEmpty) return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                runSpacing: 8,
+                children: chips,
+              ),
+            );
+          }),
         ],
       ),
     );
