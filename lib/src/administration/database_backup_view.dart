@@ -239,52 +239,58 @@ class _DatabaseBackupViewState extends State<DatabaseBackupView> {
                               margin: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 4),
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 8),
-                                child: Row(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Icon(Icons.storage,
-                                        color: Color.fromARGB(255, 0, 80, 150)),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            backup['filename'] ?? 'Unknown',
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.w500),
+                                    Text(
+                                      backup['filename'] ?? 'Unknown',
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 16),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${backup['created_at'] ?? ''} - ${_formatSize(backup['size'])}',
+                                      style: const TextStyle(
+                                          fontSize: 13, color: Colors.grey),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Row(
+                                      children: [
+                                        ElevatedButton.icon(
+                                          onPressed: () => _downloadBackup(
+                                              backup['filename']),
+                                          icon: const Icon(Icons.download, size: 18),
+                                          label: const Text('Download'),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.blue,
+                                            foregroundColor: Colors.white,
                                           ),
-                                          Text(
-                                            '${backup['created_at'] ?? ''} - ${_formatSize(backup['size'])}',
-                                            style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        ElevatedButton.icon(
+                                          onPressed: () => _restoreBackup(
+                                              backup['filename']),
+                                          icon: const Icon(Icons.restore, size: 18),
+                                          label: const Text('Restore'),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.orange,
+                                            foregroundColor: Colors.white,
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.download,
-                                          color: Colors.blue),
-                                      tooltip: 'Download',
-                                      onPressed: () => _downloadBackup(
-                                          backup['filename']),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.restore,
-                                          color: Colors.orange),
-                                      tooltip: 'Restore',
-                                      onPressed: () => _restoreBackup(
-                                          backup['filename']),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.delete,
-                                          color: Colors.red),
-                                      tooltip: 'Delete',
-                                      onPressed: () => _deleteBackup(
-                                          backup['filename']),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        ElevatedButton.icon(
+                                          onPressed: () => _deleteBackup(
+                                              backup['filename']),
+                                          icon: const Icon(Icons.delete, size: 18),
+                                          label: const Text('Delete'),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.red,
+                                            foregroundColor: Colors.white,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
