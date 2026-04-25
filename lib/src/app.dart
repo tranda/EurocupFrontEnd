@@ -393,6 +393,12 @@ class MyApp extends StatelessWidget {
         // Router: Initial route from path: $routePath
       }
 
+      // Strip query string before route matching — params are handled separately
+      final queryIndex = routePath.indexOf('?');
+      if (queryIndex != -1) {
+        routePath = routePath.substring(0, queryIndex);
+      }
+
       // Define valid routes that can be accessed directly
       const validDirectRoutes = [
         LoginView.routeName,
@@ -470,7 +476,18 @@ class MyApp extends StatelessWidget {
     if (kIsWeb) {
       try {
         final uri = Uri.base;
-        final queryParams = uri.queryParameters;
+        // Under HashUrlStrategy, query params live inside the URL fragment
+        // (e.g. /#/race_results_list?eventId=5), not in uri.queryParameters.
+        // Merge both so the function works regardless of strategy.
+        final Map<String, String> queryParams =
+            Map<String, String>.from(uri.queryParameters);
+        if (uri.fragment.isNotEmpty) {
+          try {
+            queryParams.addAll(Uri.parse(uri.fragment).queryParameters);
+          } catch (_) {
+            // Ignore malformed fragment
+          }
+        }
         // Extraction: URI = $uri
         // Extraction: Query params = $queryParams
         // Extraction: Route name = ${routeSettings.name}

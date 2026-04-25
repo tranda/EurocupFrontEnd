@@ -1,3 +1,5 @@
+import 'dart:html' as html;
+
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/model/race/race_result.dart';
 import 'package:eurocup_frontend/src/model/race/crew_result.dart';
@@ -150,22 +152,57 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
       _eventId = (active.isNotEmpty ? active.first.id : competitions.first.id).toString();
     }
 
+    _syncUrlWithEvent();
     _hasInitialized = true;
     _loadEventData();
+  }
+
+  /// Mirror the current eventId/eventName into the browser URL so the page
+  /// survives a refresh and can be shared as a link.
+  void _syncUrlWithEvent() {
+    if (!kIsWeb || _eventId == null) return;
+    final params = <String, String>{
+      'eventId': _eventId!,
+      if (_eventName != null && _eventName!.isNotEmpty) 'eventName': _eventName!,
+    };
+    final query = Uri(queryParameters: params).query;
+    final newHash = '#${RaceResultsListView.routeName}?$query';
+    if (html.window.location.hash != newHash) {
+      html.window.history.replaceState(null, '', newHash);
+    }
   }
 
   Future<void> _loadEventData() async {
     try {
       // Try to get event data from public competitions API (since public APIs work correctly)
-      final competitions = await api.getCompetitions();
+      final apiCompetitions = await api.getCompetitions();
       final eventIdInt = int.tryParse(_eventId ?? '0') ?? 0;
-      final competition = competitions.firstWhere((comp) => comp.id == eventIdInt);
 
-      setState(() {
-        _competition = competition;
-        _eventName ??= competition.getShortName();
-      });
-      // Successfully loaded event from competitions: ${competition.getShortName()}
+      Competition? competition;
+      if (eventIdInt > 0) {
+        try {
+          competition = apiCompetitions.firstWhere((comp) => comp.id == eventIdInt);
+        } catch (_) {
+          competition = null;
+        }
+      }
+
+      // Cold-refresh fallback: no eventId in URL/args and the global
+      // competitions list isn't loaded for this public route. Pick the
+      // first active competition so the page renders something useful.
+      if (competition == null && apiCompetitions.isNotEmpty) {
+        final active = apiCompetitions.where((c) => c.isActive).toList();
+        competition = active.isNotEmpty ? active.first : apiCompetitions.first;
+        _eventId = competition.id.toString();
+      }
+
+      if (competition != null && mounted) {
+        setState(() {
+          _competition = competition;
+          _eventName ??= competition!.getShortName();
+        });
+        _syncUrlWithEvent();
+      }
     } catch (e) {
       // Failed to load event data: $e
       // Continue without competition data - will use fallbacks
