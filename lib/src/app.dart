@@ -228,13 +228,16 @@ class MyApp extends StatelessWidget {
                     // Handle routes that might have query parameters
                     final routeName = routeSettings.name ?? '';
 
-                    // Skip the initial '/' route if we're on web with a fragment
-                    if (kIsWeb && routeName == '/' && Uri.base.fragment.isNotEmpty) {
-                      // Router: Skipping initial / route, waiting for fragment route
-                      return const Scaffold(
-                        body: Center(
-                          child: CircularProgressIndicator(),
-                        ),
+                    // The bootstrap '/' route used to return a bare spinner
+                    // while waiting for the fragment-based route to be
+                    // resolved. That spinner had no path forward and could
+                    // become a dead-end at the bottom of the Navigator stack
+                    // after refresh + back. Render a wrapped HomePage instead
+                    // so init/auth resolves and the user lands somewhere real.
+                    if (kIsWeb && routeName == '/') {
+                      return const StartupWrapper(
+                        targetRoute: HomePage.routeName,
+                        child: HomePage(),
                       );
                     }
 
@@ -423,9 +426,14 @@ class MyApp extends StatelessWidget {
                           child: const AiBarcodeScanner(),
                         );
                       default:
-                        // For unknown routes, redirect to home page instead of login
-                        // Router: Unknown route ${routeSettings.name}, redirecting to HomePage
-                        return const HomePage();
+                        // For unknown routes, fall back to HomePage. Wrap in
+                        // StartupWrapper so init/auth runs — otherwise a bare
+                        // HomePage hits its own deadlock when accessLevel is
+                        // null and never recovers.
+                        return const StartupWrapper(
+                          targetRoute: HomePage.routeName,
+                          child: HomePage(),
+                        );
                     }
                   },
                 );
