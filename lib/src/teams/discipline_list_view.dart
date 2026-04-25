@@ -53,6 +53,26 @@ class _DisciplineListViewState extends State<DisciplineListView> {
     return allRaces;
   }
 
+  Widget _competitionBadge(String competition) {
+    final color = competitionBadgeColor(competition);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.shade100,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color, width: 1),
+      ),
+      child: Text(
+        competition,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: color.shade800,
+        ),
+      ),
+    );
+  }
+
   Future<bool> _onWillPop() async {
     return (!changes
             ? true
@@ -153,9 +173,20 @@ class _DisciplineListViewState extends State<DisciplineListView> {
                             leading: Text(eventName, 
                             style: Theme.of(context).textTheme.labelSmall,
                             ),
-                            title: Text(
-                              "${discipline.getDisplayName()} $inactiveStatus",
-                              style: Theme.of(context).textTheme.bodyLarge,
+                            title: Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    "${discipline.getDisplayName()} $inactiveStatus",
+                                    style: Theme.of(context).textTheme.bodyLarge,
+                                  ),
+                                ),
+                                if (discipline.competition != null &&
+                                    discipline.competition!.isNotEmpty) ...[
+                                  const SizedBox(width: 10),
+                                  _competitionBadge(discipline.competition!),
+                                ],
+                              ],
                             ),
                             trailing: locked
                                 // When locked, show check marks for registered disciplines

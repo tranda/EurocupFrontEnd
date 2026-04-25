@@ -66,6 +66,21 @@ const double bigSpace = 50;
 const double cornerRadius = 4;
 const double iconSize = 24;
 
+// Stable color palette for competition badges (picked by hash of name)
+const List<MaterialColor> competitionBadgePalette = [
+  Colors.purple,
+  Colors.teal,
+  Colors.indigo,
+  Colors.deepOrange,
+  Colors.pink,
+  Colors.brown,
+];
+
+MaterialColor competitionBadgeColor(String competition) {
+  final hash = competition.toLowerCase().codeUnits.fold(0, (a, b) => a + b);
+  return competitionBadgePalette[hash % competitionBadgePalette.length];
+}
+
 // Discipline field options
 const List<String> disciplineAgeGroups = ['Junior', 'Junior A', 'Junior B', 'U24', 'Premier', 'Senior A', 'Senior B', 'Senior C', 'Senior D', 'BCP', 'ACP'];
 const List<String> disciplineGenderGroups = ['Mixed', 'Women', 'Open'];

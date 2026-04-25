@@ -163,30 +163,20 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
   }
 
   Widget _competitionBadge(String competition) {
-    const palette = [
-      Colors.purple,
-      Colors.teal,
-      Colors.indigo,
-      Colors.deepOrange,
-      Colors.pink,
-      Colors.brown,
-    ];
-    final hash = competition.toLowerCase().codeUnits.fold(0, (a, b) => a + b);
-    final color = palette[hash % palette.length];
-
+    final color = competitionBadgeColor(competition);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
       decoration: BoxDecoration(
         color: color.shade100,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white, width: 1.5),
+        border: Border.all(color: color, width: 1),
       ),
       child: Text(
         competition,
         style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          color: color.shade900,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: color.shade800,
         ),
       ),
     );

@@ -138,18 +138,7 @@ class _AdminDisciplineListViewState extends State<AdminDisciplineListView> {
   }
 
   Widget _competitionBadge(String competition) {
-    // Stable color per competition name
-    const palette = [
-      Colors.purple,
-      Colors.teal,
-      Colors.indigo,
-      Colors.deepOrange,
-      Colors.pink,
-      Colors.brown,
-    ];
-    final hash = competition.toLowerCase().codeUnits.fold(0, (a, b) => a + b);
-    final color = palette[hash % palette.length];
-
+    final color = competitionBadgeColor(competition);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
       decoration: BoxDecoration(
