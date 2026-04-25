@@ -232,28 +232,43 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     });
   }
 
-  Widget _buildCompetitionFilter() {
-    if (_raceResults == null) return const SizedBox.shrink();
+  List<Widget> _buildCompetitionChips() {
+    if (_raceResults == null) return const [];
     final competitionsSet = <String>{};
     for (var race in _raceResults!) {
       final c = race.discipline?.competition;
       if (c != null && c.isNotEmpty) competitionsSet.add(c);
     }
-    if (competitionsSet.isEmpty) return const SizedBox.shrink();
+    if (competitionsSet.isEmpty) return const [];
     final available = competitionsSet.toList()..sort();
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.only(top: 8),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 4,
-        alignment: WrapAlignment.center,
-        children: available.map((comp) {
-          final isSelected = _filterCompetitions.contains(comp);
-          final color = competitionBadgeColor(comp);
-          return FilterChip(
-            label: Text(
+    return available.map((comp) {
+      final isSelected = _filterCompetitions.contains(comp);
+      final color = competitionBadgeColor(comp);
+      return Padding(
+        padding: const EdgeInsets.only(left: 8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () {
+            setState(() {
+              if (isSelected) {
+                _filterCompetitions.remove(comp);
+              } else {
+                _filterCompetitions.add(comp);
+              }
+              _applyFilters();
+            });
+          },
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 28),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: isSelected ? color.shade100 : Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: color, width: 1),
+            ),
+            alignment: Alignment.center,
+            child: Text(
               comp,
               style: TextStyle(
                 fontSize: 12,
@@ -261,26 +276,10 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                 color: isSelected ? color.shade900 : color.shade800,
               ),
             ),
-            selected: isSelected,
-            showCheckmark: false,
-            backgroundColor: Colors.white,
-            selectedColor: color.shade100,
-            side: BorderSide(color: color, width: 1),
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            onSelected: (selected) {
-              setState(() {
-                if (selected) {
-                  _filterCompetitions.add(comp);
-                } else {
-                  _filterCompetitions.remove(comp);
-                }
-                _applyFilters();
-              });
-            },
-          );
-        }).toList(),
-      ),
-    );
+          ),
+        ),
+      );
+    }).toList();
   }
 
   Widget _competitionBadge(String competition) {
@@ -1387,6 +1386,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                           ),
                           child: const Text('Filters'),
                         ),
+                        ..._buildCompetitionChips(),
                       ],
                     ),
                     // Right side: Export PDF button in green
@@ -1404,8 +1404,6 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                     ),
                   ],
                 ),
-                // Competition selector (separate from other filters)
-                _buildCompetitionFilter(),
                 // Active filters chips display
                 _buildActiveFiltersChips(),
               ],
