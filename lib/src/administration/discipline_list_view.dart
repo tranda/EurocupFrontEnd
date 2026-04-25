@@ -307,9 +307,37 @@ class _AdminDisciplineListViewState extends State<AdminDisciplineListView> {
                           ),
                         ),
                         child: ListTile(
-                          title: Text(
-                            discipline.getDisplayName(),
-                            style: Theme.of(context).textTheme.displaySmall,
+                          title: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  discipline.getDisplayName(),
+                                  style:
+                                      Theme.of(context).textTheme.displaySmall,
+                                ),
+                              ),
+                              if (discipline.competition != null &&
+                                  discipline.competition!.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: Colors.purple.shade100,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                        color: Colors.purple, width: 1),
+                                  ),
+                                  child: Text(
+                                    discipline.competition!,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.purple.shade800,
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -326,29 +354,6 @@ class _AdminDisciplineListViewState extends State<AdminDisciplineListView> {
                                 Text(
                                   'Teams: ${discipline.teamsCount}',
                                   style: Theme.of(context).textTheme.headlineMedium,
-                                ),
-                              if (discipline.competition != null &&
-                                  discipline.competition!.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 4),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 3),
-                                    decoration: BoxDecoration(
-                                      color: Colors.purple.shade100,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                          color: Colors.purple, width: 1),
-                                    ),
-                                    child: Text(
-                                      discipline.competition!,
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.purple.shade800,
-                                      ),
-                                    ),
-                                  ),
                                 ),
                             ],
                           ),
