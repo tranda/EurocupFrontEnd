@@ -7,6 +7,7 @@ import '../clubs/club_list_view.dart';
 import '../common.dart';
 import '../model/user.dart';
 import '../teams/team_list_view.dart';
+import 'database_backup_view.dart';
 import 'event_list_view.dart';
 import 'discipline_list_view.dart';
 
@@ -106,6 +107,21 @@ class _AdministrationPageState extends State<AdministrationPage> {
                 },
                 leading: const Icon(
                   Icons.play_arrow,
+                  color: Color.fromARGB(255, 0, 80, 150),
+                ),
+              ),
+            ),
+            Visibility(
+              visible: currentUser.accessLevel! >= 3,
+              child: ListTile(
+                title: Text('Database Backups',
+                    style: Theme.of(context).textTheme.displayMedium,
+                    textAlign: TextAlign.left),
+                onTap: () {
+                  Navigator.pushNamed(context, DatabaseBackupView.routeName);
+                },
+                leading: const Icon(
+                  Icons.backup,
                   color: Color.fromARGB(255, 0, 80, 150),
                 ),
               ),

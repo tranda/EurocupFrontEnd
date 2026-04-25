@@ -1327,6 +1327,79 @@ Future<Map<String, dynamic>> sendForgotPasswordRequest(String email) async {
   };
 }
 
+// Database Backup API methods
+Future<List<Map<String, dynamic>>> getBackups() async {
+  var headers = {'Authorization': 'Bearer $token'};
+  var request = http.Request('GET', Uri.parse('$apiURL/backups'));
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+  List<Map<String, dynamic>> backups = [];
+
+  if (response.statusCode == 200) {
+    var responseString = await response.stream.bytesToString();
+    Map<String, dynamic> responseJson = jsonDecode(responseString);
+    if (responseJson['success'] == true && responseJson['data'] != null) {
+      backups = List<Map<String, dynamic>>.from(responseJson['data']);
+    }
+  }
+  return backups;
+}
+
+Future<Map<String, dynamic>> createBackup() async {
+  var headers = {
+    'Authorization': 'Bearer $token',
+    'Content-Type': 'application/json',
+  };
+  var request = http.Request('POST', Uri.parse('$apiURL/backups'));
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+  var responseString = await response.stream.bytesToString();
+  return jsonDecode(responseString);
+}
+
+Future<Map<String, dynamic>> restoreBackup(String filename) async {
+  var headers = {
+    'Authorization': 'Bearer $token',
+    'Content-Type': 'application/json',
+  };
+  var request = http.Request('POST', Uri.parse('$apiURL/backups/restore'));
+  request.body = jsonEncode({'filename': filename});
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+  var responseString = await response.stream.bytesToString();
+  return jsonDecode(responseString);
+}
+
+Future<List<int>?> downloadBackup(String filename) async {
+  var headers = {'Authorization': 'Bearer $token'};
+  var request = http.Request('GET', Uri.parse('$apiURL/backups/download?filename=$filename'));
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+
+  if (response.statusCode == 200) {
+    return await response.stream.toBytes();
+  }
+  return null;
+}
+
+Future<Map<String, dynamic>> deleteBackup(String filename) async {
+  var headers = {
+    'Authorization': 'Bearer $token',
+    'Content-Type': 'application/json',
+  };
+  var request = http.Request('DELETE', Uri.parse('$apiURL/backups'));
+  request.body = jsonEncode({'filename': filename});
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+  var responseString = await response.stream.bytesToString();
+  return jsonDecode(responseString);
+}
+
 Future<Map<String, dynamic>> sendResetPasswordRequest({
   required String email,
   required String token,

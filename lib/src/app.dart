@@ -1,4 +1,5 @@
 import 'package:eurocup_frontend/src/administration/administration_view.dart';
+import 'package:eurocup_frontend/src/administration/database_backup_view.dart';
 import 'package:eurocup_frontend/src/administration/event_list_view.dart';
 import 'package:eurocup_frontend/src/administration/event_detail_view.dart';
 import 'package:eurocup_frontend/src/administration/discipline_list_view.dart' as admin;
@@ -265,6 +266,8 @@ class MyApp extends StatelessWidget {
                         );
                       case AdministrationPage.routeName:
                         return const AdministrationPage();
+                      case DatabaseBackupView.routeName:
+                        return const DatabaseBackupView();
                       case EventListView.routeName:
                         return const EventListView();
                       case EventDetailView.routeName:
