@@ -81,10 +81,6 @@ class Discipline {
   String toJson() => json.encode(toMap());
 
   String getDisplayName() {
-    final base = '$boatGroup $ageGroup $genderGroup ${distance}m';
-    if (competition != null && competition!.isNotEmpty) {
-      return '$base [$competition]';
-    }
-    return base;
+    return '$boatGroup $ageGroup $genderGroup ${distance}m';
   }
 }
