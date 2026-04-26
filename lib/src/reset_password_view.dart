@@ -1,6 +1,5 @@
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
 class ResetPasswordView extends StatefulWidget {
@@ -85,7 +84,7 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () {
-                      context.go('/forgot-password');
+                      Navigator.of(context).pushReplacementNamed('/forgot-password');
                     },
                     child: const Text('Request New Link'),
                   ),
@@ -324,7 +323,10 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                           // Go to login button
                           ElevatedButton(
                             onPressed: () {
-                              context.go('/login');
+                              Navigator.of(context).pushNamedAndRemoveUntil(
+                                '/login',
+                                (route) => false,
+                              );
                             },
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 16),

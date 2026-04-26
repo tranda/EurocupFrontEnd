@@ -1,7 +1,6 @@
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
 import 'club_detail_page.dart';
@@ -107,9 +106,9 @@ class ListViewState extends State<ClubListView> {
                             ],
                           ),
                           onTap: () {
-                            context.push(
-          ClubDetailPage.routeName,
-                                extra: {
+                            Navigator.pushNamed(
+                                context, ClubDetailPage.routeName,
+                                arguments: {
                                   'clubId': clubs[index].id,
                                 }).then((value) {
                               setState(() {});

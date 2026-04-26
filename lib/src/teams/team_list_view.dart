@@ -2,7 +2,6 @@
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
 import '../model/race/team.dart';
@@ -139,9 +138,9 @@ class ListViewState extends State<TeamListView> {
                             ],
                           ),
                           onTap: () {
-                            context.push(
-          DisciplineListView.routeName,
-                                extra: {
+                            Navigator.pushNamed(
+                                context, DisciplineListView.routeName,
+                                arguments: {
                                   'teamId': teams[index].id,
                                   'teamName': teams[index].name
                                 }).then((value) {
@@ -234,7 +233,7 @@ class ListViewState extends State<TeamListView> {
   }
 
   void cancel() {
-    context.pop();
+    Navigator.of(context).pop();
     controller.clear();
   }
 

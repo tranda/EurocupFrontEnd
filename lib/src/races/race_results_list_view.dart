@@ -4,7 +4,6 @@ import 'package:eurocup_frontend/src/model/race/crew_result.dart';
 import 'package:eurocup_frontend/src/races/race_result_detail_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:pdf/pdf.dart';
@@ -659,7 +658,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                 ElevatedButton(
                   onPressed: () {
                     print('Apply clicked - temp values: Ages=$tempAgeGroups, Genders=$tempGenderGroups, Boats=$tempBoatGroups, Distances=$tempDistances, Stages=$tempStages, Team=$tempTeamName, Country=$tempCountry');
-                    context.pop();
+                    Navigator.of(context).pop();
                     setState(() {
                       // Copy temp values to actual filter state
                       _filterAgeGroups.clear();
@@ -1474,9 +1473,10 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                   color: competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1],
                   child: ListTile(
                     onTap: crewResults.isEmpty ? () {
-                      context.push(
-          RaceResultDetailView.routeName,
-                        extra: {'raceResultId': raceResult.id},
+                      Navigator.pushNamed(
+                        context,
+                        RaceResultDetailView.routeName,
+                        arguments: {'raceResultId': raceResult.id},
                       );
                     } : () {
                       setState(() {
@@ -1568,9 +1568,10 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                         const SizedBox(width: 8),
                         InkWell(
                           onTap: () {
-                            context.push(
-          RaceResultDetailView.routeName,
-                              extra: {'raceResultId': raceResult.id},
+                            Navigator.pushNamed(
+                              context,
+                              RaceResultDetailView.routeName,
+                              arguments: {'raceResultId': raceResult.id},
                             );
                           },
                           child: const Icon(Icons.arrow_forward, color: Colors.white),

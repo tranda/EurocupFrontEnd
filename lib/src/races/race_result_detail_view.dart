@@ -4,7 +4,6 @@ import 'package:eurocup_frontend/src/model/race/crew_result.dart';
 import 'package:eurocup_frontend/src/races/race_results_list_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import '../athletes/image_widget_web.dart' if (dart.library.io) 'package:flutter/material.dart';
@@ -34,7 +33,7 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
     // If we don't have a race result ID, redirect to race results list
     if (raceResultId == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.go(RaceResultsListView.routeName);
+        Navigator.of(context).pushReplacementNamed(RaceResultsListView.routeName);
       });
       return;
     }

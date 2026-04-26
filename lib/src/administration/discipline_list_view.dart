@@ -2,7 +2,6 @@ import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
 import '../model/race/discipline.dart';
@@ -278,9 +277,10 @@ class _AdminDisciplineListViewState extends State<AdminDisciplineListView> {
         actions: currentUser.accessLevel! >= 3 ? [
           IconButton(
             onPressed: () {
-              context.push(
-          DisciplineDetailView.routeName,
-                extra: {
+              Navigator.pushNamed(
+                context,
+                DisciplineDetailView.routeName,
+                arguments: {
                   'events': events,
                   'selectedEvent': selectedEvent,
                 },
@@ -368,9 +368,10 @@ class _AdminDisciplineListViewState extends State<AdminDisciplineListView> {
                               IconButton(
                                 icon: const Icon(Icons.edit, color: Colors.blue),
                                 onPressed: () {
-                                  context.push(
-          DisciplineDetailView.routeName,
-                                    extra: {
+                                  Navigator.pushNamed(
+                                    context,
+                                    DisciplineDetailView.routeName,
+                                    arguments: {
                                       'discipline': discipline,
                                       'events': events,
                                     },
@@ -389,9 +390,10 @@ class _AdminDisciplineListViewState extends State<AdminDisciplineListView> {
                           ) : const Icon(Icons.arrow_forward),
                           onTap: () {
                             if (currentUser.accessLevel! >= 3) {
-                              context.push(
-          DisciplineDetailView.routeName,
-                                extra: {
+                              Navigator.pushNamed(
+                                context,
+                                DisciplineDetailView.routeName,
+                                arguments: {
                                   'discipline': discipline,
                                   'events': events,
                                 },

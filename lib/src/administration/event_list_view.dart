@@ -1,7 +1,6 @@
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
 import '../model/event/event.dart';
@@ -92,7 +91,7 @@ class _EventListViewState extends State<EventListView> {
         actions: currentUser.accessLevel! >= 3 ? [
           IconButton(
             onPressed: () {
-              context.push(EventDetailView.routeName)
+              Navigator.pushNamed(context, EventDetailView.routeName)
                   .then((value) {
                 if (value == true) {
                   _loadEvents();
@@ -213,9 +212,10 @@ class _EventListViewState extends State<EventListView> {
                               IconButton(
                                 icon: const Icon(Icons.edit, color: Colors.blue),
                                 onPressed: () {
-                                  context.push(
-          EventDetailView.routeName,
-                                    extra: {'event': event},
+                                  Navigator.pushNamed(
+                                    context,
+                                    EventDetailView.routeName,
+                                    arguments: {'event': event},
                                   ).then((value) {
                                     if (value == true) {
                                       _loadEvents();
@@ -231,9 +231,10 @@ class _EventListViewState extends State<EventListView> {
                           ) : const Icon(Icons.arrow_forward),
                           onTap: () {
                             if (currentUser.accessLevel! >= 3) {
-                              context.push(
-          EventDetailView.routeName,
-                                extra: {'event': event},
+                              Navigator.pushNamed(
+                                context,
+                                EventDetailView.routeName,
+                                arguments: {'event': event},
                               ).then((value) {
                                 if (value == true) {
                                   _loadEvents();

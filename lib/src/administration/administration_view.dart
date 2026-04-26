@@ -1,7 +1,6 @@
 import 'package:eurocup_frontend/src/users/users_list_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../clubs/club_adel_list_view.dart';
 import '../clubs/club_list_view.dart';
@@ -44,7 +43,7 @@ class _AdministrationPageState extends State<AdministrationPage> {
                     style: Theme.of(context).textTheme.displayMedium,
                     textAlign: TextAlign.left),
                 onTap: () {
-                  context.push(UserListView.routeName);
+                  Navigator.pushNamed(context, UserListView.routeName);
                 },
                 leading: const Icon(
                   Icons.play_arrow,
@@ -59,7 +58,7 @@ class _AdministrationPageState extends State<AdministrationPage> {
                     style: Theme.of(context).textTheme.displayMedium,
                     textAlign: TextAlign.left),
                 onTap: () {
-                  context.push(EventListView.routeName);
+                  Navigator.pushNamed(context, EventListView.routeName);
                 },
                 leading: const Icon(
                   Icons.play_arrow,
@@ -74,7 +73,7 @@ class _AdministrationPageState extends State<AdministrationPage> {
                     style: Theme.of(context).textTheme.displayMedium,
                     textAlign: TextAlign.left),
                 onTap: () {
-                  context.push(AdminDisciplineListView.routeName);
+                  Navigator.pushNamed(context, AdminDisciplineListView.routeName);
                 },
                 leading: const Icon(
                   Icons.play_arrow,
@@ -89,7 +88,7 @@ class _AdministrationPageState extends State<AdministrationPage> {
                     style: Theme.of(context).textTheme.displayMedium,
                     textAlign: TextAlign.left),
                 onTap: () {
-                  context.push(ClubListView.routeName);
+                  Navigator.pushNamed(context, ClubListView.routeName);
                 },
                 leading: const Icon(
                   Icons.play_arrow,
@@ -104,7 +103,7 @@ class _AdministrationPageState extends State<AdministrationPage> {
                     style: Theme.of(context).textTheme.displayMedium,
                     textAlign: TextAlign.left),
                 onTap: () {
-                  context.push(TeamListView.routeName);
+                  Navigator.pushNamed(context, TeamListView.routeName);
                 },
                 leading: const Icon(
                   Icons.play_arrow,
@@ -119,7 +118,7 @@ class _AdministrationPageState extends State<AdministrationPage> {
                     style: Theme.of(context).textTheme.displayMedium,
                     textAlign: TextAlign.left),
                 onTap: () {
-                  context.push(DatabaseBackupView.routeName);
+                  Navigator.pushNamed(context, DatabaseBackupView.routeName);
                 },
                 leading: const Icon(
                   Icons.backup,
@@ -134,7 +133,7 @@ class _AdministrationPageState extends State<AdministrationPage> {
                     style: Theme.of(context).textTheme.displayMedium,
                     textAlign: TextAlign.left),
                 onTap: () {
-                  context.push(ClubAdelListView.routeName);
+                  Navigator.pushNamed(context, ClubAdelListView.routeName);
                 },
                 leading: const Icon(
                   Icons.play_arrow,

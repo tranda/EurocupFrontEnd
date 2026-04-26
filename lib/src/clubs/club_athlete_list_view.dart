@@ -5,7 +5,6 @@ import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../athletes/athlete_detail_view.dart';
 import '../athletes/image_widget_web.dart' if (dart.library.io) 'package:flutter/material.dart';
@@ -60,8 +59,8 @@ class _ClubAthleteListViewState extends State<ClubAthleteListView> {
     return Scaffold(
       appBar: appBarWithAction(
         () {
-          context.push(ClubDetailView.routeName,
-              extra: {'clubId': clubId, 'title': title});
+          Navigator.pushNamed(context, ClubDetailView.routeName,
+              arguments: {'clubId': clubId, 'title': title});
         },
         title: title,
         icon: Icons.info,
@@ -102,9 +101,9 @@ class _ClubAthleteListViewState extends State<ClubAthleteListView> {
                                     Theme.of(context).textTheme.displaySmall),
                           ),
                           onTap: () {
-                            context.push(
-          AthleteDetailView.routeName,
-                                extra: {
+                            Navigator.pushNamed(
+                                context, AthleteDetailView.routeName,
+                                arguments: {
                                   'mode': 'r',
                                   'allowEdit': false,
                                   'athlete': athlete

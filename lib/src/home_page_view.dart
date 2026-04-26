@@ -9,7 +9,6 @@ import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:excel/excel.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import 'administration/administration_view.dart';
 import 'model/user.dart';
@@ -71,7 +70,7 @@ class _HomePageState extends State<HomePage> {
                     style: Theme.of(context).textTheme.displayLarge,
                     textAlign: TextAlign.left),
                 onTap: () {
-                  context.push(AthleteListView.routeName);
+                  Navigator.pushNamed(context, AthleteListView.routeName);
                 },
                 leading: const Icon(
                   Icons.play_arrow,
@@ -101,7 +100,7 @@ class _HomePageState extends State<HomePage> {
                     style: Theme.of(context).textTheme.displayLarge,
                     textAlign: TextAlign.left),
                 onTap: () {
-                  context.push(TeamListView.routeName);
+                  Navigator.pushNamed(context, TeamListView.routeName);
                 },
                 leading: const Icon(
                   Icons.play_arrow,
@@ -116,7 +115,7 @@ class _HomePageState extends State<HomePage> {
                     style: Theme.of(context).textTheme.displayLarge,
                     textAlign: TextAlign.left),
                 onTap: () {
-                  context.push(CrewListView.routeName);
+                  Navigator.pushNamed(context, CrewListView.routeName);
                 },
                 leading: const Icon(
                   Icons.play_arrow,
@@ -135,8 +134,8 @@ class _HomePageState extends State<HomePage> {
                     style: Theme.of(context).textTheme.displayMedium,
                     textAlign: TextAlign.left),
                 onTap: () {
-                  context.push(
-          DisciplineRaceListView.routeName);
+                  Navigator.pushNamed(
+                      context, DisciplineRaceListView.routeName);
                 },
                 leading: const Icon(
                   Icons.play_arrow,
@@ -152,8 +151,8 @@ class _HomePageState extends State<HomePage> {
                     style: Theme.of(context).textTheme.displayMedium,
                     textAlign: TextAlign.left),
                 onTap: () {
-                  context.push(
-          CompetitionSelectorView.routeName);
+                  Navigator.pushNamed(
+                      context, CompetitionSelectorView.routeName);
                 },
                 leading: const Icon(
                   Icons.play_arrow,
@@ -169,7 +168,7 @@ class _HomePageState extends State<HomePage> {
                     style: Theme.of(context).textTheme.displayMedium,
                     textAlign: TextAlign.left),
                 onTap: () {
-                  context.push(AdministrationPage.routeName);
+                  Navigator.pushNamed(context, AdministrationPage.routeName);
                 },
                 leading: const Icon(
                   Icons.play_arrow,
@@ -191,7 +190,10 @@ class _HomePageState extends State<HomePage> {
                   currentUser = User(); // Reset user
 
                   // Navigate to login page and clear all previous routes
-                  context.go('/login');
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    '/login',
+                    (Route<dynamic> route) => false,
+                  );
                 }).catchError((error) {
                   // Even if logout request fails, clear local data and navigate to login
                   lastUser = null;
@@ -199,7 +201,10 @@ class _HomePageState extends State<HomePage> {
                   clearToken();
                   currentUser = User(); // Reset user
 
-                  context.go('/login');
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    '/login',
+                    (Route<dynamic> route) => false,
+                  );
                 });
               },
               leading: const Icon(
