@@ -35,6 +35,17 @@
   <title>Events Platform</title>
   <link rel="manifest" href="manifest.json">
 
+  <!--
+    Disable browser pull-to-refresh. Without this, an accidental downward
+    swipe at the top of the page reloads the app and loses the navigation
+    stack — users have repeatedly hit this on mobile. `overscroll-behavior:
+    none` tells the browser not to chain a swipe past the edge into a
+    refresh gesture.
+  -->
+  <style>
+    html, body { overscroll-behavior: none; }
+  </style>
+
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter_bootstrap.js" defer></script>
   <script src="https://unpkg.com/@zxing/library@0.19.1" type="application/javascript"></script>

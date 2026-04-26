@@ -30,20 +30,17 @@ import 'package:eurocup_frontend/src/users/user_detail_view.dart';
 import 'package:eurocup_frontend/src/users/users_list_view.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:eurocup_frontend/src/localization/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'clubs/club_athlete_list_view.dart';
 import 'crews/crew_detail_print.dart';
 import 'qr_scanner/ai_barcode_scanner.dart';
-import 'qr_scanner/ai_barcode_scanner_view.dart';
+import 'services/startup_service.dart';
 import 'settings/settings_controller.dart';
 import 'settings/settings_view.dart';
 import 'teams/discipline_list_view.dart';
 import 'common.dart';
-import 'api_helper.dart' as api;
-import 'services/startup_service.dart';
 import 'widgets/startup_wrapper.dart';
 
 /// The Widget that configures your application.
@@ -55,419 +52,431 @@ class MyApp extends StatelessWidget {
 
   final SettingsController settingsController;
 
+  /// Map of route → its logical parent. Used by `onGenerateInitialRoutes` to
+  /// reconstruct a navigation stack on cold load (e.g. after a refresh) so
+  /// browser back walks up the natural hierarchy instead of dropping the user
+  /// at home or a placeholder.
+  ///
+  /// Routes not present here are treated as top-level (no parent).
+  static const Map<String, String> _routeParents = {
+    // Administration sub-pages → /administration_page
+    UserListView.routeName: AdministrationPage.routeName,
+    EventListView.routeName: AdministrationPage.routeName,
+    admin.AdminDisciplineListView.routeName: AdministrationPage.routeName,
+    TeamListView.routeName: AdministrationPage.routeName,
+    ClubListView.routeName: AdministrationPage.routeName,
+    DatabaseBackupView.routeName: AdministrationPage.routeName,
+    ClubAdelListView.routeName: AdministrationPage.routeName,
+
+    // Detail pages → corresponding list/parent
+    UserDetailView.routeName: UserListView.routeName,
+    EventDetailView.routeName: EventListView.routeName,
+    DisciplineDetailView.routeName: admin.AdminDisciplineListView.routeName,
+    ClubDetailPage.routeName: ClubListView.routeName,
+    ClubDetailView.routeName: ClubDetailPage.routeName,
+    ClubAthleteListView.routeName: ClubDetailPage.routeName,
+    AthleteDetailView.routeName: ClubAthleteListView.routeName,
+
+    // Crews
+    CrewDetailView.routeName: CrewListView.routeName,
+    AthletePickerView.routeName: CrewDetailView.routeName,
+    CrewDetailPrint.routeName: CrewDetailView.routeName,
+
+    // Races (admin)
+    RaceDetailView.routeName: DisciplineRaceListView.routeName,
+    RaceCrewDetailView.routeName: RaceDetailView.routeName,
+
+    // Race results (public branch — parent is the public selector)
+    RaceResultsListView.routeName: CompetitionSelectorView.routeName,
+    RaceResultDetailView.routeName: RaceResultsListView.routeName,
+
+    // Direct children of home
+    AdministrationPage.routeName: HomePage.routeName,
+    CrewListView.routeName: HomePage.routeName,
+    DisciplineListView.routeName: HomePage.routeName,
+    DisciplineRaceListView.routeName: HomePage.routeName,
+    CompetitionSelectorView.routeName: HomePage.routeName,
+    AthleteListView.routeName: HomePage.routeName,
+    BarCodeScannerController.routeName: HomePage.routeName,
+    AiBarcodeScanner.routeName: HomePage.routeName,
+    SettingsView.routeName: HomePage.routeName,
+  };
+
+  /// Walk the parent chain to build the implicit navigation stack for a
+  /// deep-linked or refreshed route. Cycles are guarded against.
+  List<String> _resolveStack(String leafRoute) {
+    final stack = <String>[leafRoute];
+    String? cursor = _routeParents[leafRoute];
+    while (cursor != null && !stack.contains(cursor)) {
+      stack.insert(0, cursor);
+      cursor = _routeParents[cursor];
+    }
+    return stack;
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Glue the SettingsController to the MaterialApp.
-    //
-    // The AnimatedBuilder Widget listens to the SettingsController for changes.
-    // Whenever the user updates their settings, the MaterialApp is rebuilt.
     return AnimatedBuilder(
-        animation: settingsController,
-        builder: (BuildContext context, Widget? child) {
-          return MaterialApp(
-              // Providing a restorationScopeId allows the Navigator built by the
-              // MaterialApp to restore the navigation stack when a user leaves and
-              // returns to the app after it has been killed while running in the
-              // background.
-              restorationScopeId: 'app',
-              debugShowCheckedModeBanner: false,
-
-              // Set initial route based on current URL for web deep linking
-              initialRoute: kIsWeb ? _getInitialRoute() : LoginView.routeName,
-
-              // Initialize app data on startup
-              builder: (context, child) {
-                // Trigger startup service initialization on app start
-                if (!StartupService.isInitialized && !StartupService.isLoading) {
-                  StartupService.initialize();
-                }
-                // Apply max width constraint of 1024px
-                return Center(
-                  child: Container(
-                    constraints: const BoxConstraints(maxWidth: 1024),
-                    child: child ?? const SizedBox(),
-                  ),
-                );
-              },
-
-              // Provide the generated AppLocalizations to the MaterialApp. This
-              // allows descendant Widgets to display the correct translations
-              // depending on the user's locale.
-              localizationsDelegates: const [
-                AppLocalizations.delegate,
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
-              supportedLocales: const [
-                Locale('en', ''), // English, no country code
-              ],
-
-              // Use AppLocalizations to configure the correct application title
-              // depending on the user's locale.
-              //
-              // The appTitle is defined in .arb files found in the localization
-              // directory.
-              onGenerateTitle: (BuildContext context) =>
-                  AppLocalizations.of(context)!.appTitle,
-
-              // Define a light and dark color theme. Then, read the user's
-              // preferred ThemeMode (light, dark, or system default) from the
-              // SettingsController to display the correct theme.
-              // theme: ThemeData(),
-              theme: ThemeData(
-                fontFamily: 'Roboto',
-                primarySwatch: Colors.blue,
-                canvasColor: Colors.white,
-                datePickerTheme: const DatePickerThemeData(
-                    backgroundColor: Colors.grey,
-                    surfaceTintColor: Colors.amber),
-                appBarTheme: const AppBarTheme(
-                    backgroundColor: Colors.white,
-                    foregroundColor:
-                        Colors.black //here you can give the text color
-                    ),
-                textTheme: const TextTheme(
-                  displayLarge: TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 0, 80, 150)),
-                  displayMedium: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 0, 80, 150)),
-                  displaySmall: TextStyle(
-                      fontSize: 19,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 0, 80, 150)),
-                  headlineMedium: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.normal,
-                      color: Color.fromARGB(255, 0, 80, 150)),
-                  bodyLarge: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 255, 255, 255)),
-                  bodyMedium: TextStyle(
-                      fontSize: 12, color: Color.fromARGB(255, 255, 255, 255)),
-                  titleMedium: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.normal,
-                      color: Color.fromARGB(255, 0, 80, 150)),
-                  titleSmall: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 0, 80, 150),
-                      height: 1.0),
-                  labelSmall: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.normal,
-                      color: Color.fromARGB(192, 255, 255, 255),
-                      height: 1.0),
-                ),
-                textButtonTheme: TextButtonThemeData(
-                  style: ButtonStyle(
-                    foregroundColor: WidgetStateProperty.resolveWith(
-                        (Set<WidgetState> states) {
-                      return states.contains(WidgetState.disabled)
-                          ? null
-                          : const Color.fromARGB(255, 0, 80, 150);
-                    }),
-                  ),
-                ),
-                elevatedButtonTheme: ElevatedButtonThemeData(
-                  style: ButtonStyle(
-                    foregroundColor: WidgetStateProperty.resolveWith(
-                        (Set<WidgetState> states) {
-                      return states.contains(WidgetState.disabled)
-                          ? null
-                          : Colors.white;
-                    }),
-                    backgroundColor: WidgetStateProperty.resolveWith(
-                        (Set<WidgetState> states) {
-                      return states.contains(WidgetState.disabled)
-                          ? null
-                          : const Color.fromARGB(255, 0, 80, 150);
-                    }),
-                  ),
-                ),
-                brightness: Brightness.light,
-                primaryColor: Colors.amber,
-                // accentColor: Colors.black,
-                splashColor: Colors.blue,
+      animation: settingsController,
+      builder: (BuildContext context, Widget? child) {
+        return MaterialApp(
+          restorationScopeId: 'app',
+          debugShowCheckedModeBanner: false,
+          initialRoute: kIsWeb ? _getInitialRoute() : LoginView.routeName,
+          builder: (context, child) {
+            if (!StartupService.isInitialized && !StartupService.isLoading) {
+              StartupService.initialize();
+            }
+            return Center(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 1024),
+                child: child ?? const SizedBox(),
               ),
-
-              darkTheme: ThemeData.dark(),
-              themeMode: ThemeMode.light, //settingsController.themeMode, //
-
-              // Define a function to handle named routes in order to support
-              // Flutter web url navigation and deep linking.
-              onGenerateRoute: (RouteSettings routeSettings) {
-                // Extract route arguments from URL if available (for web deep linking)
-                // But preserve existing arguments if they were passed programmatically
-                print('onGenerateRoute: route = ${routeSettings.name}');
-                print('onGenerateRoute: original arguments = ${routeSettings.arguments}');
-                print('onGenerateRoute: arguments type = ${routeSettings.arguments.runtimeType}');
-
-                final extractedArguments = _extractArgumentsFromSettings(routeSettings);
-                final finalArguments = routeSettings.arguments ?? extractedArguments;
-
-                print('onGenerateRoute: extracted arguments = $extractedArguments');
-                print('onGenerateRoute: final arguments = $finalArguments');
-
-                final updatedSettings = RouteSettings(
-                  name: routeSettings.name,
-                  arguments: finalArguments,
-                );
-
-                return MaterialPageRoute<void>(
-                  settings: updatedSettings,
-                  builder: (BuildContext context) {
-                    // Router: Building route for ${routeSettings.name}
-                    // Router: Arguments extracted: $finalArguments
-                    // Handle routes that might have query parameters
-                    final routeName = routeSettings.name ?? '';
-
-                    // The bootstrap '/' route used to return a bare spinner
-                    // while waiting for the fragment-based route to be
-                    // resolved. That spinner had no path forward and could
-                    // become a dead-end at the bottom of the Navigator stack
-                    // after refresh + back. Render a wrapped HomePage instead
-                    // so init/auth resolves and the user lands somewhere real.
-                    if (kIsWeb && routeName == '/') {
-                      return const StartupWrapper(
-                        targetRoute: HomePage.routeName,
-                        child: HomePage(),
-                      );
-                    }
-
-                    switch (routeSettings.name) {
-                      case SettingsView.routeName:
-                        return SettingsView(controller: settingsController);
-                      case LoginView.routeName:
-                        return const LoginView();
-                      case ForgotPasswordView.routeName:
-                        return const ForgotPasswordView();
-                      case ResetPasswordView.routeName:
-                        // Router: Creating ResetPasswordView
-                        return const ResetPasswordView();
-                    }
-
-                    // Handle routes with query parameters
-                    if (routeName.startsWith('/reset-password')) {
-                      // Router: Creating ResetPasswordView for route with params
-                      return const ResetPasswordView();
-                    }
-
-                    // Router: Second switch checking route: ${routeSettings.name}
-                    // Router: CompetitionSelectorView.routeName = ${CompetitionSelectorView.routeName}
-                    switch (routeSettings.name) {
-                      case HomePage.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const HomePage(),
-                        );
-                      case AdministrationPage.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const AdministrationPage(),
-                        );
-                      case DatabaseBackupView.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const DatabaseBackupView(),
-                        );
-                      case EventListView.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const EventListView(),
-                        );
-                      case EventDetailView.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const EventDetailView(),
-                        );
-                      case admin.AdminDisciplineListView.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const admin.AdminDisciplineListView(),
-                        );
-                      case DisciplineDetailView.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const DisciplineDetailView(),
-                        );
-                      case DisciplineListView.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const DisciplineListView(),
-                        );
-                      case UserListView.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const UserListView(),
-                        );
-                      case UserDetailView.routeName:
-                        print('Route: UserDetailView');
-                        print('Original routeSettings.arguments: ${routeSettings.arguments}');
-                        print('Updated settings.arguments: ${updatedSettings.arguments}');
-                        print('Final arguments: $finalArguments');
-                        // Pass the user directly if available
-                        final userArg = updatedSettings.arguments is User ? updatedSettings.arguments as User : null;
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: UserDetailView(user: userArg),
-                        );
-                      case AthleteListView.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: AthleteListView(),
-                        );
-                      case ClubListView.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const ClubListView(),
-                        );
-                      case ClubAthleteListView.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: ClubAthleteListView(),
-                        );
-                      case AthleteDetailView.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const AthleteDetailView(),
-                        );
-                      case CrewListView.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const CrewListView(),
-                        );
-                      case CrewDetailView.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const CrewDetailView(),
-                        );
-                      case AthletePickerView.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const AthletePickerView(),
-                        );
-                      case TeamListView.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const TeamListView(),
-                        );
-                      case DisciplineRaceListView.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const DisciplineRaceListView(),
-                        );
-                      case RaceDetailView.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const RaceDetailView(),
-                        );
-                      case RaceCrewDetailView.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const RaceCrewDetailView(),
-                        );
-                      case CompetitionSelectorView.routeName:
-                        // Competition selector is public - no auth needed
-                        // Router: Creating CompetitionSelectorView
-                        return const CompetitionSelectorView();
-                      case RaceResultsListView.routeName:
-                        // Race results can be viewed publicly
-                        // Load token and basic data if available, but don't require authentication
-                        loadToken();
-                        return const RaceResultsListView();
-                      case RaceResultDetailView.routeName:
-                        // Check if we have the required raceResultId argument
-                        if (finalArguments is Map && finalArguments['raceResultId'] == null) {
-                          // If no argument, redirect to race results list
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            Navigator.of(context).pushReplacementNamed(RaceResultsListView.routeName);
-                          });
-                          loadToken();
-                          return const RaceResultsListView();
-                        }
-                        // Race result details can be viewed publicly
-                        loadToken();
-                        return const RaceResultDetailView();
-                      case BarCodeScannerController.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const BarCodeScannerController(),
-                        );
-                      case ClubDetailView.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const ClubDetailView(),
-                        );
-                      case ClubDetailPage.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const ClubDetailPage(),
-                        );
-                      case CrewDetailPrint.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const CrewDetailPrint(),
-                        );
-                      case ClubAdelListView.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const ClubAdelListView(),
-                        );
-                      case AiBarcodeScanner.routeName:
-                        return StartupWrapper(
-                          targetRoute: routeSettings.name,
-                          child: const AiBarcodeScanner(),
-                        );
-                      default:
-                        // For unknown routes, fall back to HomePage. Wrap in
-                        // StartupWrapper so init/auth runs — otherwise a bare
-                        // HomePage hits its own deadlock when accessLevel is
-                        // null and never recovers.
-                        return const StartupWrapper(
-                          targetRoute: HomePage.routeName,
-                          child: HomePage(),
-                        );
-                    }
-                  },
-                );
-              },
-          );
-        },
+            );
+          },
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en', '')],
+          onGenerateTitle: (BuildContext context) =>
+              AppLocalizations.of(context)!.appTitle,
+          theme: ThemeData(
+            fontFamily: 'Roboto',
+            primarySwatch: Colors.blue,
+            canvasColor: Colors.white,
+            datePickerTheme: const DatePickerThemeData(
+                backgroundColor: Colors.grey, surfaceTintColor: Colors.amber),
+            appBarTheme: const AppBarTheme(
+                backgroundColor: Colors.white, foregroundColor: Colors.black),
+            textTheme: const TextTheme(
+              displayLarge: TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 0, 80, 150)),
+              displayMedium: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 0, 80, 150)),
+              displaySmall: TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 0, 80, 150)),
+              headlineMedium: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.normal,
+                  color: Color.fromARGB(255, 0, 80, 150)),
+              bodyLarge: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 255, 255, 255)),
+              bodyMedium: TextStyle(
+                  fontSize: 12, color: Color.fromARGB(255, 255, 255, 255)),
+              titleMedium: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.normal,
+                  color: Color.fromARGB(255, 0, 80, 150)),
+              titleSmall: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 0, 80, 150),
+                  height: 1.0),
+              labelSmall: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.normal,
+                  color: Color.fromARGB(192, 255, 255, 255),
+                  height: 1.0),
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: ButtonStyle(
+                foregroundColor: WidgetStateProperty.resolveWith(
+                    (Set<WidgetState> states) {
+                  return states.contains(WidgetState.disabled)
+                      ? null
+                      : const Color.fromARGB(255, 0, 80, 150);
+                }),
+              ),
+            ),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ButtonStyle(
+                foregroundColor: WidgetStateProperty.resolveWith(
+                    (Set<WidgetState> states) {
+                  return states.contains(WidgetState.disabled)
+                      ? null
+                      : Colors.white;
+                }),
+                backgroundColor: WidgetStateProperty.resolveWith(
+                    (Set<WidgetState> states) {
+                  return states.contains(WidgetState.disabled)
+                      ? null
+                      : const Color.fromARGB(255, 0, 80, 150);
+                }),
+              ),
+            ),
+            brightness: Brightness.light,
+            primaryColor: Colors.amber,
+            splashColor: Colors.blue,
+          ),
+          darkTheme: ThemeData.dark(),
+          themeMode: ThemeMode.light,
+          onGenerateRoute: _buildRoute,
+          onGenerateInitialRoutes: (String initialRouteName) {
+            // Walk the parent chain so a deep-link or refresh restores a
+            // navigation stack, not just one route. Browser back then walks
+            // up the hierarchy instead of dropping to home.
+            return _resolveStack(initialRouteName)
+                .map((name) => _buildRoute(RouteSettings(name: name)))
+                .whereType<Route<dynamic>>()
+                .toList();
+          },
+        );
+      },
     );
   }
 
-  /// Extract the initial route from the current URL (for web deep linking)
+  // ---------------------------------------------------------------------------
+  // Route construction
+  // ---------------------------------------------------------------------------
+
+  /// Generates a [Route] for a given [RouteSettings]. Used both as
+  /// `onGenerateRoute` (for runtime navigation) and by `onGenerateInitialRoutes`
+  /// (when reconstructing the initial stack on cold load).
+  Route<dynamic>? _buildRoute(RouteSettings routeSettings) {
+    final extractedArguments = _extractArgumentsFromSettings(routeSettings);
+    final finalArguments = routeSettings.arguments ?? extractedArguments;
+
+    final updatedSettings = RouteSettings(
+      name: routeSettings.name,
+      arguments: finalArguments,
+    );
+
+    return MaterialPageRoute<void>(
+      settings: updatedSettings,
+      builder: (BuildContext context) {
+        final routeName = routeSettings.name ?? '';
+
+        // The bootstrap '/' slot — render a wrapped HomePage so it has a
+        // working init/auth path rather than a dead-end spinner.
+        if (kIsWeb && routeName == '/') {
+          return const StartupWrapper(
+            targetRoute: HomePage.routeName,
+            child: HomePage(),
+          );
+        }
+
+        // Public routes (no auth needed)
+        switch (routeName) {
+          case SettingsView.routeName:
+            return SettingsView(controller: settingsController);
+          case LoginView.routeName:
+            return const LoginView();
+          case ForgotPasswordView.routeName:
+            return const ForgotPasswordView();
+          case ResetPasswordView.routeName:
+            return const ResetPasswordView();
+        }
+        if (routeName.startsWith('/reset-password')) {
+          return const ResetPasswordView();
+        }
+
+        // Auth-gated routes
+        switch (routeName) {
+          case HomePage.routeName:
+            return const StartupWrapper(
+              targetRoute: HomePage.routeName,
+              child: HomePage(),
+            );
+          case AdministrationPage.routeName:
+            return const StartupWrapper(
+              targetRoute: AdministrationPage.routeName,
+              child: AdministrationPage(),
+            );
+          case DatabaseBackupView.routeName:
+            return const StartupWrapper(
+              targetRoute: DatabaseBackupView.routeName,
+              child: DatabaseBackupView(),
+            );
+          case EventListView.routeName:
+            return const StartupWrapper(
+              targetRoute: EventListView.routeName,
+              child: EventListView(),
+            );
+          case EventDetailView.routeName:
+            return const StartupWrapper(
+              targetRoute: EventDetailView.routeName,
+              child: EventDetailView(),
+            );
+          case admin.AdminDisciplineListView.routeName:
+            return const StartupWrapper(
+              targetRoute: admin.AdminDisciplineListView.routeName,
+              child: admin.AdminDisciplineListView(),
+            );
+          case DisciplineDetailView.routeName:
+            return const StartupWrapper(
+              targetRoute: DisciplineDetailView.routeName,
+              child: DisciplineDetailView(),
+            );
+          case DisciplineListView.routeName:
+            return const StartupWrapper(
+              targetRoute: DisciplineListView.routeName,
+              child: DisciplineListView(),
+            );
+          case UserListView.routeName:
+            return const StartupWrapper(
+              targetRoute: UserListView.routeName,
+              child: UserListView(),
+            );
+          case UserDetailView.routeName:
+            final userArg = finalArguments is User ? finalArguments : null;
+            return StartupWrapper(
+              targetRoute: UserDetailView.routeName,
+              child: UserDetailView(user: userArg),
+            );
+          case AthleteListView.routeName:
+            return StartupWrapper(
+              targetRoute: AthleteListView.routeName,
+              child: AthleteListView(),
+            );
+          case ClubListView.routeName:
+            return const StartupWrapper(
+              targetRoute: ClubListView.routeName,
+              child: ClubListView(),
+            );
+          case ClubAthleteListView.routeName:
+            return StartupWrapper(
+              targetRoute: ClubAthleteListView.routeName,
+              child: ClubAthleteListView(),
+            );
+          case AthleteDetailView.routeName:
+            return const StartupWrapper(
+              targetRoute: AthleteDetailView.routeName,
+              child: AthleteDetailView(),
+            );
+          case CrewListView.routeName:
+            return const StartupWrapper(
+              targetRoute: CrewListView.routeName,
+              child: CrewListView(),
+            );
+          case CrewDetailView.routeName:
+            return const StartupWrapper(
+              targetRoute: CrewDetailView.routeName,
+              child: CrewDetailView(),
+            );
+          case AthletePickerView.routeName:
+            return const StartupWrapper(
+              targetRoute: AthletePickerView.routeName,
+              child: AthletePickerView(),
+            );
+          case TeamListView.routeName:
+            return const StartupWrapper(
+              targetRoute: TeamListView.routeName,
+              child: TeamListView(),
+            );
+          case DisciplineRaceListView.routeName:
+            return const StartupWrapper(
+              targetRoute: DisciplineRaceListView.routeName,
+              child: DisciplineRaceListView(),
+            );
+          case RaceDetailView.routeName:
+            return const StartupWrapper(
+              targetRoute: RaceDetailView.routeName,
+              child: RaceDetailView(),
+            );
+          case RaceCrewDetailView.routeName:
+            return const StartupWrapper(
+              targetRoute: RaceCrewDetailView.routeName,
+              child: RaceCrewDetailView(),
+            );
+          case BarCodeScannerController.routeName:
+            return const StartupWrapper(
+              targetRoute: BarCodeScannerController.routeName,
+              child: BarCodeScannerController(),
+            );
+          case ClubDetailView.routeName:
+            return const StartupWrapper(
+              targetRoute: ClubDetailView.routeName,
+              child: ClubDetailView(),
+            );
+          case ClubDetailPage.routeName:
+            return const StartupWrapper(
+              targetRoute: ClubDetailPage.routeName,
+              child: ClubDetailPage(),
+            );
+          case CrewDetailPrint.routeName:
+            return const StartupWrapper(
+              targetRoute: CrewDetailPrint.routeName,
+              child: CrewDetailPrint(),
+            );
+          case ClubAdelListView.routeName:
+            return const StartupWrapper(
+              targetRoute: ClubAdelListView.routeName,
+              child: ClubAdelListView(),
+            );
+          case AiBarcodeScanner.routeName:
+            return const StartupWrapper(
+              targetRoute: AiBarcodeScanner.routeName,
+              child: AiBarcodeScanner(),
+            );
+          case CompetitionSelectorView.routeName:
+            return const CompetitionSelectorView();
+          case RaceResultsListView.routeName:
+            loadToken();
+            return const RaceResultsListView();
+          case RaceResultDetailView.routeName:
+            if (finalArguments is Map &&
+                finalArguments['raceResultId'] == null) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.of(context).pushReplacementNamed(
+                    RaceResultsListView.routeName);
+              });
+              loadToken();
+              return const RaceResultsListView();
+            }
+            loadToken();
+            return const RaceResultDetailView();
+        }
+
+        // Fallback: any unrecognized route resolves to wrapped HomePage so
+        // unknown URLs still go through init/auth instead of rendering bare.
+        return const StartupWrapper(
+          targetRoute: HomePage.routeName,
+          child: HomePage(),
+        );
+      },
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // URL → initial route detection (web only)
+  // ---------------------------------------------------------------------------
+
+  /// Extract the initial route from the current URL (for web deep linking).
   static String _getInitialRoute() {
     if (!kIsWeb) return LoginView.routeName;
 
     try {
-      // Get current URL path from fragment for hash routing
       final uri = Uri.base;
       String routePath;
 
-      // For hash routing, the route is in the fragment
+      // Hash routing puts the route in the fragment.
       if (uri.fragment.isNotEmpty) {
         routePath = '/${uri.fragment}';
-        // Remove the leading slash if fragment already has it
         if (routePath.startsWith('//')) {
           routePath = routePath.substring(1);
         }
-        // Router: Initial route from fragment: $routePath
       } else {
-        // Fall back to path-based routing
         final path = uri.path;
         routePath = path.startsWith('/') ? path : '/$path';
-        // Router: Initial route from path: $routePath
       }
 
-      // Define valid routes that can be accessed directly
+      // Strip query string before route matching — params are handled separately.
+      final queryIndex = routePath.indexOf('?');
+      if (queryIndex != -1) {
+        routePath = routePath.substring(0, queryIndex);
+      }
+
       const validDirectRoutes = [
         LoginView.routeName,
         ForgotPasswordView.routeName,
@@ -487,79 +496,66 @@ class MyApp extends StatelessWidget {
         UserListView.routeName,
       ];
 
-      // Check if the route is valid for direct access
-      // Router: Checking if $routePath is in validDirectRoutes
       if (validDirectRoutes.contains(routePath)) {
-        // Router: Route is valid, returning: $routePath
         return routePath;
       }
-      // Router: Route not in valid list
 
-      // Handle routes that require parameters
       if (routePath == RaceResultDetailView.routeName) {
-        // Check if we have the required parameter in query string
         final raceResultId = uri.queryParameters['raceResultId'];
-        if (raceResultId != null) {
-          return routePath;
-        }
-        // If no parameter, redirect to race results list
+        if (raceResultId != null) return routePath;
         return RaceResultsListView.routeName;
       }
 
-      // For other routes that might require parameters, redirect to a safe default
       if (routePath.contains('detail') || routePath.contains('picker')) {
         return HomePage.routeName;
       }
-
-      // Default fallback - check if path looks like a public race results view
       if (routePath.contains('race') || routePath.contains('result')) {
         return RaceResultsListView.routeName;
       }
-
-      // Ultimate fallback
       return HomePage.routeName;
-    } catch (e) {
-      // In case of any error, return safe default
+    } catch (_) {
       return HomePage.routeName;
     }
   }
 
-  /// Extract arguments from route settings and URL query parameters (for web deep linking)
+  /// Extract arguments from route settings and URL query parameters.
   static dynamic _extractArgumentsFromSettings(RouteSettings routeSettings) {
-    // If arguments are not a Map, return them as-is (e.g., User object)
-    if (routeSettings.arguments != null && routeSettings.arguments is! Map<String, dynamic>) {
+    if (routeSettings.arguments != null &&
+        routeSettings.arguments is! Map<String, dynamic>) {
       return routeSettings.arguments;
     }
 
     Map<String, dynamic> arguments = {};
-
-    // First, use any existing arguments
     if (routeSettings.arguments != null) {
       if (routeSettings.arguments is Map<String, dynamic>) {
         arguments.addAll(routeSettings.arguments as Map<String, dynamic>);
       }
     }
 
-    // For web, also extract from URL query parameters
     if (kIsWeb) {
       try {
         final uri = Uri.base;
-        final queryParams = uri.queryParameters;
-        // Extraction: URI = $uri
-        // Extraction: Query params = $queryParams
-        // Extraction: Route name = ${routeSettings.name}
+        // With HashUrlStrategy, query params live inside the URL fragment
+        // (e.g. /#/race_results_list?eventId=5), not in uri.queryParameters.
+        // Merge both so the function works regardless of strategy.
+        final Map<String, String> queryParams =
+            Map<String, String>.from(uri.queryParameters);
+        if (uri.fragment.isNotEmpty) {
+          try {
+            queryParams.addAll(Uri.parse(uri.fragment).queryParameters);
+          } catch (_) {}
+        }
 
-        // Handle route-specific parameter extraction
         switch (routeSettings.name) {
           case RaceResultDetailView.routeName:
             if (queryParams.containsKey('raceResultId')) {
-              final raceResultId = int.tryParse(queryParams['raceResultId']!);
+              final raceResultId =
+                  int.tryParse(queryParams['raceResultId']!);
               if (raceResultId != null) {
                 arguments['raceResultId'] = raceResultId;
               }
             }
             break;
-
           case RaceResultsListView.routeName:
             if (queryParams.containsKey('eventId')) {
               arguments['eventId'] = queryParams['eventId'];
@@ -568,7 +564,6 @@ class MyApp extends StatelessWidget {
               arguments['eventName'] = queryParams['eventName'];
             }
             break;
-
           case AthleteDetailView.routeName:
             if (queryParams.containsKey('athleteId')) {
               final athleteId = int.tryParse(queryParams['athleteId']!);
@@ -577,50 +572,32 @@ class MyApp extends StatelessWidget {
               }
             }
             break;
-
           case CrewDetailView.routeName:
             if (queryParams.containsKey('crewId')) {
               final crewId = int.tryParse(queryParams['crewId']!);
-              if (crewId != null) {
-                arguments['crewId'] = crewId;
-              }
+              if (crewId != null) arguments['crewId'] = crewId;
             }
             break;
-
           case RaceDetailView.routeName:
             if (queryParams.containsKey('raceId')) {
               final raceId = int.tryParse(queryParams['raceId']!);
-              if (raceId != null) {
-                arguments['raceId'] = raceId;
-              }
+              if (raceId != null) arguments['raceId'] = raceId;
             }
             break;
         }
 
-        // Handle reset password route with query parameters
         final routeName = routeSettings.name ?? '';
         if (routeName.startsWith('/reset-password')) {
-          // Extraction: Found reset-password route
           if (queryParams.containsKey('token')) {
             arguments['token'] = queryParams['token'];
-            // Extraction: Token found in query params = ${queryParams['token']}
           } else if (routeName.contains('?token=')) {
-            // Extraction: No token in query params, checking route name
             final tokenPart = routeName.split('?token=')[1];
-            final token = tokenPart.split('&')[0]; // Get only the token part
-            arguments['token'] = token;
-            // Extraction: Token found in route name = $token
-          } else {
-            // Extraction: No token found anywhere
+            arguments['token'] = tokenPart.split('&')[0];
           }
         }
-      } catch (e) {
-        // In case of any error, just return existing arguments
-        // Error extracting URL parameters: $e
-      }
+      } catch (_) {}
     }
 
     return arguments.isEmpty ? null : arguments;
   }
-
 }
