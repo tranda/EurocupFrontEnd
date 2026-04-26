@@ -3,6 +3,7 @@ import 'package:eurocup_frontend/src/races/race_detail_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 class DisciplineRaceListView extends StatefulWidget {
   const DisciplineRaceListView({super.key});
@@ -341,10 +342,9 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
                     onTap: (teams != null && teams.isEmpty || currentUser.accessLevel! < 1)
                         ? null
                         : () {
-                            Navigator.pushNamed(
-                              context,
-                              RaceDetailView.routeName,
-                              arguments: {'disciplineId': discipline.id}
+                            context.push(
+          RaceDetailView.routeName,
+                              extra: {'disciplineId': discipline.id}
                             );
                           },
                   ),

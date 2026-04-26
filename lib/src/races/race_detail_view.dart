@@ -2,6 +2,7 @@ import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/races/race_crew_detail_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
 class RaceDetailView extends StatefulWidget {
@@ -67,9 +68,9 @@ class ListViewState extends State<RaceDetailView> {
                           ),
                           onTap: currentUser.accessLevel! > 0
                               ? () {
-                                  Navigator.pushNamed(
-                                      context, RaceCrewDetailView.routeName,
-                                      arguments: {
+                                  context.push(
+          RaceCrewDetailView.routeName,
+                                      extra: {
                                         'crewId': teams[index].crew!.id,
                                         'size': size + reserves,
                                         'helmNo': helmNo,

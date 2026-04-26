@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
@@ -71,10 +72,9 @@ class _CompetitionSelectorViewState extends State<CompetitionSelectorView> {
 
   void _viewResults() {
     if (selectedEventId != null) {
-      Navigator.pushNamed(
-        context,
-        RaceResultsListView.routeName,
-        arguments: {
+      context.push(
+          RaceResultsListView.routeName,
+        extra: {
           'eventId': selectedEventId,
           'eventName': competitions.firstWhere((c) => c.id.toString() == selectedEventId, orElse: () => competitions.first).getShortName(),
         },

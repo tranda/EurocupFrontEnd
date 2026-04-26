@@ -3,6 +3,7 @@ import 'package:eurocup_frontend/src/model/race/crew.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
 import '../athletes/athlete_detail_view.dart';
@@ -60,10 +61,9 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
 
     return Scaffold(
       appBar: appBarWithAction(() {
-        Navigator.pushNamed(
-          context,
+        context.push(
           BarCodeScannerController.routeName,
-          arguments: {'list': listAthlete},
+          extra: {'list': listAthlete},
         ).then((value) async {
           if (value != null && value is Map) {
             if (value['success'] == true) {
@@ -124,9 +124,9 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
                               child: Text(athlete.category ?? ""),
                             ),
                             onTap: () {
-                              Navigator.pushNamed(
-                                  context, AthleteDetailView.routeName,
-                                  arguments: {
+                              context.push(
+          AthleteDetailView.routeName,
+                                  extra: {
                                     'mode': 'r',
                                     'allowEdit': false,
                                     'athlete': athlete

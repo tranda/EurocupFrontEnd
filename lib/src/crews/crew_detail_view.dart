@@ -2,6 +2,7 @@ import 'package:eurocup_frontend/src/crews/athlete_picker_view.dart';
 import 'package:eurocup_frontend/src/model/race/crew.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
 import '../model/athlete/athlete.dart';
@@ -55,7 +56,7 @@ class _CrewDetailViewState extends State<CrewDetailView> {
       appBar: appBar(title: title),
       // appBar: appBarWithAction(
       //   () {
-      //     Navigator.pushNamed(context, CrewDetailPrint.routeName, arguments: {
+      //     context.push(CrewDetailPrint.routeName, extra: {
       //       'crewId': crewId,
       //       'size': size, // + reserves,
       //       'helmNo': helmNo,
@@ -130,9 +131,9 @@ class _CrewDetailViewState extends State<CrewDetailView> {
                             onTap: locked
                                 ? () {}
                                 : () {
-                                    Navigator.of(context).pushNamed(
+                                    context.push(
                                         AthletePickerView.routeName,
-                                        arguments: {
+                                        extra: {
                                           'crewId': crewId,
                                           'no': index
                                         }).then((value) {

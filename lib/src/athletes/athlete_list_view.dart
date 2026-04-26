@@ -5,6 +5,7 @@ import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'image_widget_web.dart' if (dart.library.io) 'package:flutter/material.dart';
 
 class AthleteListView extends StatefulWidget {
@@ -60,8 +61,8 @@ class _AthleteListViewState extends State<AthleteListView> {
           locked
               ? () {}
               : () {
-                  Navigator.pushNamed(context, AthleteDetailView.routeName,
-                      arguments: {'mode': 'm', 'athlete': Athlete()}).then((value) {
+                  context.push(AthleteDetailView.routeName,
+                      extra: {'mode': 'm', 'athlete': Athlete()}).then((value) {
                     setState(() {});
                   });
                 },
@@ -101,9 +102,9 @@ class _AthleteListViewState extends State<AthleteListView> {
                                     Theme.of(context).textTheme.displaySmall),
                           ),
                           onTap: () {
-                            Navigator.pushNamed(
-                                context, AthleteDetailView.routeName,
-                                arguments: {
+                            context.push(
+          AthleteDetailView.routeName,
+                                extra: {
                                   'mode': 'r',
                                   'allowEdit': !locked,
                                   'athlete': athlete

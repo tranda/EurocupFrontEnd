@@ -1,6 +1,7 @@
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 // import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -55,11 +56,8 @@ class _LoginViewState extends State<LoginView> {
               passwordController.text)
           .then((value) {
         if (value) {
-          Navigator.pushNamed(
-                  context, HomePage.routeName)
-              .then((value) {
-            setState(() {});
-          });
+          // Replace login with home so browser back doesn't return to login.
+          context.go(HomePage.routeName);
         } else {
           ScaffoldMessenger.of(context)
               .showSnackBar(
@@ -211,7 +209,7 @@ class _LoginViewState extends State<LoginView> {
                           child: Center(
                             child: TextButton(
                               onPressed: () {
-                                Navigator.pushNamed(context, ForgotPasswordView.routeName);
+                                context.push(ForgotPasswordView.routeName);
                               },
                               child: Text(
                                 'Forgot Password?',
@@ -232,7 +230,7 @@ class _LoginViewState extends State<LoginView> {
                           child: Center(
                             child: OutlinedButton(
                               onPressed: () {
-                                Navigator.pushNamed(context, '/results');
+                                context.push('/results');
                               },
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(

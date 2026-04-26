@@ -6,6 +6,7 @@ import 'package:eurocup_frontend/src/model/club/club.dart';
 export 'package:eurocup_frontend/src/model/club/club.dart' show Club;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:html' as html;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -127,11 +128,7 @@ Future<T?> navigateWithParams<T extends Object?>(
   String routeName, {
   Map<String, dynamic>? arguments,
 }) {
-  return Navigator.pushNamed<T>(
-    context,
-    routeName,
-    arguments: arguments,
-  );
+  return context.push<T>(routeName, extra: arguments);
 }
 
 // Token storage functions for web

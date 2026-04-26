@@ -3,6 +3,7 @@ import 'package:eurocup_frontend/src/model/user.dart';
 import 'package:eurocup_frontend/src/users/user_detail_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
 class UserListView extends StatefulWidget {
@@ -24,7 +25,7 @@ class ListViewState extends State<UserListView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: appBarWithAction(() {
-        Navigator.pushNamed(context, UserDetailView.routeName, arguments: null)
+        context.push(UserDetailView.routeName, extra: null)
             .then((value) {
           setState(() {});
         });
@@ -77,10 +78,9 @@ class ListViewState extends State<UserListView> {
                         print('User object: $user');
                         print('User id: ${user.id}, name: ${user.name}, username: ${user.username}');
 
-                        Navigator.pushNamed(
-                          context,
-                          UserDetailView.routeName,
-                          arguments: user
+                        context.push(
+          UserDetailView.routeName,
+                          extra: user
                         ).then((value) {
                           print('Returned from UserDetailView');
                           setState(() {});

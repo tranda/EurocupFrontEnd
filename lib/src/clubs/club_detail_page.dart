@@ -4,6 +4,7 @@ import 'package:eurocup_frontend/src/clubs/club_details_view.dart';
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class ClubDetailPage extends StatefulWidget {
   const ClubDetailPage({super.key});
@@ -360,10 +361,9 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
                           title: 'Club Members',
                           subtitle: 'View all athletes in this club',
                           onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              ClubAthleteListView.routeName,
-                              arguments: {
+                            context.push(
+          ClubAthleteListView.routeName,
+                              extra: {
                                 'clubId': club!.id,
                                 'title': club!.name!
                               },
@@ -381,10 +381,9 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
                           title: 'Club Statistics',
                           subtitle: 'View club statistics and breakdown',
                           onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              ClubDetailView.routeName,
-                              arguments: {
+                            context.push(
+          ClubDetailView.routeName,
+                              extra: {
                                 'clubId': club!.id,
                                 'title': club!.name!
                               },
@@ -473,8 +472,8 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
                             try {
                               await api.deleteClub(club!.id!);
                               if (context.mounted) {
-                                Navigator.pop(context);
-                                Navigator.pop(context);
+                                context.pop();
+                                context.pop();
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                       content: Text(
@@ -483,7 +482,7 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
                               }
                             } catch (e) {
                               if (context.mounted) {
-                                Navigator.pop(context);
+                                context.pop();
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                       content: Text(

@@ -3,6 +3,7 @@ import 'package:eurocup_frontend/src/crews/crew_detail_view.dart';
 import 'package:eurocup_frontend/src/model/race/discipline_crew.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:eurocup_frontend/src/model/race/race.dart';
 
@@ -117,9 +118,9 @@ class _CrewListViewState extends State<CrewListView> {
                                     ),
                                   ),
                                   onTap: () {
-                                    Navigator.of(context).pushNamed(
+                                    context.push(
                                         CrewDetailView.routeName,
-                                        arguments: {
+                                        extra: {
                                           'crewId': disciplineCrew.crew!.id,
                                           'size': size + reserves,
                                           'helmNo': helmNo,
