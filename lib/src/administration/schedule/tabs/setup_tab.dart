@@ -184,7 +184,14 @@ class _SetupTabState extends State<SetupTab> {
         TextEditingController(text: initial?.startTime.substring(0, 5) ?? '09:00');
     final gapController =
         TextEditingController(text: (initial?.gapSeconds ?? 240).toString());
-    final genders = <String>{...?initial?.genderFilter};
+    // Normalize legacy short codes (M/W/X) to canonical long form so the
+    // dialog selects the right chips and saving cleans up old values.
+    const genderMap = {'M': 'Open', 'W': 'Women', 'X': 'Mixed'};
+    const validGenders = {'Open', 'Women', 'Mixed'};
+    final genders = <String>{
+      for (final g in initial?.genderFilter ?? const <String>[])
+        if (validGenders.contains(genderMap[g] ?? g)) (genderMap[g] ?? g),
+    };
     final distancesController =
         TextEditingController(text: initial?.distanceFilter?.join(', ') ?? '');
     final stagesController =
