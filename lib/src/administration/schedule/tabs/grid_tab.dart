@@ -239,6 +239,7 @@ class _GridTabState extends State<GridTab> {
   String _formatDateTime(DateTime t) =>
       '${t.year}-${_pad(t.month)}-${_pad(t.day)} ${_pad(t.hour)}:${_pad(t.minute)}';
   String _formatTimeOnly(DateTime t) => '${_pad(t.hour)}:${_pad(t.minute)}';
+  String _formatDateOnly(DateTime t) => '${t.year}-${_pad(t.month)}-${_pad(t.day)}';
   String _pad(int n) => n.toString().padLeft(2, '0');
 
   @override
@@ -332,6 +333,7 @@ class _GridTabState extends State<GridTab> {
           headingRowColor: WidgetStateProperty.all(const Color.fromARGB(255, 240, 245, 252)),
           columns: [
             const DataColumn(label: Text('#')),
+            const DataColumn(label: Text('Date')),
             const DataColumn(label: Text('Time')),
             const DataColumn(label: Text('Discipline')),
             const DataColumn(label: Text('Stage')),
@@ -353,6 +355,7 @@ class _GridTabState extends State<GridTab> {
 
     return DataRow(cells: [
       DataCell(Text(race.raceNumber?.toString() ?? '—')),
+      DataCell(Text(race.raceTime == null ? '—' : _formatDateOnly(race.raceTime!))),
       DataCell(Text(race.raceTime == null ? '—' : _formatTimeOnly(race.raceTime!))),
       DataCell(SizedBox(
         width: 220,
