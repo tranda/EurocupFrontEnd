@@ -326,24 +326,69 @@ class _GridTabState extends State<GridTab> {
       return true;
     }).toList();
 
+    // Group by date string (or "Unscheduled" bucket for races with no time).
+    final groups = <String, List<RaceResult>>{};
+    for (final r in filtered) {
+      final key = r.raceTime == null ? 'Unscheduled' : _formatDateOnly(r.raceTime!);
+      (groups[key] ??= []).add(r);
+    }
+    final keys = groups.keys.toList()
+      ..sort((a, b) {
+        if (a == 'Unscheduled') return 1;
+        if (b == 'Unscheduled') return -1;
+        return a.compareTo(b);
+      });
+
     return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SingleChildScrollView(
-        child: DataTable(
-          headingRowColor: WidgetStateProperty.all(const Color.fromARGB(255, 240, 245, 252)),
-          columns: [
-            const DataColumn(label: Text('#')),
-            const DataColumn(label: Text('Date')),
-            const DataColumn(label: Text('Time')),
-            const DataColumn(label: Text('Discipline')),
-            const DataColumn(label: Text('Stage')),
-            for (var lane = 1; lane <= _laneCount; lane++)
-              DataColumn(label: Text('L$lane')),
-            const DataColumn(label: Text('')),
-          ],
-          rows: filtered.map(_buildRow).toList(),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        for (final key in keys) _dateSection(key, groups[key]!),
+      ]),
+    );
+  }
+
+  Widget _dateSection(String dateLabel, List<RaceResult> rows) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          color: const Color.fromARGB(255, 0, 80, 150),
+          child: Row(children: [
+            const Icon(Icons.event, color: Colors.white, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              dateLabel,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              '${rows.length} race${rows.length == 1 ? "" : "s"}',
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+          ]),
         ),
-      ),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            headingRowColor: WidgetStateProperty.all(const Color.fromARGB(255, 240, 245, 252)),
+            columns: [
+              const DataColumn(label: Text('#')),
+              const DataColumn(label: Text('Time')),
+              const DataColumn(label: Text('Discipline')),
+              const DataColumn(label: Text('Stage')),
+              for (var lane = 1; lane <= _laneCount; lane++)
+                DataColumn(label: Text('L$lane')),
+              const DataColumn(label: Text('')),
+            ],
+            rows: rows.map(_buildRow).toList(),
+          ),
+        ),
+      ]),
     );
   }
 
@@ -355,7 +400,6 @@ class _GridTabState extends State<GridTab> {
 
     return DataRow(cells: [
       DataCell(Text(race.raceNumber?.toString() ?? '—')),
-      DataCell(Text(race.raceTime == null ? '—' : _formatDateOnly(race.raceTime!))),
       DataCell(Text(race.raceTime == null ? '—' : _formatTimeOnly(race.raceTime!))),
       DataCell(SizedBox(
         width: 220,
