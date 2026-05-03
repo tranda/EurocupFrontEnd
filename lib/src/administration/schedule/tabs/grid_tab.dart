@@ -6,6 +6,7 @@ import '../../../model/race/crew_result.dart';
 import '../../../model/race/race_result.dart';
 import '../../../model/schedule/crew_seed.dart';
 import '../../../model/schedule/schedule_config.dart';
+import '../../../widgets/compact_icon.dart';
 
 /// Grid view of all scheduled races in chronological order, with inline edit
 /// of time/stage, lane assignment dialogs, and per-row delete.
@@ -493,19 +494,19 @@ class _GridTabState extends State<GridTab> {
             style: const TextStyle(color: Colors.white70),
           ),
           trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-            _compactIcon(
+            CompactIcon(
               Icons.auto_fix_high,
               tooltip: 'Auto-fill lanes (centre-out by seed)',
               onPressed: () => _autoFillLanes(race),
               color: Colors.white,
             ),
-            _compactIcon(
+            CompactIcon(
               Icons.edit,
               tooltip: 'Edit time/stage',
               onPressed: () => _editRace(race),
               color: Colors.white,
             ),
-            _compactIcon(
+            CompactIcon(
               Icons.delete_outline,
               tooltip: 'Delete race',
               onPressed: () => _deleteRace(race),
@@ -612,25 +613,6 @@ class _GridTabState extends State<GridTab> {
                 ),
               )
             : const Icon(Icons.add, size: 18, color: Colors.grey),
-      ),
-    );
-  }
-
-  Widget _compactIcon(
-    IconData icon, {
-    required String tooltip,
-    required VoidCallback onPressed,
-    Color? color,
-  }) {
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(6),
-          child: Icon(icon, size: 18, color: color ?? Colors.black54),
-        ),
       ),
     );
   }

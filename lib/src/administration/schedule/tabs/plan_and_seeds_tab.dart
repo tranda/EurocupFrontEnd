@@ -5,6 +5,7 @@ import '../../../common.dart';
 import '../../../model/schedule/crew_seed.dart';
 import '../../../model/schedule/discipline_progression.dart';
 import '../../../model/schedule/generation_result.dart';
+import '../../../widgets/compact_icon.dart';
 
 /// Per-discipline race plan override + crew seeds editor.
 class PlanAndSeedsTab extends StatefulWidget {
@@ -370,80 +371,109 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
     final crewCount = prog?.crewCount ?? d.teamsCount ?? 0;
     final effective = prog?.effectiveCode ?? '—';
     final isOverride = prog?.overrideCode != null;
+    final headerColor = competitionColor[0];
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-        Expanded(
-          flex: 3,
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Flexible(
-                child: Text(d.getDisplayName(),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                    overflow: TextOverflow.ellipsis),
-              ),
-              if (d.competition != null && d.competition!.isNotEmpty) ...[
-                const SizedBox(width: 8),
-                _competitionBadge(d.competition!),
-              ],
-            ]),
-            Text('$crewCount crews', style: const TextStyle(color: Colors.grey, fontSize: 12)),
-          ]),
-        ),
-        Expanded(
-          flex: 2,
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Plan', style: TextStyle(fontSize: 11, color: Colors.grey)),
-            if (options == null || options.isEmpty)
-              Text(effective, style: const TextStyle(fontWeight: FontWeight.w600))
-            else
-              DropdownButton<String?>(
-                isExpanded: true,
-                value: prog?.overrideCode,
-                hint: Text('Auto: ${prog?.autoPickCode ?? "—"}'),
-                items: [
-                  const DropdownMenuItem(value: null, child: Text('— Auto —')),
-                  ...options.map((c) => DropdownMenuItem(
-                        value: c,
-                        child: Text(c == prog?.autoPickCode ? '$c (auto)' : c),
-                      )),
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Container(
+        color: headerColor,
+        padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Flexible(
+                  child: Text(
+                    d.getDisplayName(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (d.competition != null && d.competition!.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  _competitionBadge(d.competition!),
                 ],
-                onChanged: (v) => _changePlan(d.id!, v),
-              ),
-            if (isOverride)
-              const Text('overridden', style: TextStyle(fontSize: 10, color: Colors.orange)),
-            if (prog?.overrideCode == 'CUSTOM' && (prog?.customStages?.isNotEmpty ?? false))
+              ]),
               Text(
+                '$crewCount crews',
+                style: const TextStyle(color: Colors.white70, fontSize: 12),
+              ),
+            ]),
+          ),
+          if (prog?.overrideCode == 'CUSTOM')
+            CompactIcon(
+              Icons.edit_note,
+              tooltip: 'Edit custom stages',
+              onPressed: d.id == null ? null : () => _editCustomStagesFor(d.id!),
+              color: Colors.white,
+            ),
+          CompactIcon(
+            Icons.format_list_numbered,
+            tooltip: 'Edit seeds',
+            onPressed: d.id == null ? null : () => _openSeeds(d),
+            color: Colors.white,
+          ),
+          CompactIcon(
+            Icons.fast_forward,
+            tooltip: 'Seed next round (after prior round results entered)',
+            onPressed: d.id == null ? null : () => _seedNextRound(d.id!),
+            color: Colors.white,
+          ),
+          CompactIcon(
+            Icons.refresh,
+            tooltip: 'Regenerate this discipline',
+            onPressed: d.id == null ? null : () => _regenerate(d.id!),
+            color: Colors.white,
+          ),
+        ]),
+      ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            const Text(
+              'Plan: ',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            Expanded(
+              child: (options == null || options.isEmpty)
+                  ? Text(effective, style: const TextStyle(fontWeight: FontWeight.w600))
+                  : DropdownButton<String?>(
+                      isExpanded: true,
+                      value: prog?.overrideCode,
+                      hint: Text('Auto: ${prog?.autoPickCode ?? "—"}'),
+                      items: [
+                        const DropdownMenuItem(value: null, child: Text('— Auto —')),
+                        ...options.map((c) => DropdownMenuItem(
+                              value: c,
+                              child: Text(c == prog?.autoPickCode ? '$c (auto)' : c),
+                            )),
+                      ],
+                      onChanged: (v) => _changePlan(d.id!, v),
+                    ),
+            ),
+            if (isOverride)
+              const Padding(
+                padding: EdgeInsets.only(left: 8),
+                child: Text('overridden',
+                    style: TextStyle(fontSize: 10, color: Colors.orange)),
+              ),
+          ]),
+          if (prog?.overrideCode == 'CUSTOM' && (prog?.customStages?.isNotEmpty ?? false))
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
                 'Stages: ${prog!.customStages!.join(", ")}',
-                style: const TextStyle(fontSize: 10, color: Colors.black54),
+                style: const TextStyle(fontSize: 11, color: Colors.black54),
                 overflow: TextOverflow.ellipsis,
               ),
-          ]),
-        ),
-        if (prog?.overrideCode == 'CUSTOM')
-          IconButton(
-            tooltip: 'Edit custom stages',
-            icon: const Icon(Icons.edit_note),
-            onPressed: d.id == null ? null : () => _editCustomStagesFor(d.id!),
-          ),
-        IconButton(
-          tooltip: 'Edit seeds',
-          icon: const Icon(Icons.format_list_numbered),
-          onPressed: d.id == null ? null : () => _openSeeds(d),
-        ),
-        IconButton(
-          tooltip: 'Seed next round (after prior round results entered)',
-          icon: const Icon(Icons.fast_forward),
-          onPressed: d.id == null ? null : () => _seedNextRound(d.id!),
-        ),
-        IconButton(
-          tooltip: 'Regenerate this discipline',
-          icon: const Icon(Icons.refresh),
-          onPressed: d.id == null ? null : () => _regenerate(d.id!),
-        ),
-      ]),
-    );
+            ),
+        ]),
+      ),
+    ]);
   }
 }
 

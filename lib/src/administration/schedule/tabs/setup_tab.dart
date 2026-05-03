@@ -1,9 +1,11 @@
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:flutter/material.dart';
 
+import '../../../common.dart';
 import '../../../model/schedule/event_day.dart';
 import '../../../model/schedule/schedule_block.dart';
 import '../../../model/schedule/schedule_config.dart';
+import '../../../widgets/compact_icon.dart';
 
 /// Setup tab: lane count + days + blocks editor.
 class SetupTab extends StatefulWidget {
@@ -89,8 +91,9 @@ class _SetupTabState extends State<SetupTab> {
               const Text('Date: '),
               Text(date.toIso8601String().substring(0, 10)),
               const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.calendar_today),
+              CompactIcon(
+                Icons.calendar_today,
+                tooltip: 'Pick date',
                 onPressed: () async {
                   final picked = await showDatePicker(
                     context: ctx,
@@ -349,43 +352,68 @@ class _SetupTabState extends State<SetupTab> {
 
   Widget _dayCard(EventDay day) {
     final dateStr = day.date.toIso8601String().substring(0, 10);
+    final headerColor = competitionColor[0]; // deep blue
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            const Icon(Icons.event, color: Color.fromARGB(255, 0, 80, 150)),
+      clipBehavior: Clip.antiAlias,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(
+          color: headerColor,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(children: [
+            const Icon(Icons.event, color: Colors.white, size: 20),
             const SizedBox(width: 8),
             Expanded(
-              child: Text(
-                day.name?.isNotEmpty == true ? '${day.name} · $dateStr' : dateStr,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(
+                  day.name?.isNotEmpty == true ? day.name! : dateStr,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                if (day.name?.isNotEmpty == true)
+                  Text(
+                    dateStr,
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+              ]),
             ),
-            IconButton(icon: const Icon(Icons.edit), onPressed: () => _editDay(day)),
-            IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
+            CompactIcon(
+              Icons.edit,
+              tooltip: 'Edit day',
+              onPressed: () => _editDay(day),
+              color: Colors.white,
+            ),
+            CompactIcon(
+              Icons.delete_outline,
+              tooltip: 'Delete day',
               onPressed: () => _deleteDay(day),
+              color: Colors.white,
             ),
           ]),
-          const Divider(),
-          if (day.blocks.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text('No blocks yet.', style: TextStyle(color: Colors.grey)),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            if (day.blocks.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Text('No blocks yet.', style: TextStyle(color: Colors.grey)),
+              ),
+            ...day.blocks.map(_blockTile),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () => _addBlock(day),
+                icon: const Icon(Icons.add),
+                label: const Text('Add Block'),
+              ),
             ),
-          ...day.blocks.map(_blockTile),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: () => _addBlock(day),
-              icon: const Icon(Icons.add),
-              label: const Text('Add Block'),
-            ),
-          ),
-        ]),
-      ),
+          ]),
+        ),
+      ]),
     );
   }
 
@@ -412,10 +440,16 @@ class _SetupTabState extends State<SetupTab> {
       ),
       isThreeLine: filterLines.isNotEmpty,
       trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-        IconButton(icon: const Icon(Icons.edit), onPressed: () => _editBlock(block)),
-        IconButton(
-          icon: const Icon(Icons.delete_outline, color: Colors.red),
+        CompactIcon(
+          Icons.edit,
+          tooltip: 'Edit block',
+          onPressed: () => _editBlock(block),
+        ),
+        CompactIcon(
+          Icons.delete_outline,
+          tooltip: 'Delete block',
           onPressed: () => _deleteBlock(block),
+          color: Colors.red,
         ),
       ]),
     );
