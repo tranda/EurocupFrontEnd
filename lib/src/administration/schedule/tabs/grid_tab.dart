@@ -494,19 +494,20 @@ class _GridTabState extends State<GridTab> {
                 '$filledLanes/$_laneCount',
                 style: const TextStyle(color: Colors.grey, fontSize: 11),
               ),
-              IconButton(
-                icon: const Icon(Icons.auto_fix_high, size: 18),
+              _compactIcon(
+                Icons.auto_fix_high,
                 tooltip: 'Auto-fill lanes (centre-out by seed)',
                 onPressed: () => _autoFillLanes(race),
               ),
-              IconButton(
-                icon: const Icon(Icons.edit, size: 18),
+              _compactIcon(
+                Icons.edit,
                 tooltip: 'Edit time/stage',
                 onPressed: () => _editRace(race),
               ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+              _compactIcon(
+                Icons.delete_outline,
                 tooltip: 'Delete race',
+                color: Colors.red,
                 onPressed: () => _deleteRace(race),
               ),
               Icon(
@@ -520,7 +521,15 @@ class _GridTabState extends State<GridTab> {
           const Divider(height: 1),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Column(children: [
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Row(children: [
+                TextButton.icon(
+                  onPressed: () => _autoFillLanes(race),
+                  icon: const Icon(Icons.auto_fix_high, size: 16),
+                  label: const Text('Auto-fill lanes'),
+                ),
+                const Spacer(),
+              ]),
               for (var lane = 1; lane <= _laneCount; lane++)
                 _laneRow(race, lane, crewByLane[lane]),
             ]),
@@ -569,6 +578,25 @@ class _GridTabState extends State<GridTab> {
           ),
           const Icon(Icons.edit, size: 14, color: Colors.grey),
         ]),
+      ),
+    );
+  }
+
+  Widget _compactIcon(
+    IconData icon, {
+    required String tooltip,
+    required VoidCallback onPressed,
+    Color? color,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: Icon(icon, size: 18, color: color ?? Colors.black54),
+        ),
       ),
     );
   }
