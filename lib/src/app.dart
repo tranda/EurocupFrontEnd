@@ -4,6 +4,8 @@ import 'package:eurocup_frontend/src/administration/event_list_view.dart';
 import 'package:eurocup_frontend/src/administration/event_detail_view.dart';
 import 'package:eurocup_frontend/src/administration/discipline_list_view.dart' as admin;
 import 'package:eurocup_frontend/src/administration/discipline_detail_view.dart';
+import 'package:eurocup_frontend/src/administration/schedule/schedule_builder_page.dart';
+import 'package:eurocup_frontend/src/administration/schedule/schedule_event_picker.dart';
 import 'package:eurocup_frontend/src/athletes/athlete_detail_view.dart';
 import 'package:eurocup_frontend/src/athletes/athlete_list_view.dart';
 import 'package:eurocup_frontend/src/model/user.dart';
@@ -67,6 +69,8 @@ class MyApp extends StatelessWidget {
     ClubListView.routeName: AdministrationPage.routeName,
     DatabaseBackupView.routeName: AdministrationPage.routeName,
     ClubAdelListView.routeName: AdministrationPage.routeName,
+    ScheduleEventPicker.routeName: AdministrationPage.routeName,
+    ScheduleBuilderPage.routeName: ScheduleEventPicker.routeName,
 
     // Detail pages → corresponding list/parent
     UserDetailView.routeName: UserListView.routeName,
@@ -293,6 +297,16 @@ class MyApp extends StatelessWidget {
               targetRoute: AdministrationPage.routeName,
               child: AdministrationPage(),
             );
+          case ScheduleEventPicker.routeName:
+            return const StartupWrapper(
+              targetRoute: ScheduleEventPicker.routeName,
+              child: ScheduleEventPicker(),
+            );
+          case ScheduleBuilderPage.routeName:
+            return const StartupWrapper(
+              targetRoute: ScheduleBuilderPage.routeName,
+              child: ScheduleBuilderPage(),
+            );
           case DatabaseBackupView.routeName:
             return const StartupWrapper(
               targetRoute: DatabaseBackupView.routeName,
@@ -494,6 +508,7 @@ class MyApp extends StatelessWidget {
         admin.AdminDisciplineListView.routeName,
         DisciplineListView.routeName,
         UserListView.routeName,
+        ScheduleEventPicker.routeName,
       ];
 
       if (validDirectRoutes.contains(routePath)) {

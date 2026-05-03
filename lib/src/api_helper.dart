@@ -5,6 +5,10 @@ import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
 import 'package:eurocup_frontend/src/model/race/discipline_crew.dart';
 import 'package:eurocup_frontend/src/model/race/race.dart';
 import 'package:eurocup_frontend/src/model/race/race_result.dart';
+import 'package:eurocup_frontend/src/model/schedule/crew_seed.dart';
+import 'package:eurocup_frontend/src/model/schedule/discipline_progression.dart';
+import 'package:eurocup_frontend/src/model/schedule/generation_result.dart';
+import 'package:eurocup_frontend/src/model/schedule/schedule_config.dart';
 import 'package:eurocup_frontend/src/model/user.dart';
 import 'package:http/http.dart' as http;
 import 'common.dart';
@@ -1195,12 +1199,13 @@ Future deleteDiscipline(Discipline discipline) async {
 }
 
 // Race Results API methods
-Future<List<RaceResult>> getRaceResults({int? eventId}) async {
+Future<List<RaceResult>> getRaceResults({int? eventId, bool includeDrafts = false}) async {
   var headers = {'Authorization': 'Bearer $token'};
   var url = '$apiURL/race-results';
-  if (eventId != null) {
-    url += '?event_id=$eventId';
-  }
+  final params = <String>[];
+  if (eventId != null) params.add('event_id=$eventId');
+  if (includeDrafts) params.add('include_drafts=1');
+  if (params.isNotEmpty) url += '?${params.join("&")}';
   var request = http.Request('GET', Uri.parse(url));
   request.headers.addAll(headers);
 
@@ -1429,4 +1434,279 @@ Future<Map<String, dynamic>> sendResetPasswordRequest({
     'statusCode': response.statusCode,
     'data': responseJson,
   };
+}
+
+// =============================================================================
+// Schedule Builder API
+// =============================================================================
+
+Map<String, String> _jsonAuthHeaders() => {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+dynamic _unwrap(http.Response response, {String action = 'request'}) {
+  if (response.statusCode < 200 || response.statusCode >= 300) {
+    String message = '$action failed (${response.statusCode})';
+    try {
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (body['message'] is String) message = body['message'] as String;
+    } catch (_) {}
+    throw Exception(message);
+  }
+  if (response.body.isEmpty) return null;
+  final body = jsonDecode(response.body);
+  if (body is Map<String, dynamic> && body.containsKey('data')) return body['data'];
+  return body;
+}
+
+Future<ScheduleConfig> getScheduleConfig(int eventId) async {
+  final res = await http.get(
+    Uri.parse('$apiURL/events/$eventId/schedule-config'),
+    headers: _jsonAuthHeaders(),
+  );
+  return ScheduleConfig.fromMap(_unwrap(res, action: 'load schedule config') as Map<String, dynamic>);
+}
+
+Future<void> updateScheduleConfig(int eventId, {required int laneCount}) async {
+  final res = await http.put(
+    Uri.parse('$apiURL/events/$eventId/schedule-config'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode({'lane_count': laneCount}),
+  );
+  _unwrap(res, action: 'update schedule config');
+}
+
+Future<int> createEventDay(int eventId, {required DateTime date, String? name, int? sortOrder}) async {
+  final res = await http.post(
+    Uri.parse('$apiURL/events/$eventId/event-days'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode({
+      'date': date.toIso8601String().substring(0, 10),
+      if (name != null) 'name': name,
+      if (sortOrder != null) 'sort_order': sortOrder,
+    }),
+  );
+  final data = _unwrap(res, action: 'create event day') as Map<String, dynamic>;
+  return data['id'] as int;
+}
+
+Future<void> updateEventDay(int dayId, {DateTime? date, String? name, int? sortOrder}) async {
+  final res = await http.put(
+    Uri.parse('$apiURL/event-days/$dayId'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode({
+      if (date != null) 'date': date.toIso8601String().substring(0, 10),
+      if (name != null) 'name': name,
+      if (sortOrder != null) 'sort_order': sortOrder,
+    }),
+  );
+  _unwrap(res, action: 'update event day');
+}
+
+Future<void> deleteEventDay(int dayId) async {
+  final res = await http.delete(
+    Uri.parse('$apiURL/event-days/$dayId'),
+    headers: _jsonAuthHeaders(),
+  );
+  _unwrap(res, action: 'delete event day');
+}
+
+Future<int> createScheduleBlock(
+  int dayId, {
+  required String name,
+  required String startTime,
+  required int gapSeconds,
+  List<String>? genderFilter,
+  List<String>? distanceFilter,
+  List<String>? stageFilter,
+  int? sortOrder,
+}) async {
+  final res = await http.post(
+    Uri.parse('$apiURL/event-days/$dayId/blocks'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode({
+      'name': name,
+      'start_time': startTime,
+      'gap_seconds': gapSeconds,
+      if (genderFilter != null) 'gender_filter': genderFilter,
+      if (distanceFilter != null) 'distance_filter': distanceFilter,
+      if (stageFilter != null) 'stage_filter': stageFilter,
+      if (sortOrder != null) 'sort_order': sortOrder,
+    }),
+  );
+  final data = _unwrap(res, action: 'create schedule block') as Map<String, dynamic>;
+  return data['id'] as int;
+}
+
+Future<void> updateScheduleBlock(
+  int blockId, {
+  String? name,
+  String? startTime,
+  int? gapSeconds,
+  List<String>? genderFilter,
+  List<String>? distanceFilter,
+  List<String>? stageFilter,
+  int? sortOrder,
+}) async {
+  final res = await http.put(
+    Uri.parse('$apiURL/schedule-blocks/$blockId'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode({
+      if (name != null) 'name': name,
+      if (startTime != null) 'start_time': startTime,
+      if (gapSeconds != null) 'gap_seconds': gapSeconds,
+      if (genderFilter != null) 'gender_filter': genderFilter,
+      if (distanceFilter != null) 'distance_filter': distanceFilter,
+      if (stageFilter != null) 'stage_filter': stageFilter,
+      if (sortOrder != null) 'sort_order': sortOrder,
+    }),
+  );
+  _unwrap(res, action: 'update schedule block');
+}
+
+Future<void> deleteScheduleBlock(int blockId) async {
+  final res = await http.delete(
+    Uri.parse('$apiURL/schedule-blocks/$blockId'),
+    headers: _jsonAuthHeaders(),
+  );
+  _unwrap(res, action: 'delete schedule block');
+}
+
+Future<DisciplineProgressionInfo> getDisciplineProgression(int disciplineId) async {
+  final res = await http.get(
+    Uri.parse('$apiURL/disciplines/$disciplineId/progression'),
+    headers: _jsonAuthHeaders(),
+  );
+  return DisciplineProgressionInfo.fromMap(
+    _unwrap(res, action: 'load progression') as Map<String, dynamic>,
+  );
+}
+
+Future<void> updateDisciplineProgression(int disciplineId, String? racePlanCode) async {
+  final res = await http.put(
+    Uri.parse('$apiURL/disciplines/$disciplineId/progression'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode({'race_plan_code': racePlanCode}),
+  );
+  _unwrap(res, action: 'update progression');
+}
+
+Future<List<String>> getDisciplineRacePlanOptions(int disciplineId) async {
+  final res = await http.get(
+    Uri.parse('$apiURL/disciplines/$disciplineId/race-plan-options'),
+    headers: _jsonAuthHeaders(),
+  );
+  final data = _unwrap(res, action: 'load plan options') as Map<String, dynamic>;
+  return (data['options'] as List<dynamic>).map((e) => e.toString()).toList();
+}
+
+Future<List<CrewSeed>> getDisciplineCrewSeeds(int disciplineId) async {
+  final res = await http.get(
+    Uri.parse('$apiURL/disciplines/$disciplineId/crew-seeds'),
+    headers: _jsonAuthHeaders(),
+  );
+  final list = _unwrap(res, action: 'load crew seeds') as List<dynamic>;
+  return list.map((e) => CrewSeed.fromMap(e as Map<String, dynamic>)).toList();
+}
+
+Future<void> updateDisciplineCrewSeeds(int disciplineId, List<CrewSeed> seeds) async {
+  final res = await http.put(
+    Uri.parse('$apiURL/disciplines/$disciplineId/crew-seeds'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode({'seeds': seeds.map((s) => s.toUpdatePayload()).toList()}),
+  );
+  _unwrap(res, action: 'update crew seeds');
+}
+
+Future<void> resetDisciplineCrewSeeds(int disciplineId) async {
+  final res = await http.post(
+    Uri.parse('$apiURL/disciplines/$disciplineId/crew-seeds/reset'),
+    headers: _jsonAuthHeaders(),
+  );
+  _unwrap(res, action: 'reset crew seeds');
+}
+
+Future<GenerationResult> generateSchedule(int eventId) async {
+  final res = await http.post(
+    Uri.parse('$apiURL/events/$eventId/schedule/generate'),
+    headers: _jsonAuthHeaders(),
+  );
+  return GenerationResult.fromMap(_unwrap(res, action: 'generate schedule') as Map<String, dynamic>);
+}
+
+Future<GenerationResult> regenerateDisciplineSchedule(int disciplineId) async {
+  final res = await http.post(
+    Uri.parse('$apiURL/disciplines/$disciplineId/schedule/regenerate'),
+    headers: _jsonAuthHeaders(),
+  );
+  return GenerationResult.fromMap(_unwrap(res, action: 'regenerate discipline') as Map<String, dynamic>);
+}
+
+Future<void> publishSchedule(int eventId) async {
+  final res = await http.post(
+    Uri.parse('$apiURL/events/$eventId/schedule/publish'),
+    headers: _jsonAuthHeaders(),
+  );
+  _unwrap(res, action: 'publish schedule');
+}
+
+Future<void> unpublishSchedule(int eventId) async {
+  final res = await http.post(
+    Uri.parse('$apiURL/events/$eventId/schedule/unpublish'),
+    headers: _jsonAuthHeaders(),
+  );
+  _unwrap(res, action: 'unpublish schedule');
+}
+
+/// Update a single race row (race_time, stage, race_number, status).
+Future<void> updateRaceResultFields(int raceId, {
+  DateTime? raceTime,
+  String? stage,
+  int? raceNumber,
+  String? status,
+}) async {
+  final body = <String, dynamic>{};
+  if (raceTime != null) body['race_time'] = raceTime.toIso8601String();
+  if (stage != null) body['stage'] = stage;
+  if (raceNumber != null) body['race_number'] = raceNumber;
+  if (status != null) body['status'] = status;
+  final res = await http.put(
+    Uri.parse('$apiURL/race-results/$raceId'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode(body),
+  );
+  _unwrap(res, action: 'update race');
+}
+
+Future<void> deleteRaceResult(int raceId) async {
+  final res = await http.delete(
+    Uri.parse('$apiURL/race-results/$raceId'),
+    headers: _jsonAuthHeaders(),
+  );
+  _unwrap(res, action: 'delete race');
+}
+
+/// Assign a single crew to a lane in a race (creates or updates the CrewResult).
+/// Used by drag-to-lane edits in the Grid tab.
+Future<void> assignCrewToLane(int raceId, int crewId, int? lane) async {
+  final res = await http.post(
+    Uri.parse('$apiURL/race-results/$raceId/crew-results'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode({
+      'crew_results': [
+        {'crew_id': crewId, 'lane': lane},
+      ],
+    }),
+  );
+  _unwrap(res, action: 'assign lane');
+}
+
+Future<GenerationResult> seedNextRound(int disciplineId) async {
+  final res = await http.post(
+    Uri.parse('$apiURL/disciplines/$disciplineId/schedule/seed-next-round'),
+    headers: _jsonAuthHeaders(),
+  );
+  return GenerationResult.fromMap(_unwrap(res, action: 'seed next round') as Map<String, dynamic>);
 }
