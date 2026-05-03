@@ -1,8 +1,8 @@
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:flutter/material.dart';
 
+import '../../../common.dart';
 import '../../../model/race/crew_result.dart';
-import '../../../model/race/discipline.dart';
 import '../../../model/race/race_result.dart';
 import '../../../model/schedule/crew_seed.dart';
 import '../../../model/schedule/schedule_config.dart';
@@ -355,8 +355,17 @@ class _GridTabState extends State<GridTab> {
       DataCell(Text(race.raceNumber?.toString() ?? '—')),
       DataCell(Text(race.raceTime == null ? '—' : _formatTimeOnly(race.raceTime!))),
       DataCell(SizedBox(
-        width: 160,
-        child: Text(race.discipline?.getDisplayName() ?? '—', overflow: TextOverflow.ellipsis),
+        width: 220,
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Flexible(
+            child: Text(race.discipline?.getDisplayName() ?? '—', overflow: TextOverflow.ellipsis),
+          ),
+          if (race.discipline?.competition != null &&
+              race.discipline!.competition!.isNotEmpty) ...[
+            const SizedBox(width: 6),
+            _competitionBadge(race.discipline!.competition!),
+          ],
+        ]),
       )),
       DataCell(Text(race.stage ?? '—')),
       for (var lane = 1; lane <= _laneCount; lane++)
@@ -374,6 +383,22 @@ class _GridTabState extends State<GridTab> {
         ),
       ])),
     ]);
+  }
+
+  Widget _competitionBadge(String competition) {
+    final color = competitionBadgeColor(competition);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+      decoration: BoxDecoration(
+        color: color.shade50,
+        border: Border.all(color: color.shade200),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        competition,
+        style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: color.shade700),
+      ),
+    );
   }
 
   Widget _laneCell(RaceResult race, int lane, CrewResult? crewResult) {

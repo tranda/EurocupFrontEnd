@@ -1,7 +1,7 @@
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:flutter/material.dart';
 
-import '../../../model/race/discipline.dart';
+import '../../../common.dart';
 import '../../../model/schedule/crew_seed.dart';
 import '../../../model/schedule/discipline_progression.dart';
 import '../../../model/schedule/generation_result.dart';
@@ -276,6 +276,22 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
     );
   }
 
+  Widget _competitionBadge(String competition) {
+    final color = competitionBadgeColor(competition);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.shade50,
+        border: Border.all(color: color.shade200),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        competition,
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color.shade700),
+      ),
+    );
+  }
+
   Widget _disciplineRow(Discipline d) {
     final prog = d.id == null ? null : _progressionByDiscipline[d.id];
     final options = d.id == null ? null : _optionsByDiscipline[d.id];
@@ -289,7 +305,17 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
         Expanded(
           flex: 3,
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(d.getDisplayName(), style: const TextStyle(fontWeight: FontWeight.bold)),
+            Row(children: [
+              Flexible(
+                child: Text(d.getDisplayName(),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis),
+              ),
+              if (d.competition != null && d.competition!.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                _competitionBadge(d.competition!),
+              ],
+            ]),
             Text('$crewCount crews', style: const TextStyle(color: Colors.grey, fontSize: 12)),
           ]),
         ),
