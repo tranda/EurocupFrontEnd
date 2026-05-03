@@ -220,6 +220,55 @@ class _GridTabState extends State<GridTab> {
     }
   }
 
+  /// Auto-fill this race's lanes centre-out using crew seed numbers.
+  /// Crews without a seed number get appended after seeded ones.
+  Future<void> _autoFillLanes(RaceResult race) async {
+    if (race.id == null || race.disciplineId == null) return;
+    try {
+      final crews = await _loadCrewsFor(race.disciplineId!);
+      if (crews.isEmpty) return;
+
+      // Sort: seeded ascending, then unseeded by id-order.
+      final sorted = [...crews];
+      sorted.sort((a, b) {
+        final as = a.seedNumber, bs = b.seedNumber;
+        if (as == null && bs == null) return 0;
+        if (as == null) return 1;
+        if (bs == null) return -1;
+        return as.compareTo(bs);
+      });
+
+      // Centre-out lane order, e.g. 4 lanes → [3,2,4,1]; 6 → [4,3,5,2,6,1].
+      final n = _laneCount;
+      final centre = ((n + 1) / 2).ceil();
+      final order = <int>[centre];
+      for (var d = 1; d < n; d++) {
+        final left = centre - d, right = centre + d;
+        if (left >= 1) order.add(left);
+        if (right <= n) order.add(right);
+      }
+
+      // Build assignment payload — empties for unused lanes.
+      final assignments = <Map<String, dynamic>>[];
+      final used = <int>{};
+      for (var i = 0; i < sorted.length && i < order.length; i++) {
+        assignments.add({'crew_id': sorted[i].crewId, 'lane': order[i]});
+        used.add(order[i]);
+      }
+      // Clear any crews currently assigned to lanes we're not using.
+      for (final cr in race.crewResults ?? <CrewResult>[]) {
+        if (cr.crewId != null && !assignments.any((a) => a['crew_id'] == cr.crewId)) {
+          assignments.add({'crew_id': cr.crewId, 'lane': null});
+        }
+      }
+
+      await _runWithBusy(() => api.setCrewLanes(race.id!, assignments));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+    }
+  }
+
   Future<bool> _confirm(String title, String message) async {
     final result = await showDialog<bool>(
       context: context,
@@ -444,6 +493,11 @@ class _GridTabState extends State<GridTab> {
               Text(
                 '$filledLanes/$_laneCount',
                 style: const TextStyle(color: Colors.grey, fontSize: 11),
+              ),
+              IconButton(
+                icon: const Icon(Icons.auto_fix_high, size: 18),
+                tooltip: 'Auto-fill lanes (centre-out by seed)',
+                onPressed: () => _autoFillLanes(race),
               ),
               IconButton(
                 icon: const Icon(Icons.edit, size: 18),
