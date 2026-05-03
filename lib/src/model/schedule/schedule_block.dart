@@ -7,6 +7,7 @@ class ScheduleBlock {
   final List<String>? genderFilter;
   final List<String>? distanceFilter;
   final List<String>? stageFilter;
+  final List<String>? competitionFilter;
   final int sortOrder;
 
   ScheduleBlock({
@@ -18,6 +19,7 @@ class ScheduleBlock {
     this.genderFilter,
     this.distanceFilter,
     this.stageFilter,
+    this.competitionFilter,
     this.sortOrder = 0,
   });
 
@@ -30,6 +32,7 @@ class ScheduleBlock {
         genderFilter: _stringListOrNull(data['gender_filter']),
         distanceFilter: _stringListOrNull(data['distance_filter']),
         stageFilter: _stringListOrNull(data['stage_filter']),
+        competitionFilter: _stringListOrNull(data['competition_filter']),
         sortOrder: (data['sort_order'] ?? 0) as int,
       );
 

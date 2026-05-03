@@ -1521,6 +1521,7 @@ Future<int> createScheduleBlock(
   List<String>? genderFilter,
   List<String>? distanceFilter,
   List<String>? stageFilter,
+  List<String>? competitionFilter,
   int? sortOrder,
 }) async {
   final res = await http.post(
@@ -1533,6 +1534,7 @@ Future<int> createScheduleBlock(
       if (genderFilter != null) 'gender_filter': genderFilter,
       if (distanceFilter != null) 'distance_filter': distanceFilter,
       if (stageFilter != null) 'stage_filter': stageFilter,
+      if (competitionFilter != null) 'competition_filter': competitionFilter,
       if (sortOrder != null) 'sort_order': sortOrder,
     }),
   );
@@ -1548,6 +1550,7 @@ Future<void> updateScheduleBlock(
   List<String>? genderFilter,
   List<String>? distanceFilter,
   List<String>? stageFilter,
+  List<String>? competitionFilter,
   int? sortOrder,
 }) async {
   final res = await http.put(
@@ -1560,6 +1563,7 @@ Future<void> updateScheduleBlock(
       if (genderFilter != null) 'gender_filter': genderFilter,
       if (distanceFilter != null) 'distance_filter': distanceFilter,
       if (stageFilter != null) 'stage_filter': stageFilter,
+      if (competitionFilter != null) 'competition_filter': competitionFilter,
       if (sortOrder != null) 'sort_order': sortOrder,
     }),
   );

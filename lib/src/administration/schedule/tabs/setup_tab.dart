@@ -136,6 +136,7 @@ class _SetupTabState extends State<SetupTab> {
           genderFilter: block.genderFilter,
           distanceFilter: block.distanceFilter,
           stageFilter: block.stageFilter,
+          competitionFilter: block.competitionFilter,
         ).then((_) {}));
   }
 
@@ -150,6 +151,7 @@ class _SetupTabState extends State<SetupTab> {
           genderFilter: updated.genderFilter,
           distanceFilter: updated.distanceFilter,
           stageFilter: updated.stageFilter,
+          competitionFilter: updated.competitionFilter,
         ));
   }
 
@@ -187,6 +189,8 @@ class _SetupTabState extends State<SetupTab> {
         TextEditingController(text: initial?.distanceFilter?.join(', ') ?? '');
     final stagesController =
         TextEditingController(text: initial?.stageFilter?.join(', ') ?? '');
+    final competitionsController =
+        TextEditingController(text: initial?.competitionFilter?.join(', ') ?? '');
 
     return showDialog<_BlockDraft>(
       context: context,
@@ -239,6 +243,13 @@ class _SetupTabState extends State<SetupTab> {
                   helperText: 'e.g. Heat, Round, Final',
                 ),
               ),
+              TextField(
+                controller: competitionsController,
+                decoration: const InputDecoration(
+                  labelText: 'Competition filter (comma-separated, blank = any)',
+                  helperText: 'e.g. Club, Corporate, Festival, Schools',
+                ),
+              ),
             ]),
           ),
           actions: [
@@ -256,6 +267,7 @@ class _SetupTabState extends State<SetupTab> {
                     genderFilter: genders.isEmpty ? null : genders.toList(),
                     distanceFilter: _parseList(distancesController.text),
                     stageFilter: _parseList(stagesController.text),
+                    competitionFilter: _parseList(competitionsController.text),
                   ),
                 );
               },
@@ -378,6 +390,9 @@ class _SetupTabState extends State<SetupTab> {
     if (block.stageFilter?.isNotEmpty == true) {
       filterLines.add('Stage: ${block.stageFilter!.join(", ")}');
     }
+    if (block.competitionFilter?.isNotEmpty == true) {
+      filterLines.add('Competition: ${block.competitionFilter!.join(", ")}');
+    }
     return ListTile(
       contentPadding: EdgeInsets.zero,
       title: Text(block.name),
@@ -404,6 +419,7 @@ class _BlockDraft {
   final List<String>? genderFilter;
   final List<String>? distanceFilter;
   final List<String>? stageFilter;
+  final List<String>? competitionFilter;
   _BlockDraft({
     required this.name,
     required this.startTime,
@@ -411,5 +427,6 @@ class _BlockDraft {
     this.genderFilter,
     this.distanceFilter,
     this.stageFilter,
+    this.competitionFilter,
   });
 }
