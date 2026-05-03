@@ -29,6 +29,8 @@ class _GridTabState extends State<GridTab> {
   // simple filters
   int? _filterDisciplineId;
   String? _filterStage;
+  // which race rows are currently expanded
+  final Set<int> _expanded = <int>{};
 
   int get _laneCount => widget.config.laneCount;
 
@@ -372,64 +374,149 @@ class _GridTabState extends State<GridTab> {
             ),
           ]),
         ),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: DataTable(
-            headingRowColor: WidgetStateProperty.all(const Color.fromARGB(255, 240, 245, 252)),
-            columns: [
-              const DataColumn(label: Text('#')),
-              const DataColumn(label: Text('Time')),
-              const DataColumn(label: Text('Discipline')),
-              const DataColumn(label: Text('Stage')),
-              for (var lane = 1; lane <= _laneCount; lane++)
-                DataColumn(label: Text('L$lane')),
-              const DataColumn(label: Text('')),
-            ],
-            rows: rows.map(_buildRow).toList(),
-          ),
-        ),
+        for (final r in rows) _raceCard(r),
       ]),
     );
   }
 
-  DataRow _buildRow(RaceResult race) {
+  Widget _raceCard(RaceResult race) {
+    final raceId = race.id;
+    final isExpanded = raceId != null && _expanded.contains(raceId);
     final crewByLane = <int, CrewResult>{};
     for (final cr in race.crewResults ?? <CrewResult>[]) {
       if (cr.lane != null) crewByLane[cr.lane!] = cr;
     }
+    final filledLanes = crewByLane.length;
 
-    return DataRow(cells: [
-      DataCell(Text(race.raceNumber?.toString() ?? '—')),
-      DataCell(Text(race.raceTime == null ? '—' : _formatTimeOnly(race.raceTime!))),
-      DataCell(SizedBox(
-        width: 220,
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Flexible(
-            child: Text(race.discipline?.getDisplayName() ?? '—', overflow: TextOverflow.ellipsis),
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      child: Column(children: [
+        InkWell(
+          onTap: raceId == null ? null : () => setState(() {
+            if (isExpanded) {
+              _expanded.remove(raceId);
+            } else {
+              _expanded.add(raceId);
+            }
+          }),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(children: [
+              SizedBox(
+                width: 36,
+                child: Text(
+                  '#${race.raceNumber ?? "—"}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              SizedBox(
+                width: 56,
+                child: Text(
+                  race.raceTime == null ? '—' : _formatTimeOnly(race.raceTime!),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+              Expanded(
+                child: Row(children: [
+                  Flexible(
+                    child: Text(
+                      race.discipline?.getDisplayName() ?? '—',
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                  if (race.discipline?.competition != null &&
+                      race.discipline!.competition!.isNotEmpty) ...[
+                    const SizedBox(width: 6),
+                    _competitionBadge(race.discipline!.competition!),
+                  ],
+                ]),
+              ),
+              SizedBox(
+                width: 80,
+                child: Text(
+                  race.stage ?? '—',
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(color: Colors.black87),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '$filledLanes/$_laneCount',
+                style: const TextStyle(color: Colors.grey, fontSize: 11),
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit, size: 18),
+                tooltip: 'Edit time/stage',
+                onPressed: () => _editRace(race),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                tooltip: 'Delete race',
+                onPressed: () => _deleteRace(race),
+              ),
+              Icon(
+                isExpanded ? Icons.expand_less : Icons.expand_more,
+                color: Colors.grey,
+              ),
+            ]),
           ),
-          if (race.discipline?.competition != null &&
-              race.discipline!.competition!.isNotEmpty) ...[
-            const SizedBox(width: 6),
-            _competitionBadge(race.discipline!.competition!),
-          ],
+        ),
+        if (isExpanded) ...[
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Column(children: [
+              for (var lane = 1; lane <= _laneCount; lane++)
+                _laneRow(race, lane, crewByLane[lane]),
+            ]),
+          ),
+        ],
+      ]),
+    );
+  }
+
+  Widget _laneRow(RaceResult race, int lane, CrewResult? crewResult) {
+    final teamName = crewResult?.crew?.team?.name ?? crewResult?.team?.name;
+    final hasContent = crewResult != null && teamName != null;
+    return InkWell(
+      onTap: () => _assignLane(race, lane),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+        child: Row(children: [
+          Container(
+            width: 36,
+            height: 28,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: hasContent
+                  ? const Color.fromARGB(255, 0, 80, 150)
+                  : Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              'L$lane',
+              style: TextStyle(
+                color: hasContent ? Colors.white : Colors.black54,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              hasContent ? teamName : '— empty —',
+              style: TextStyle(
+                color: hasContent ? Colors.black87 : Colors.grey,
+                fontStyle: hasContent ? FontStyle.normal : FontStyle.italic,
+              ),
+            ),
+          ),
+          const Icon(Icons.edit, size: 14, color: Colors.grey),
         ]),
-      )),
-      DataCell(Text(race.stage ?? '—')),
-      for (var lane = 1; lane <= _laneCount; lane++)
-        DataCell(_laneCell(race, lane, crewByLane[lane])),
-      DataCell(Row(mainAxisSize: MainAxisSize.min, children: [
-        IconButton(
-          icon: const Icon(Icons.edit, size: 18),
-          tooltip: 'Edit time/stage',
-          onPressed: () => _editRace(race),
-        ),
-        IconButton(
-          icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
-          tooltip: 'Delete race',
-          onPressed: () => _deleteRace(race),
-        ),
-      ])),
-    ]);
+      ),
+    );
   }
 
   Widget _competitionBadge(String competition) {
@@ -448,18 +535,4 @@ class _GridTabState extends State<GridTab> {
     );
   }
 
-  Widget _laneCell(RaceResult race, int lane, CrewResult? crewResult) {
-    final teamName = crewResult?.crew?.team?.name ?? crewResult?.team?.name;
-    final hasContent = crewResult != null && teamName != null;
-    return InkWell(
-      onTap: () => _assignLane(race, lane),
-      child: Container(
-        constraints: const BoxConstraints(minWidth: 80, minHeight: 32),
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-        child: hasContent
-            ? Text(teamName, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)
-            : const Text('—', style: TextStyle(color: Colors.grey)),
-      ),
-    );
-  }
 }
