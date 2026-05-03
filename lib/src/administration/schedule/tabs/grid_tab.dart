@@ -436,148 +436,182 @@ class _GridTabState extends State<GridTab> {
       if (cr.lane != null) crewByLane[cr.lane!] = cr;
     }
     final filledLanes = crewByLane.length;
+    final headerColor = competitionColor[0]; // deep blue, matches Race Results
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      child: Column(children: [
-        InkWell(
-          onTap: raceId == null ? null : () => setState(() {
-            if (isExpanded) {
-              _expanded.remove(raceId);
-            } else {
-              _expanded.add(raceId);
-            }
-          }),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(children: [
-              SizedBox(
-                width: 36,
-                child: Text(
-                  '#${race.raceNumber ?? "—"}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-              SizedBox(
-                width: 56,
-                child: Text(
-                  race.raceTime == null ? '—' : _formatTimeOnly(race.raceTime!),
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ),
-              Expanded(
-                child: Row(children: [
-                  Flexible(
-                    child: Text(
-                      race.discipline?.getDisplayName() ?? '—',
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                  if (race.discipline?.competition != null &&
-                      race.discipline!.competition!.isNotEmpty) ...[
-                    const SizedBox(width: 6),
-                    _competitionBadge(race.discipline!.competition!),
-                  ],
-                ]),
-              ),
-              SizedBox(
-                width: 80,
-                child: Text(
-                  race.stage ?? '—',
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(color: Colors.black87),
-                ),
-              ),
-              const SizedBox(width: 8),
+    return Column(children: [
+      Container(
+        color: headerColor,
+        child: ListTile(
+          onTap: raceId == null
+              ? null
+              : () => setState(() {
+                    if (isExpanded) {
+                      _expanded.remove(raceId);
+                    } else {
+                      _expanded.add(raceId);
+                    }
+                  }),
+          title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
               Text(
-                '$filledLanes/$_laneCount',
-                style: const TextStyle(color: Colors.grey, fontSize: 11),
+                '#${race.raceNumber ?? "—"}  ${race.raceTime == null ? "—" : _formatTimeOnly(race.raceTime!)}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 16,
+                ),
               ),
-              _compactIcon(
-                Icons.auto_fix_high,
-                tooltip: 'Auto-fill lanes (centre-out by seed)',
-                onPressed: () => _autoFillLanes(race),
+              Text(
+                race.stage ?? '',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 16,
+                ),
               ),
-              _compactIcon(
-                Icons.edit,
-                tooltip: 'Edit time/stage',
-                onPressed: () => _editRace(race),
+            ]),
+            Row(children: [
+              Flexible(
+                child: Text(
+                  race.discipline?.getDisplayName() ?? 'Unknown',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
               ),
-              _compactIcon(
-                Icons.delete_outline,
-                tooltip: 'Delete race',
-                color: Colors.red,
-                onPressed: () => _deleteRace(race),
-              ),
+              if (race.discipline?.competition != null &&
+                  race.discipline!.competition!.isNotEmpty) ...[
+                const SizedBox(width: 10),
+                _competitionBadge(race.discipline!.competition!),
+              ],
+            ]),
+          ]),
+          subtitle: Text(
+            'Scheduled ($filledLanes/$_laneCount)',
+            style: const TextStyle(color: Colors.white70),
+          ),
+          trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+            _compactIcon(
+              Icons.auto_fix_high,
+              tooltip: 'Auto-fill lanes (centre-out by seed)',
+              onPressed: () => _autoFillLanes(race),
+              color: Colors.white,
+            ),
+            _compactIcon(
+              Icons.edit,
+              tooltip: 'Edit time/stage',
+              onPressed: () => _editRace(race),
+              color: Colors.white,
+            ),
+            _compactIcon(
+              Icons.delete_outline,
+              tooltip: 'Delete race',
+              onPressed: () => _deleteRace(race),
+              color: Colors.white,
+            ),
+            if (raceId != null)
               Icon(
                 isExpanded ? Icons.expand_less : Icons.expand_more,
-                color: Colors.grey,
+                color: Colors.white,
               ),
-            ]),
-          ),
+          ]),
         ),
-        if (isExpanded) ...[
-          const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Row(children: [
-                TextButton.icon(
-                  onPressed: () => _autoFillLanes(race),
-                  icon: const Icon(Icons.auto_fix_high, size: 16),
-                  label: const Text('Auto-fill lanes'),
-                ),
-                const Spacer(),
-              ]),
-              for (var lane = 1; lane <= _laneCount; lane++)
-                _laneRow(race, lane, crewByLane[lane]),
-            ]),
-          ),
-        ],
-      ]),
-    );
+      ),
+      const Divider(height: 4),
+      if (isExpanded)
+        for (var lane = 1; lane <= _laneCount; lane++)
+          _laneRow(race, lane, crewByLane[lane]),
+      const Divider(height: smallSpace),
+    ]);
   }
 
   Widget _laneRow(RaceResult race, int lane, CrewResult? crewResult) {
     final teamName = crewResult?.crew?.team?.name ?? crewResult?.team?.name;
     final hasContent = crewResult != null && teamName != null;
-    return InkWell(
-      onTap: () => _assignLane(race, lane),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-        child: Row(children: [
-          Container(
-            width: 36,
-            height: 28,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: hasContent
-                  ? const Color.fromARGB(255, 0, 80, 150)
-                  : Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(6),
+    final country = crewResult?.crew?.team?.club?.country;
+
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5)),
+      ),
+      child: ListTile(
+        onTap: () => _assignLane(race, lane),
+        leading: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: hasContent ? Colors.blue.shade50 : Colors.grey.shade100,
+            border: Border.all(
+              color: hasContent ? Colors.blue.shade300 : Colors.grey.shade300,
+              width: 2,
             ),
+            shape: BoxShape.circle,
+          ),
+          child: const Center(
             child: Text(
-              'L$lane',
+              '-',
               style: TextStyle(
-                color: hasContent ? Colors.white : Colors.black54,
+                color: Colors.black54,
                 fontWeight: FontWeight.bold,
-                fontSize: 12,
+                fontSize: 18,
               ),
             ),
           ),
-          const SizedBox(width: 12),
+        ),
+        title: Row(children: [
+          if (hasContent && country != null)
+            Container(
+              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Text(
+                '${getCountryFlag(country)} ${getCountryCode(country)}',
+                style: TextStyle(
+                  color: Colors.blue.shade700,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           Expanded(
             child: Text(
               hasContent ? teamName : '— empty —',
               style: TextStyle(
                 color: hasContent ? Colors.black87 : Colors.grey,
                 fontStyle: hasContent ? FontStyle.normal : FontStyle.italic,
+                fontSize: 16,
+                fontWeight: hasContent ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
           ),
-          const Icon(Icons.edit, size: 14, color: Colors.grey),
         ]),
+        subtitle: Text(
+          'Lane $lane',
+          style: const TextStyle(color: Colors.black54, fontSize: 12),
+        ),
+        trailing: hasContent
+            ? Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade400,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text(
+                  'Registered',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              )
+            : const Icon(Icons.add, size: 18, color: Colors.grey),
       ),
     );
   }
