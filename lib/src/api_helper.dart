@@ -1591,11 +1591,18 @@ Future<DisciplineProgressionInfo> getDisciplineProgression(int disciplineId) asy
   );
 }
 
-Future<void> updateDisciplineProgression(int disciplineId, String? racePlanCode) async {
+Future<void> updateDisciplineProgression(
+  int disciplineId,
+  String? racePlanCode, {
+  List<String>? customStages,
+}) async {
   final res = await http.put(
     Uri.parse('$apiURL/disciplines/$disciplineId/progression'),
     headers: _jsonAuthHeaders(),
-    body: jsonEncode({'race_plan_code': racePlanCode}),
+    body: jsonEncode({
+      'race_plan_code': racePlanCode,
+      if (customStages != null) 'custom_stages': customStages,
+    }),
   );
   _unwrap(res, action: 'update progression');
 }

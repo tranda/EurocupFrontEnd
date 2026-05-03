@@ -143,13 +143,85 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
 
   Future<void> _changePlan(int disciplineId, String? newCode) async {
     try {
-      await api.updateDisciplineProgression(disciplineId, newCode);
+      if (newCode == 'CUSTOM') {
+        final existing = _progressionByDiscipline[disciplineId]?.customStages ?? const [];
+        final stages = await _editCustomStages(existing);
+        if (stages == null) return; // cancelled — don't change anything
+        await api.updateDisciplineProgression(disciplineId, 'CUSTOM', customStages: stages);
+      } else {
+        await api.updateDisciplineProgression(disciplineId, newCode);
+      }
       final updated = await api.getDisciplineProgression(disciplineId);
       setState(() => _progressionByDiscipline[disciplineId] = updated);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
     }
+  }
+
+  Future<void> _editCustomStagesFor(int disciplineId) async {
+    final existing = _progressionByDiscipline[disciplineId]?.customStages ?? const [];
+    final stages = await _editCustomStages(existing);
+    if (stages == null) return;
+    try {
+      await api.updateDisciplineProgression(disciplineId, 'CUSTOM', customStages: stages);
+      final updated = await api.getDisciplineProgression(disciplineId);
+      setState(() => _progressionByDiscipline[disciplineId] = updated);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+    }
+  }
+
+  Future<List<String>?> _editCustomStages(List<String> initial) async {
+    final controller = TextEditingController(
+      text: initial.isEmpty ? 'Round 1\nRound 2\nFinal' : initial.join('\n'),
+    );
+    final result = await showDialog<List<String>?>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Custom stages'),
+        content: SizedBox(
+          width: 380,
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text(
+              'One stage per line. The generator creates one race per stage; '
+              'lanes stay empty so you assign crews manually in the Grid.',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              maxLines: 8,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+            ),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              final stages = controller.text
+                  .split('\n')
+                  .map((s) => s.trim())
+                  .where((s) => s.isNotEmpty)
+                  .toList();
+              if (stages.isEmpty) {
+                ScaffoldMessenger.of(ctx)
+                    .showSnackBar(const SnackBar(content: Text('Add at least one stage.')));
+                return;
+              }
+              Navigator.pop(ctx, stages);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    return result;
   }
 
   Future<void> _openSeeds(Discipline d) async {
@@ -341,8 +413,20 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
               ),
             if (isOverride)
               const Text('overridden', style: TextStyle(fontSize: 10, color: Colors.orange)),
+            if (prog?.overrideCode == 'CUSTOM' && (prog?.customStages?.isNotEmpty ?? false))
+              Text(
+                'Stages: ${prog!.customStages!.join(", ")}',
+                style: const TextStyle(fontSize: 10, color: Colors.black54),
+                overflow: TextOverflow.ellipsis,
+              ),
           ]),
         ),
+        if (prog?.overrideCode == 'CUSTOM')
+          IconButton(
+            tooltip: 'Edit custom stages',
+            icon: const Icon(Icons.edit_note),
+            onPressed: d.id == null ? null : () => _editCustomStagesFor(d.id!),
+          ),
         IconButton(
           tooltip: 'Edit seeds',
           icon: const Icon(Icons.format_list_numbered),
