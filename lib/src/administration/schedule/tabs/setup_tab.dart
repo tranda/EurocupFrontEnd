@@ -219,7 +219,7 @@ class _SetupTabState extends State<SetupTab> {
                     style: Theme.of(ctx).textTheme.bodySmall),
               ),
               Wrap(spacing: 6, children: [
-                for (final g in ['M', 'W', 'X'])
+                for (final g in const ['Open', 'Women', 'Mixed'])
                   FilterChip(
                     label: Text(g),
                     selected: genders.contains(g),
