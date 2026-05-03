@@ -1553,6 +1553,9 @@ Future<void> updateScheduleBlock(
   List<String>? competitionFilter,
   int? sortOrder,
 }) async {
+  // For filter fields, always send the value (including empty list) so
+  // clearing all chips actually clears the DB value. Backend treats empty
+  // arrays the same as null in matching.
   final res = await http.put(
     Uri.parse('$apiURL/schedule-blocks/$blockId'),
     headers: _jsonAuthHeaders(),
@@ -1705,6 +1708,38 @@ Future<void> assignCrewToLane(int raceId, int crewId, int? lane) async {
     }),
   );
   _unwrap(res, action: 'assign lane');
+}
+
+/// Apply multiple lane assignments in one call. Used for atomic lane swaps.
+/// Each entry: {'crew_id': int, 'lane': int?}.
+Future<void> setCrewLanes(int raceId, List<Map<String, dynamic>> assignments) async {
+  final res = await http.post(
+    Uri.parse('$apiURL/race-results/$raceId/crew-results'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode({'crew_results': assignments}),
+  );
+  _unwrap(res, action: 'set crew lanes');
+}
+
+/// Shift all SCHEDULED races at-or-after the pivot race by N minutes (signed).
+/// Returns the number of races shifted.
+Future<int> shiftScheduleFrom(
+  int eventId, {
+  required int fromRaceId,
+  required int minutes,
+  bool sameDayOnly = true,
+}) async {
+  final res = await http.post(
+    Uri.parse('$apiURL/events/$eventId/schedule/shift'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode({
+      'from_race_id': fromRaceId,
+      'minutes': minutes,
+      'same_day_only': sameDayOnly,
+    }),
+  );
+  final data = _unwrap(res, action: 'shift schedule') as Map<String, dynamic>;
+  return (data['races_shifted'] ?? 0) as int;
 }
 
 Future<GenerationResult> seedNextRound(int disciplineId) async {

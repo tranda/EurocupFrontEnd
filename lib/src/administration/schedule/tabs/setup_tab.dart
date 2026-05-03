@@ -271,10 +271,10 @@ class _SetupTabState extends State<SetupTab> {
                     name: nameController.text.trim(),
                     startTime: startTimeController.text.trim(),
                     gapSeconds: gap,
-                    genderFilter: genders.isEmpty ? null : genders.toList(),
-                    distanceFilter: _parseList(distancesController.text),
-                    stageFilter: _parseList(stagesController.text),
-                    competitionFilter: _parseList(competitionsController.text),
+                    genderFilter: genders.toList(),
+                    distanceFilter: _parseListOrEmpty(distancesController.text),
+                    stageFilter: _parseListOrEmpty(stagesController.text),
+                    competitionFilter: _parseListOrEmpty(competitionsController.text),
                   ),
                 );
               },
@@ -286,9 +286,8 @@ class _SetupTabState extends State<SetupTab> {
     );
   }
 
-  List<String>? _parseList(String raw) {
-    final parts = raw.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
-    return parts.isEmpty ? null : parts;
+  List<String> _parseListOrEmpty(String raw) {
+    return raw.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
   }
 
   @override
@@ -427,17 +426,17 @@ class _BlockDraft {
   final String name;
   final String startTime;
   final int gapSeconds;
-  final List<String>? genderFilter;
-  final List<String>? distanceFilter;
-  final List<String>? stageFilter;
-  final List<String>? competitionFilter;
+  final List<String> genderFilter;
+  final List<String> distanceFilter;
+  final List<String> stageFilter;
+  final List<String> competitionFilter;
   _BlockDraft({
     required this.name,
     required this.startTime,
     required this.gapSeconds,
-    this.genderFilter,
-    this.distanceFilter,
-    this.stageFilter,
-    this.competitionFilter,
+    this.genderFilter = const [],
+    this.distanceFilter = const [],
+    this.stageFilter = const [],
+    this.competitionFilter = const [],
   });
 }
