@@ -94,36 +94,64 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
   @override
   Widget build(BuildContext context) {
     final eventLabel = _event?.name ?? 'Schedule Builder';
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        title: Row(children: [
-          Expanded(child: Text(eventLabel, overflow: TextOverflow.ellipsis)),
-          if (_config != null) _statusBadge(_config!.scheduleStatus),
-        ]),
-        actions: [
-          if (_config != null)
-            TextButton.icon(
-              onPressed: _publishing ? null : _togglePublish,
-              icon: Icon(_config!.isPublished ? Icons.lock_open : Icons.publish),
-              label: Text(_config!.isPublished ? 'Unpublish' : 'Publish'),
-            ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: const Color.fromARGB(255, 0, 80, 150),
-          unselectedLabelColor: Colors.black54,
-          isScrollable: true,
-          tabs: const [
-            Tab(text: 'Setup', icon: Icon(Icons.tune)),
-            Tab(text: 'Plan & Seeds', icon: Icon(Icons.format_list_numbered)),
-            Tab(text: 'Grid', icon: Icon(Icons.grid_on)),
-            Tab(text: 'Import', icon: Icon(Icons.file_upload)),
+    final base = Theme.of(context);
+    const darkText = Color(0xFF1F2937);
+    final localTheme = base.copyWith(
+      scaffoldBackgroundColor: const Color(0xFFF5F6F8),
+      cardTheme: const CardThemeData(
+        color: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 1,
+      ),
+      dividerColor: const Color(0xFFE5E7EB),
+      iconTheme: base.iconTheme.copyWith(color: darkText),
+      textTheme: base.textTheme.copyWith(
+        bodyLarge: base.textTheme.bodyLarge?.copyWith(color: darkText),
+        bodyMedium: base.textTheme.bodyMedium?.copyWith(color: darkText),
+        bodySmall: base.textTheme.bodySmall?.copyWith(color: Colors.black54),
+        labelLarge: base.textTheme.labelLarge?.copyWith(color: darkText),
+        labelMedium: base.textTheme.labelMedium?.copyWith(color: darkText),
+        labelSmall: base.textTheme.labelSmall?.copyWith(color: Colors.black54),
+        titleMedium: base.textTheme.titleMedium?.copyWith(color: darkText),
+      ),
+    );
+    return Theme(
+      data: localTheme,
+      child: Scaffold(
+        backgroundColor: localTheme.scaffoldBackgroundColor,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          title: Row(children: [
+            Expanded(child: Text(eventLabel, overflow: TextOverflow.ellipsis)),
+            if (_config != null) _statusBadge(_config!.scheduleStatus),
+          ]),
+          actions: [
+            if (_config != null)
+              TextButton.icon(
+                onPressed: _publishing ? null : _togglePublish,
+                icon: Icon(_config!.isPublished ? Icons.lock_open : Icons.publish),
+                label: Text(_config!.isPublished ? 'Unpublish' : 'Publish'),
+              ),
           ],
+          bottom: TabBar(
+            controller: _tabController,
+            labelColor: const Color.fromARGB(255, 0, 80, 150),
+            unselectedLabelColor: Colors.black54,
+            isScrollable: true,
+            tabs: const [
+              Tab(text: 'Setup', icon: Icon(Icons.tune)),
+              Tab(text: 'Plan & Seeds', icon: Icon(Icons.format_list_numbered)),
+              Tab(text: 'Grid', icon: Icon(Icons.grid_on)),
+              Tab(text: 'Import', icon: Icon(Icons.file_upload)),
+            ],
+          ),
+        ),
+        body: DefaultTextStyle.merge(
+          style: const TextStyle(color: darkText),
+          child: _buildBody(),
         ),
       ),
-      body: _buildBody(),
     );
   }
 
