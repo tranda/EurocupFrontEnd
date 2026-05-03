@@ -323,10 +323,14 @@ class _SetupTabState extends State<SetupTab> {
           const Spacer(),
           DropdownButton<int>(
             value: _laneCount,
-            items: const [
-              DropdownMenuItem(value: 4, child: Text('4 lanes')),
-              DropdownMenuItem(value: 6, child: Text('6 lanes')),
-              DropdownMenuItem(value: 8, child: Text('8 lanes')),
+            items: [
+              for (final n in const [3, 4, 5, 6, 7, 8, 9])
+                DropdownMenuItem(
+                  value: n,
+                  child: Text(
+                    '$n lanes${(n == 4 || n == 6 || n == 8) ? "" : " (no IDBF plan)"}',
+                  ),
+                ),
             ],
             onChanged: _saving ? null : (v) {
               if (v != null) _saveLaneCount(v);

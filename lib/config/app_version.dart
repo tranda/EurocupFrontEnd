@@ -1,7 +1,7 @@
 class AppVersion {
   static const String major = '0';
   static const String minor = '6';
-  static const String patch = '39';
+  static const String patch = '40';
 
   static String get version => '$major.$minor.$patch';
 
