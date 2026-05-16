@@ -1702,6 +1702,26 @@ Future<void> deleteRaceResult(int raceId) async {
   _unwrap(res, action: 'delete race');
 }
 
+/// Bulk-update race_time for drag-reorder in the Grid tab. Each MapEntry pairs
+/// a race id with its new time. Backend updates atomically and renumbers chronologically.
+Future<void> reorderRaces(List<MapEntry<int, DateTime>> updates) async {
+  final body = {
+    'updates': [
+      for (final u in updates)
+        {
+          'race_id': u.key,
+          'race_time': u.value.toIso8601String(),
+        },
+    ],
+  };
+  final res = await http.post(
+    Uri.parse('$apiURL/race-results/reorder'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode(body),
+  );
+  _unwrap(res, action: 'reorder races');
+}
+
 /// Assign a single crew to a lane in a race (creates or updates the CrewResult).
 /// Used by drag-to-lane edits in the Grid tab.
 Future<void> assignCrewToLane(int raceId, int crewId, int? lane) async {

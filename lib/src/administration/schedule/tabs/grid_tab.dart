@@ -79,6 +79,50 @@ class _GridTabState extends State<GridTab> {
     return crews;
   }
 
+  Future<void> _onReorder(List<RaceResult> rows, int oldIndex, int newIndex) async {
+    // Flutter ReorderableListView quirk: newIndex is post-removal; adjust when moving down.
+    if (newIndex > oldIndex) newIndex -= 1;
+    if (newIndex == oldIndex) return;
+
+    final lo = oldIndex < newIndex ? oldIndex : newIndex;
+    final hi = oldIndex < newIndex ? newIndex : oldIndex;
+
+    // Block reorder if any race in the slice isn't SCHEDULED — slot-swap would
+    // shift times for races that are already running/finished.
+    for (var i = lo; i <= hi; i++) {
+      if (rows[i].status != 'SCHEDULED') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cannot reorder: a race in this range is running or finished.')),
+        );
+        return;
+      }
+    }
+
+    // Capture the time values for the slice in original order — these are the
+    // slot times that stay put.
+    final slotTimes = [for (var i = lo; i <= hi; i++) rows[i].raceTime];
+
+    // Compute the new ordering of races in the slice.
+    final reordered = List<RaceResult>.from(rows);
+    final moved = reordered.removeAt(oldIndex);
+    reordered.insert(newIndex, moved);
+
+    // Pair each slice position with the race now occupying it, and the original
+    // slot time for that position.
+    final updates = <MapEntry<int, DateTime>>[];
+    for (var i = lo; i <= hi; i++) {
+      final race = reordered[i];
+      final time = slotTimes[i - lo];
+      if (time == null) continue; // skip "Unscheduled" rows — they have no slot
+      if (race.raceTime == time) continue; // no-op for unchanged positions
+      updates.add(MapEntry(race.id!, time));
+    }
+
+    if (updates.isEmpty) return;
+
+    await _runWithBusy(() => api.reorderRaces(updates));
+  }
+
   Future<void> _runWithBusy(Future<void> Function() task) async {
     setState(() => _busy = true);
     try {
@@ -424,7 +468,33 @@ class _GridTabState extends State<GridTab> {
             ),
           ]),
         ),
-        for (final r in rows) _raceCard(r),
+        ReorderableListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          buildDefaultDragHandles: false,
+          itemCount: rows.length,
+          itemBuilder: (ctx, i) {
+            final race = rows[i];
+            final canDrag = race.status == 'SCHEDULED';
+            return Row(
+              key: ValueKey('race-${race.id}'),
+              children: [
+                if (canDrag)
+                  ReorderableDragStartListener(
+                    index: i,
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Icon(Icons.drag_indicator, color: Colors.grey),
+                    ),
+                  )
+                else
+                  const SizedBox(width: 40),
+                Expanded(child: _raceCard(race)),
+              ],
+            );
+          },
+          onReorder: (oldIndex, newIndex) => _onReorder(rows, oldIndex, newIndex),
+        ),
       ]),
     );
   }
