@@ -185,8 +185,8 @@ class _SetupTabState extends State<SetupTab> {
     final nameController = TextEditingController(text: initial?.name ?? '');
     final startTimeController =
         TextEditingController(text: initial?.startTime.substring(0, 5) ?? '09:00');
-    final gapController =
-        TextEditingController(text: (initial?.gapSeconds ?? 240).toString());
+    final gapController = TextEditingController(
+        text: _formatGapMinutes(initial?.gapSeconds ?? 240));
     // Normalize legacy short codes (M/W/X) to canonical long form so the
     // dialog selects the right chips and saving cleans up old values.
     const genderMap = {'M': 'Open', 'W': 'Women', 'X': 'Mixed'};
@@ -219,8 +219,8 @@ class _SetupTabState extends State<SetupTab> {
               ),
               TextField(
                 controller: gapController,
-                decoration: const InputDecoration(labelText: 'Gap (seconds)'),
-                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Gap (minutes)'),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
               ),
               const SizedBox(height: 8),
               Align(
@@ -266,8 +266,9 @@ class _SetupTabState extends State<SetupTab> {
             TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
             TextButton(
               onPressed: () {
-                final gap = int.tryParse(gapController.text.trim());
-                if (nameController.text.trim().isEmpty || gap == null) return;
+                final gapMinutes = double.tryParse(gapController.text.trim());
+                if (nameController.text.trim().isEmpty || gapMinutes == null) return;
+                final gap = (gapMinutes * 60).round();
                 Navigator.pop(
                   ctx,
                   _BlockDraft(
@@ -291,6 +292,14 @@ class _SetupTabState extends State<SetupTab> {
 
   List<String> _parseListOrEmpty(String raw) {
     return raw.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+  }
+
+  String _formatGapMinutes(int seconds) {
+    final minutes = seconds / 60.0;
+    if (minutes == minutes.truncateToDouble()) {
+      return minutes.toInt().toString();
+    }
+    return minutes.toStringAsFixed(2).replaceFirst(RegExp(r'0+$'), '').replaceFirst(RegExp(r'\.$'), '');
   }
 
   @override
@@ -435,7 +444,7 @@ class _SetupTabState extends State<SetupTab> {
       contentPadding: EdgeInsets.zero,
       title: Text(block.name),
       subtitle: Text(
-        '${block.startTime.substring(0, 5)}  ·  every ${block.gapSeconds}s'
+        '${block.startTime.substring(0, 5)}  ·  every ${_formatGapMinutes(block.gapSeconds)} min'
         '${filterLines.isEmpty ? "" : "\n${filterLines.join("  ·  ")}"}',
       ),
       isThreeLine: filterLines.isNotEmpty,
