@@ -484,11 +484,16 @@ class _GridTabState extends State<GridTab> {
                     index: i,
                     child: const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Icon(Icons.drag_indicator, color: Colors.grey),
+                      child: Icon(
+                        Icons.drag_indicator,
+                        color: Color.fromARGB(255, 80, 80, 80),
+                        size: 28,
+                        semanticLabel: 'Drag to reorder',
+                      ),
                     ),
                   )
                 else
-                  const SizedBox(width: 40),
+                  const SizedBox(width: 44),
                 Expanded(child: _raceCard(race)),
               ],
             );
