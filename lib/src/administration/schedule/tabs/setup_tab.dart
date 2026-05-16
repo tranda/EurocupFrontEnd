@@ -310,7 +310,7 @@ class _SetupTabState extends State<SetupTab> {
         children: [
           _laneCountCard(),
           const SizedBox(height: 16),
-          ...widget.config.days.map(_dayCard),
+          ...(widget.config.days.toList()..sort((a, b) => a.date.compareTo(b.date))).map(_dayCard),
           const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: _saving ? null : _addDay,
