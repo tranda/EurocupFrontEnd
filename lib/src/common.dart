@@ -86,7 +86,7 @@ const List<String> disciplineAgeGroups = ['Junior', 'Junior A', 'Junior B', 'U24
 const List<String> disciplineGenderGroups = ['Mixed', 'Women', 'Open'];
 const List<String> disciplineBoatGroups = ['Standard', 'Small'];
 const List<String> disciplineStatusOptions = ['active', 'inactive'];
-const List<int> disciplineDistanceOptions = [200, 500, 1000, 2000];
+const List<int> disciplineDistanceOptions = [100, 200, 250, 500, 1000, 2000];
 
 const List<Color> competitionColor = [
   Color.fromARGB(255, 15, 91, 169),
