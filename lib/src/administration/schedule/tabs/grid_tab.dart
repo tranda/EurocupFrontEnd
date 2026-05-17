@@ -94,14 +94,38 @@ class _GridTabState extends State<GridTab> {
       return;
     }
 
-    // RACES below: existing slot-swap (rotate races within the slice).
-    final lo = oldIndex < newIndex ? oldIndex : newIndex;
-    final hi = oldIndex < newIndex ? newIndex : oldIndex;
+    // RACES: slot-swap among RACES ONLY. All breaks (shift or parallel) are
+    // bystanders on race drag — they keep their times and the race "flows
+    // around" them. Breaks are moved by dragging the break itself, which calls
+    // the break-update endpoint (handles parallel = no shift, shift = re-balance).
+    final raceItems = <RaceResult>[];
+    final raceItemRowsIdx = <int>[]; // rows[] index for each raceItem
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].isBreak) continue;
+      raceItems.add(rows[i]);
+      raceItemRowsIdx.add(i);
+    }
 
-    // Block reorder if any race in the slice isn't SCHEDULED — slot-swap would
-    // shift times for races that are already running/finished.
-    for (var i = lo; i <= hi; i++) {
-      if (rows[i].status != 'SCHEDULED') {
+    final movedRaceOld = raceItemRowsIdx.indexOf(oldIndex);
+    if (movedRaceOld < 0) return; // shouldn't happen — moved is a race here
+
+    // In the post-move rows list, count races up to (but not including) newIndex
+    // — that's the moved race's position in raceItems.
+    final reorderedRows = List<RaceResult>.from(rows)
+      ..removeAt(oldIndex)
+      ..insert(newIndex, moved);
+    var movedRaceNew = 0;
+    for (var i = 0; i < newIndex; i++) {
+      if (!reorderedRows[i].isBreak) movedRaceNew++;
+    }
+    if (movedRaceNew == movedRaceOld) return;
+
+    final lo = movedRaceOld < movedRaceNew ? movedRaceOld : movedRaceNew;
+    final hi = movedRaceOld < movedRaceNew ? movedRaceNew : movedRaceOld;
+
+    // Block reorder if any race in the slice isn't SCHEDULED.
+    for (var k = lo; k <= hi; k++) {
+      if (raceItems[k].status != 'SCHEDULED') {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cannot reorder: a race in this range is running or finished.')),
         );
@@ -109,39 +133,20 @@ class _GridTabState extends State<GridTab> {
       }
     }
 
-    // Slot-swap participants: races + shift-mode breaks. Parallel breaks are
-    // bystanders — they keep their original times. (Their visual position will
-    // re-sort on the next load if it ends up out of order; acceptable for the
-    // edge case of dragging a race past a parallel break.)
-    final participates = <int>[]; // indices in rows[] that take part in the swap
-    for (var i = lo; i <= hi; i++) {
-      final r = rows[i];
-      if (r.isBreak && !r.shiftSubsequent) continue;
-      participates.add(i);
-    }
-
-    // The moved item is in 'participates' (it's a race or shift break). Compute
-    // its new index within the participating list.
-    final movedNewIdx = participates.indexOf(newIndex);
-    final movedOldIdx = participates.indexOf(oldIndex);
-    if (movedNewIdx < 0 || movedOldIdx < 0 || movedNewIdx == movedOldIdx) return;
-
-    // slotTimes in original order from participating rows.
-    final slotTimes = [for (final i in participates) rows[i].raceTime];
-
-    // Reorder participating rows.
-    final reorderedParticipants = [for (final i in participates) rows[i]];
-    final movedParticipant = reorderedParticipants.removeAt(movedOldIdx);
-    reorderedParticipants.insert(movedNewIdx, movedParticipant);
+    // Slot-swap within the race-only slice.
+    final slotTimes = [for (var k = lo; k <= hi; k++) raceItems[k].raceTime];
+    final reorderedRaces = List<RaceResult>.from(raceItems);
+    final movedItem = reorderedRaces.removeAt(movedRaceOld);
+    reorderedRaces.insert(movedRaceNew, movedItem);
 
     final updates = <MapEntry<int, DateTime>>[];
-    for (var i = 0; i < reorderedParticipants.length; i++) {
-      final race = reorderedParticipants[i];
-      final time = slotTimes[i];
+    for (var k = lo; k <= hi; k++) {
+      final r = reorderedRaces[k];
+      final time = slotTimes[k - lo];
       if (time == null) continue;
-      if (race.raceTime == time) continue;
-      if (race.id == null) continue;
-      updates.add(MapEntry(race.id!, time));
+      if (r.raceTime == time) continue;
+      if (r.id == null) continue;
+      updates.add(MapEntry(r.id!, time));
     }
 
     if (updates.isEmpty) return;
