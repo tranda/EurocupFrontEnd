@@ -84,6 +84,17 @@ class _GridTabState extends State<GridTab> {
     if (newIndex > oldIndex) newIndex -= 1;
     if (newIndex == oldIndex) return;
 
+    final moved = rows[oldIndex];
+
+    // Breaks don't participate in race slot-swap. Dragging a break re-times it:
+    // the break-update endpoint un-shifts/re-shifts for shift mode and is a
+    // no-op (just changes the time) for parallel mode.
+    if (moved.isBreak) {
+      await _retimeBreakOnDrag(rows, oldIndex, newIndex);
+      return;
+    }
+
+    // RACES below: existing slot-swap (rotate races within the slice).
     final lo = oldIndex < newIndex ? oldIndex : newIndex;
     final hi = oldIndex < newIndex ? newIndex : oldIndex;
 
@@ -98,29 +109,73 @@ class _GridTabState extends State<GridTab> {
       }
     }
 
-    // Capture the time values for the slice in original order — these are the
-    // slot times that stay put.
-    final slotTimes = [for (var i = lo; i <= hi; i++) rows[i].raceTime];
-
-    // Compute the new ordering of races in the slice.
-    final reordered = List<RaceResult>.from(rows);
-    final moved = reordered.removeAt(oldIndex);
-    reordered.insert(newIndex, moved);
-
-    // Pair each slice position with the race now occupying it, and the original
-    // slot time for that position.
-    final updates = <MapEntry<int, DateTime>>[];
+    // Slot-swap participants: races + shift-mode breaks. Parallel breaks are
+    // bystanders — they keep their original times. (Their visual position will
+    // re-sort on the next load if it ends up out of order; acceptable for the
+    // edge case of dragging a race past a parallel break.)
+    final participates = <int>[]; // indices in rows[] that take part in the swap
     for (var i = lo; i <= hi; i++) {
-      final race = reordered[i];
-      final time = slotTimes[i - lo];
-      if (time == null) continue; // skip "Unscheduled" rows — they have no slot
-      if (race.raceTime == time) continue; // no-op for unchanged positions
+      final r = rows[i];
+      if (r.isBreak && !r.shiftSubsequent) continue;
+      participates.add(i);
+    }
+
+    // The moved item is in 'participates' (it's a race or shift break). Compute
+    // its new index within the participating list.
+    final movedNewIdx = participates.indexOf(newIndex);
+    final movedOldIdx = participates.indexOf(oldIndex);
+    if (movedNewIdx < 0 || movedOldIdx < 0 || movedNewIdx == movedOldIdx) return;
+
+    // slotTimes in original order from participating rows.
+    final slotTimes = [for (final i in participates) rows[i].raceTime];
+
+    // Reorder participating rows.
+    final reorderedParticipants = [for (final i in participates) rows[i]];
+    final movedParticipant = reorderedParticipants.removeAt(movedOldIdx);
+    reorderedParticipants.insert(movedNewIdx, movedParticipant);
+
+    final updates = <MapEntry<int, DateTime>>[];
+    for (var i = 0; i < reorderedParticipants.length; i++) {
+      final race = reorderedParticipants[i];
+      final time = slotTimes[i];
+      if (time == null) continue;
+      if (race.raceTime == time) continue;
+      if (race.id == null) continue;
       updates.add(MapEntry(race.id!, time));
     }
 
     if (updates.isEmpty) return;
-
     await _runWithBusy(() => api.reorderRaces(updates));
+  }
+
+  /// Set the break's time to the time of the row at its dropped position.
+  /// Falls back to (previous row time + 1 min) if dropped at the end.
+  Future<void> _retimeBreakOnDrag(List<RaceResult> rows, int oldIndex, int newIndex) async {
+    final moved = rows[oldIndex];
+    if (moved.id == null) return;
+
+    final reordered = List<RaceResult>.from(rows)
+      ..removeAt(oldIndex)
+      ..insert(newIndex, moved);
+
+    DateTime? newTime;
+    for (var i = newIndex + 1; i < reordered.length; i++) {
+      if (reordered[i].raceTime != null) {
+        newTime = reordered[i].raceTime;
+        break;
+      }
+    }
+    if (newTime == null) {
+      for (var i = newIndex - 1; i >= 0; i--) {
+        if (reordered[i].raceTime != null) {
+          newTime = reordered[i].raceTime!.add(const Duration(minutes: 1));
+          break;
+        }
+      }
+    }
+
+    if (newTime == null || newTime == moved.raceTime) return;
+    await _runWithBusy(() => api.updateScheduleBreak(moved.id!, time: newTime!));
   }
 
   Future<void> _runWithBusy(Future<void> Function() task) async {
