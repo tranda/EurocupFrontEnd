@@ -727,51 +727,57 @@ class _GridTabState extends State<GridTab> {
     final modeLabel = isShift ? 'shifts later races' : 'parallel';
     final icon = isShift ? Icons.coffee : Icons.celebration;
 
-    return Container(
-      color: headerColor,
-      child: ListTile(
-        leading: Icon(icon, color: Colors.white, size: 24),
-        title: Row(children: [
-          Text(
-            brk.raceTime == null ? '—' : _formatTimeOnly(brk.raceTime!),
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Flexible(
-            child: Text(
-              brk.label ?? brk.stage ?? 'Break',
+    // Wrap in Column with the same trailing dividers as race cards so spacing
+    // between consecutive grid rows is consistent.
+    return Column(children: [
+      Container(
+        color: headerColor,
+        child: ListTile(
+          leading: Icon(icon, color: Colors.white, size: 24),
+          title: Row(children: [
+            Text(
+              brk.raceTime == null ? '—' : _formatTimeOnly(brk.raceTime!),
               style: const TextStyle(
                 color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
               ),
             ),
+            const SizedBox(width: 12),
+            Flexible(
+              child: Text(
+                brk.label ?? brk.stage ?? 'Break',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ]),
+          subtitle: Text(
+            '$durationLabel  ·  $modeLabel',
+            style: const TextStyle(color: Colors.white70),
           ),
-        ]),
-        subtitle: Text(
-          '$durationLabel  ·  $modeLabel',
-          style: const TextStyle(color: Colors.white70),
+          trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+            CompactIcon(
+              Icons.edit,
+              tooltip: 'Edit break',
+              onPressed: () => _editBreak(brk),
+              color: Colors.white,
+            ),
+            CompactIcon(
+              Icons.delete_outline,
+              tooltip: 'Delete break',
+              onPressed: () => _deleteBreak(brk),
+              color: Colors.white,
+            ),
+          ]),
         ),
-        trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-          CompactIcon(
-            Icons.edit,
-            tooltip: 'Edit break',
-            onPressed: () => _editBreak(brk),
-            color: Colors.white,
-          ),
-          CompactIcon(
-            Icons.delete_outline,
-            tooltip: 'Delete break',
-            onPressed: () => _deleteBreak(brk),
-            color: Colors.white,
-          ),
-        ]),
       ),
-    );
+      const Divider(height: 4),
+      const Divider(height: smallSpace),
+    ]);
   }
 
   Future<void> _addBreak() async {
