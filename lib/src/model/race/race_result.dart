@@ -6,6 +6,7 @@ class RaceResult {
   int? id;
   int? raceNumber;
   int? disciplineId;
+  int? eventId;
   DateTime? raceTime;
   String? stage; // "Round x", "Heat x", "Semifinal x", "Repechage x", "Minor Final", "Grand Final", "Final"
   String? status; // "SCHEDULED", "IN_PROGRESS", "FINISHED", "CANCELLED"
@@ -14,6 +15,11 @@ class RaceResult {
   List<CrewResult>? crewResults;
   Discipline? discipline;
   List<String>? images; // Array of image filenames to be displayed below the race
+  // Break-only fields (entryType == 'break').
+  String entryType; // 'race' | 'break'
+  int? durationSeconds;
+  String? label;
+  bool shiftSubsequent;
   DateTime? createdAt;
   DateTime? updatedAt;
 
@@ -21,6 +27,7 @@ class RaceResult {
     this.id,
     this.raceNumber,
     this.disciplineId,
+    this.eventId,
     this.raceTime,
     this.stage,
     this.status,
@@ -29,14 +36,21 @@ class RaceResult {
     this.crewResults,
     this.discipline,
     this.images,
+    this.entryType = 'race',
+    this.durationSeconds,
+    this.label,
+    this.shiftSubsequent = true,
     this.createdAt,
     this.updatedAt,
   });
+
+  bool get isBreak => entryType == 'break';
 
   factory RaceResult.fromMap(Map<String, dynamic> data) => RaceResult(
         id: data['id'] as int?,
         raceNumber: data['race_number'] as int?,
         disciplineId: data['discipline_id'] as int?,
+        eventId: data['event_id'] as int?,
         raceTime: data['race_time'] == null
             ? null
             : DateTime.parse(data['race_time'] as String),
@@ -53,6 +67,12 @@ class RaceResult {
         images: (data['images'] as List<dynamic>?)
             ?.map((e) => e as String)
             .toList(),
+        entryType: (data['entry_type'] as String?) ?? 'race',
+        durationSeconds: data['duration_seconds'] as int?,
+        label: data['label'] as String?,
+        shiftSubsequent: data['shift_subsequent'] == null
+            ? true
+            : (data['shift_subsequent'] == true || data['shift_subsequent'] == 1),
         createdAt: data['created_at'] == null
             ? null
             : DateTime.parse(data['created_at'] as String),
@@ -65,6 +85,7 @@ class RaceResult {
         'id': id,
         'race_number': raceNumber,
         'discipline_id': disciplineId,
+        'event_id': eventId,
         'race_time': raceTime?.toIso8601String(),
         'stage': stage,
         'status': status,
@@ -73,6 +94,10 @@ class RaceResult {
         'crew_results': crewResults?.map((e) => e.toMap()).toList(),
         'discipline': discipline?.toMap(),
         'images': images,
+        'entry_type': entryType,
+        'duration_seconds': durationSeconds,
+        'label': label,
+        'shift_subsequent': shiftSubsequent,
         'created_at': createdAt?.toIso8601String(),
         'updated_at': updatedAt?.toIso8601String(),
       };

@@ -1776,3 +1776,54 @@ Future<GenerationResult> seedNextRound(int disciplineId) async {
   );
   return GenerationResult.fromMap(_unwrap(res, action: 'seed next round') as Map<String, dynamic>);
 }
+
+/// Create a non-race schedule entry (lunch break, medal ceremony, etc.).
+/// When [shiftSubsequent] is true the backend pushes later same-day races
+/// back by [durationSeconds]; when false the entry runs in parallel.
+Future<RaceResult> createScheduleBreak(
+  int eventId, {
+  required DateTime time,
+  required int durationSeconds,
+  required String label,
+  bool shiftSubsequent = true,
+}) async {
+  final res = await http.post(
+    Uri.parse('$apiURL/events/$eventId/schedule/breaks'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode({
+      'race_time': time.toIso8601String(),
+      'duration_seconds': durationSeconds,
+      'label': label,
+      'shift_subsequent': shiftSubsequent,
+    }),
+  );
+  return RaceResult.fromMap(_unwrap(res, action: 'create break') as Map<String, dynamic>);
+}
+
+Future<RaceResult> updateScheduleBreak(
+  int breakId, {
+  DateTime? time,
+  int? durationSeconds,
+  String? label,
+  bool? shiftSubsequent,
+}) async {
+  final body = <String, dynamic>{};
+  if (time != null) body['race_time'] = time.toIso8601String();
+  if (durationSeconds != null) body['duration_seconds'] = durationSeconds;
+  if (label != null) body['label'] = label;
+  if (shiftSubsequent != null) body['shift_subsequent'] = shiftSubsequent;
+  final res = await http.put(
+    Uri.parse('$apiURL/schedule/breaks/$breakId'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode(body),
+  );
+  return RaceResult.fromMap(_unwrap(res, action: 'update break') as Map<String, dynamic>);
+}
+
+Future<void> deleteScheduleBreak(int breakId) async {
+  final res = await http.delete(
+    Uri.parse('$apiURL/schedule/breaks/$breakId'),
+    headers: _jsonAuthHeaders(),
+  );
+  _unwrap(res, action: 'delete break');
+}

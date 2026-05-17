@@ -406,9 +406,15 @@ class _GridTabState extends State<GridTab> {
           onChanged: (v) => setState(() => _filterStage = v),
         ),
         const Spacer(),
-        IconButton(
+        TextButton.icon(
+          onPressed: _addBreak,
+          icon: const Icon(Icons.coffee, size: 18),
+          label: const Text('Add break'),
+        ),
+        const SizedBox(width: 8),
+        CompactIcon(
+          Icons.refresh,
           tooltip: 'Refresh',
-          icon: const Icon(Icons.refresh),
           onPressed: _load,
         ),
       ]),
@@ -505,6 +511,7 @@ class _GridTabState extends State<GridTab> {
   }
 
   Widget _raceCard(RaceResult race) {
+    if (race.isBreak) return _breakCard(race);
     final raceId = race.id;
     final isExpanded = raceId != null && _expanded.contains(raceId);
     final crewByLane = <int, CrewResult>{};
@@ -708,4 +715,277 @@ class _GridTabState extends State<GridTab> {
     );
   }
 
+  // --- Break entries (lunch, ceremonies, etc.) ---
+
+  Widget _breakCard(RaceResult brk) {
+    // Distinct palette per mode: amber for shift (changes the schedule),
+    // slate-grey for parallel (informational only).
+    final isShift = brk.shiftSubsequent;
+    final headerColor = isShift ? const Color(0xFFD97706) : const Color(0xFF6B7280);
+    final duration = brk.durationSeconds ?? 0;
+    final durationLabel = _formatDuration(duration);
+    final modeLabel = isShift ? 'shifts later races' : 'parallel';
+    final icon = isShift ? Icons.coffee : Icons.celebration;
+
+    return Container(
+      color: headerColor,
+      child: ListTile(
+        leading: Icon(icon, color: Colors.white, size: 24),
+        title: Row(children: [
+          Text(
+            brk.raceTime == null ? '—' : _formatTimeOnly(brk.raceTime!),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(
+              brk.label ?? brk.stage ?? 'Break',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ),
+        ]),
+        subtitle: Text(
+          '$durationLabel  ·  $modeLabel',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+          CompactIcon(
+            Icons.edit,
+            tooltip: 'Edit break',
+            onPressed: () => _editBreak(brk),
+            color: Colors.white,
+          ),
+          CompactIcon(
+            Icons.delete_outline,
+            tooltip: 'Delete break',
+            onPressed: () => _deleteBreak(brk),
+            color: Colors.white,
+          ),
+        ]),
+      ),
+    );
+  }
+
+  Future<void> _addBreak() async {
+    final draft = await _showBreakDialog();
+    if (draft == null) return;
+    await _runWithBusy(() async {
+      await api.createScheduleBreak(
+        widget.eventId,
+        time: draft.time,
+        durationSeconds: draft.durationSeconds,
+        label: draft.label,
+        shiftSubsequent: draft.shiftSubsequent,
+      );
+    });
+  }
+
+  Future<void> _editBreak(RaceResult brk) async {
+    if (brk.id == null) return;
+    final draft = await _showBreakDialog(initial: brk);
+    if (draft == null) return;
+    await _runWithBusy(() async {
+      await api.updateScheduleBreak(
+        brk.id!,
+        time: draft.time,
+        durationSeconds: draft.durationSeconds,
+        label: draft.label,
+        shiftSubsequent: draft.shiftSubsequent,
+      );
+    });
+  }
+
+  Future<void> _deleteBreak(RaceResult brk) async {
+    if (brk.id == null) return;
+    final ok = await _confirm(
+      'Delete break?',
+      brk.shiftSubsequent
+          ? '"${brk.label ?? "Break"}" will be removed and later races will move back by ${_formatDuration(brk.durationSeconds ?? 0)}.'
+          : '"${brk.label ?? "Break"}" will be removed. Race times are not affected.',
+    );
+    if (!ok) return;
+    await _runWithBusy(() => api.deleteScheduleBreak(brk.id!));
+  }
+
+  Future<_BreakDraft?> _showBreakDialog({RaceResult? initial}) async {
+    final labelController =
+        TextEditingController(text: initial?.label ?? initial?.stage ?? 'Lunch break');
+    DateTime time = initial?.raceTime ?? _suggestBreakStart();
+    int durationMinutes = ((initial?.durationSeconds ?? 1800) / 60).round();
+    bool shiftSubsequent = initial?.shiftSubsequent ?? true;
+    final durationController =
+        TextEditingController(text: durationMinutes.toString());
+
+    return showDialog<_BreakDraft?>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          title: Text(initial == null ? 'Add break' : 'Edit break'),
+          content: SizedBox(
+            width: 380,
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              TextField(
+                controller: labelController,
+                decoration: const InputDecoration(
+                  labelText: 'Label',
+                  helperText: 'e.g. Lunch break, Medal ceremony',
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(children: [
+                const Text('Start: '),
+                Text(_formatDateTime(time)),
+                const Spacer(),
+                CompactIcon(
+                  Icons.access_time,
+                  tooltip: 'Pick time',
+                  onPressed: () async {
+                    final picked = await showTimePicker(
+                      context: ctx,
+                      initialTime: TimeOfDay.fromDateTime(time),
+                    );
+                    if (picked != null) {
+                      setLocal(() {
+                        time = DateTime(time.year, time.month, time.day,
+                            picked.hour, picked.minute);
+                      });
+                    }
+                  },
+                ),
+                CompactIcon(
+                  Icons.calendar_today,
+                  tooltip: 'Pick date',
+                  onPressed: () async {
+                    final picked = await showDatePicker(
+                      context: ctx,
+                      initialDate: time,
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime(2100),
+                    );
+                    if (picked != null) {
+                      setLocal(() {
+                        time = DateTime(picked.year, picked.month, picked.day,
+                            time.hour, time.minute);
+                      });
+                    }
+                  },
+                ),
+              ]),
+              const SizedBox(height: 8),
+              TextField(
+                controller: durationController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Duration (minutes)',
+                ),
+              ),
+              const SizedBox(height: 16),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Mode',
+                  style: Theme.of(ctx).textTheme.bodySmall,
+                ),
+              ),
+              const SizedBox(height: 4),
+              SegmentedButton<bool>(
+                segments: const [
+                  ButtonSegment(
+                    value: true,
+                    icon: Icon(Icons.coffee, size: 16),
+                    label: Text('Shift races'),
+                  ),
+                  ButtonSegment(
+                    value: false,
+                    icon: Icon(Icons.celebration, size: 16),
+                    label: Text('Parallel'),
+                  ),
+                ],
+                selected: {shiftSubsequent},
+                onSelectionChanged: (sel) =>
+                    setLocal(() => shiftSubsequent = sel.first),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                shiftSubsequent
+                    ? 'Inserting this break pushes later same-day races back by its duration.'
+                    : 'Sits alongside racing. Use for medal ceremonies, side events, etc.',
+                style: const TextStyle(fontSize: 11, color: Colors.grey),
+              ),
+            ]),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () {
+                final mins = int.tryParse(durationController.text.trim());
+                if (labelController.text.trim().isEmpty || mins == null || mins <= 0) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    const SnackBar(content: Text('Label and a positive duration are required.')),
+                  );
+                  return;
+                }
+                Navigator.pop(
+                  ctx,
+                  _BreakDraft(
+                    time: time,
+                    durationSeconds: mins * 60,
+                    label: labelController.text.trim(),
+                    shiftSubsequent: shiftSubsequent,
+                  ),
+                );
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Default-start for a new break: end of last race in the current view, else 12:00 today.
+  DateTime _suggestBreakStart() {
+    final scheduled = _races
+        .where((r) => r.raceTime != null && r.status == 'SCHEDULED')
+        .toList()
+      ..sort((a, b) => a.raceTime!.compareTo(b.raceTime!));
+    if (scheduled.isEmpty) {
+      final now = DateTime.now();
+      return DateTime(now.year, now.month, now.day, 12, 0);
+    }
+    final last = scheduled.last.raceTime!;
+    return last.add(const Duration(minutes: 15));
+  }
+
+  String _formatDuration(int seconds) {
+    if (seconds <= 0) return '0 min';
+    final minutes = (seconds / 60).round();
+    if (minutes < 60) return '$minutes min';
+    final h = minutes ~/ 60;
+    final m = minutes % 60;
+    return m == 0 ? '${h}h' : '${h}h ${m}m';
+  }
+
+}
+
+class _BreakDraft {
+  final DateTime time;
+  final int durationSeconds;
+  final String label;
+  final bool shiftSubsequent;
+  _BreakDraft({
+    required this.time,
+    required this.durationSeconds,
+    required this.label,
+    required this.shiftSubsequent,
+  });
 }
