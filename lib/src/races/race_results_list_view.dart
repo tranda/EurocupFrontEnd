@@ -44,6 +44,13 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   String _filterTeamName = '';
   String _filterCountry = '';
 
+  // Day-section fold state. Membership = expanded (mirrors _expandedRaces).
+  final Set<DateTime> _expandedDays = <DateTime>{};
+
+  // Date filter — list of day keys (DateTime with time zeroed). OR-within,
+  // AND-between with the other filters, matching the existing pattern.
+  final List<DateTime> _filterDates = [];
+
 
   /// Returns event title without year
   String _getEventTitle() {
@@ -196,10 +203,18 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
 
       setState(() {
         _raceResults = results;
+        // Default every day section to expanded so the page looks like the
+        // current flat list on first load and after refreshes. Additive: an
+        // existing fold state on a day is preserved across refreshes.
+        for (final r in results) {
+          final t = r.raceTime;
+          if (t != null) _expandedDays.add(dayKey(t));
+        }
         // If filters are active, reapply them to new data
         if (_filterAgeGroups.isNotEmpty || _filterGenderGroups.isNotEmpty ||
             _filterBoatGroups.isNotEmpty || _filterDistances.isNotEmpty ||
             _filterStages.isNotEmpty || _filterCompetitions.isNotEmpty ||
+            _filterDates.isNotEmpty ||
             _filterTeamName.isNotEmpty || _filterCountry.isNotEmpty) {
           _applyFilters();
         } else {
@@ -225,12 +240,17 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     setState(() {
       final races = _filteredRaceResults ?? _raceResults ?? [];
       _expandedRaces.addAll(races.map((race) => race.id));
+      for (final r in races) {
+        final t = r.raceTime;
+        if (t != null) _expandedDays.add(dayKey(t));
+      }
     });
   }
 
   void _collapseAll() {
     setState(() {
       _expandedRaces.clear();
+      _expandedDays.clear();
     });
   }
 
@@ -707,6 +727,15 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     print('Applying filters: Ages=$_filterAgeGroups, Genders=$_filterGenderGroups, Boats=$_filterBoatGroups, Distances=$_filterDistances, Stages=$_filterStages, Team=$_filterTeamName, Country=$_filterCountry');
 
     _filteredRaceResults = _raceResults!.where((race) {
+      // Date filter (OR logic - match any selected day). Applied first so it
+      // works for races even when discipline is null.
+      if (_filterDates.isNotEmpty) {
+        final t = race.raceTime;
+        if (t == null) return false;
+        final key = dayKey(t);
+        if (!_filterDates.any((d) => dayKey(d) == key)) return false;
+      }
+
       final discipline = race.discipline;
       if (discipline == null) return true;
 
