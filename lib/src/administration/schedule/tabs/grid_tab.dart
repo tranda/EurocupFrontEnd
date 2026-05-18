@@ -582,9 +582,9 @@ class _GridTabState extends State<GridTab> {
     final headerColor = competitionColor[0]; // deep blue, matches Race Results
 
     return Column(children: [
-      Container(
+      Material(
         color: headerColor,
-        child: ListTile(
+        child: InkWell(
           onTap: raceId == null
               ? null
               : () => setState(() {
@@ -594,75 +594,100 @@ class _GridTabState extends State<GridTab> {
                       _expanded.add(raceId);
                     }
                   }),
-          title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text(
-                '#${race.raceNumber ?? "—"}  ${race.raceTime == null ? "—" : _formatTimeOnly(race.raceTime!)}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 16,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            child: Row(children: [
+              SizedBox(
+                width: 38,
+                child: Text(
+                  '#${race.raceNumber ?? "—"}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13,
+                  ),
                 ),
               ),
-              Text(
-                race.stage ?? '',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 16,
+              SizedBox(
+                width: 48,
+                child: Text(
+                  race.raceTime == null ? '—' : _formatTimeOnly(race.raceTime!),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13,
+                  ),
                 ),
               ),
-            ]),
-            Row(children: [
-              Flexible(
+              Expanded(
                 child: Text(
                   race.discipline?.getDisplayName() ?? 'Unknown',
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 18,
+                    fontSize: 13,
                   ),
                 ),
               ),
               if (race.discipline?.competition != null &&
                   race.discipline!.competition!.isNotEmpty) ...[
-                const SizedBox(width: 10),
+                const SizedBox(width: 6),
                 _competitionBadge(race.discipline!.competition!),
               ],
-            ]),
-          ]),
-          subtitle: Text(
-            'Scheduled ($filledLanes/$_laneCount)',
-            style: const TextStyle(color: Colors.white70),
-          ),
-          trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-            CompactIcon(
-              Icons.auto_fix_high,
-              tooltip: 'Auto-fill lanes (centre-out by seed)',
-              onPressed: () => _autoFillLanes(race),
-              color: Colors.white,
-            ),
-            CompactIcon(
-              Icons.edit,
-              tooltip: 'Edit time/stage',
-              onPressed: () => _editRace(race),
-              color: Colors.white,
-            ),
-            CompactIcon(
-              Icons.delete_outline,
-              tooltip: 'Delete race',
-              onPressed: () => _deleteRace(race),
-              color: Colors.white,
-            ),
-            if (raceId != null)
-              Icon(
-                isExpanded ? Icons.expand_less : Icons.expand_more,
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 78,
+                child: Text(
+                  race.stage ?? '',
+                  textAlign: TextAlign.right,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 36,
+                child: Text(
+                  '$filledLanes/$_laneCount',
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+              ),
+              const SizedBox(width: 4),
+              CompactIcon(
+                Icons.auto_fix_high,
+                tooltip: 'Auto-fill lanes (centre-out by seed)',
+                onPressed: () => _autoFillLanes(race),
                 color: Colors.white,
               ),
-          ]),
+              CompactIcon(
+                Icons.edit,
+                tooltip: 'Edit time/stage',
+                onPressed: () => _editRace(race),
+                color: Colors.white,
+              ),
+              CompactIcon(
+                Icons.delete_outline,
+                tooltip: 'Delete race',
+                onPressed: () => _deleteRace(race),
+                color: Colors.white,
+              ),
+              if (raceId != null)
+                Icon(
+                  isExpanded ? Icons.expand_less : Icons.expand_more,
+                  color: Colors.white,
+                  size: 20,
+                ),
+            ]),
+          ),
         ),
       ),
-      const Divider(height: 4),
+      const Divider(height: 1),
       if (isExpanded)
         for (var lane = 1; lane <= _laneCount; lane++)
           _laneRow(race, lane, crewByLane[lane]),
