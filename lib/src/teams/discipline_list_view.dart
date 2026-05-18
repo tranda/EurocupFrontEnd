@@ -178,7 +178,7 @@ class _DisciplineListViewState extends State<DisciplineListView> {
                                 Flexible(
                                   child: Text(
                                     "${discipline.getDisplayName()} $inactiveStatus",
-                                    style: Theme.of(context).textTheme.bodyLarge,
+                                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white),
                                   ),
                                 ),
                                 if (discipline.competition != null &&

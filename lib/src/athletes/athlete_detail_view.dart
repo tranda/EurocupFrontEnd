@@ -677,7 +677,7 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                   leading: const Icon(Icons.camera),
                   title: Text(
                     'Camera',
-                    style: Theme.of(context).textTheme.bodyLarge,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white),
                   ),
                   onTap: () {
                     Navigator.pop(context);
@@ -688,7 +688,7 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                   leading: const Icon(Icons.photo_album),
                   title: Text(
                     'Gallery',
-                    style: Theme.of(context).textTheme.bodyLarge,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white),
                   ),
                   onTap: () {
                     Navigator.pop(context);

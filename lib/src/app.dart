@@ -175,9 +175,9 @@ class MyApp extends StatelessWidget {
               bodyLarge: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 255, 255, 255)),
+                  color: Colors.black87),
               bodyMedium: TextStyle(
-                  fontSize: 12, color: Color.fromARGB(255, 255, 255, 255)),
+                  fontSize: 12, color: Colors.black87),
               titleMedium: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.normal,
