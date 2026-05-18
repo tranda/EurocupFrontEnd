@@ -6,6 +6,7 @@ import '../../model/schedule/schedule_config.dart';
 import 'tabs/grid_tab.dart';
 import 'tabs/import_tab.dart';
 import 'tabs/plan_and_seeds_tab.dart';
+import 'tabs/register_crews_tab.dart';
 import 'tabs/setup_tab.dart';
 
 class ScheduleBuilderPage extends StatefulWidget {
@@ -28,7 +29,7 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -141,6 +142,7 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
             isScrollable: true,
             tabs: const [
               Tab(text: 'Setup', icon: Icon(Icons.tune)),
+              Tab(text: 'Register Crews', icon: Icon(Icons.group_add)),
               Tab(text: 'Plan & Seeds', icon: Icon(Icons.format_list_numbered)),
               Tab(text: 'Grid', icon: Icon(Icons.grid_on)),
               Tab(text: 'Import', icon: Icon(Icons.file_upload)),
@@ -173,6 +175,7 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
       controller: _tabController,
       children: [
         SetupTab(eventId: _event!.id!, config: _config!, onChanged: _loadConfig),
+        RegisterCrewsTab(eventId: _event!.id!),
         PlanAndSeedsTab(eventId: _event!.id!),
         GridTab(eventId: _event!.id!, config: _config!),
         ImportTab(eventId: _event!.id!),

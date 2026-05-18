@@ -1835,3 +1835,20 @@ Future<void> deleteScheduleBreak(int breakId) async {
   );
   _unwrap(res, action: 'delete break');
 }
+
+/// Bulk-register crews for an event from a CSV matrix. Set [dryRun] true to
+/// preview without committing — the backend rolls back the transaction.
+/// Returns a summary map: matched_count, crews_created, crews_skipped_existing,
+/// disciplines_created, unmatched_teams[], warnings[].
+Future<Map<String, dynamic>> importCrewRegistrations(
+  int eventId, {
+  required String csv,
+  bool dryRun = false,
+}) async {
+  final res = await http.post(
+    Uri.parse('$apiURL/events/$eventId/registrations/import'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode({'csv': csv, 'dry_run': dryRun}),
+  );
+  return _unwrap(res, action: 'import registrations') as Map<String, dynamic>;
+}
