@@ -1473,10 +1473,12 @@ Future<void> updateScheduleConfig(
   int eventId, {
   int? laneCount,
   int? defaultRounds,
+  int? minCrewsPerRace,
 }) async {
   final body = <String, dynamic>{};
   if (laneCount != null) body['lane_count'] = laneCount;
   if (defaultRounds != null) body['default_rounds'] = defaultRounds;
+  if (minCrewsPerRace != null) body['min_crews_per_race'] = minCrewsPerRace;
   if (body.isEmpty) return;
   final res = await http.put(
     Uri.parse('$apiURL/events/$eventId/schedule-config'),

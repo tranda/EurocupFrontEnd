@@ -27,6 +27,7 @@ class SetupTab extends StatefulWidget {
 class _SetupTabState extends State<SetupTab> {
   late int _laneCount;
   late int _defaultRounds;
+  late int _minCrewsPerRace;
   bool _saving = false;
 
   @override
@@ -34,6 +35,7 @@ class _SetupTabState extends State<SetupTab> {
     super.initState();
     _laneCount = widget.config.laneCount;
     _defaultRounds = widget.config.defaultRounds;
+    _minCrewsPerRace = widget.config.minCrewsPerRace;
   }
 
   @override
@@ -44,6 +46,9 @@ class _SetupTabState extends State<SetupTab> {
     }
     if (oldWidget.config.defaultRounds != widget.config.defaultRounds) {
       _defaultRounds = widget.config.defaultRounds;
+    }
+    if (oldWidget.config.minCrewsPerRace != widget.config.minCrewsPerRace) {
+      _minCrewsPerRace = widget.config.minCrewsPerRace;
     }
   }
 
@@ -68,6 +73,11 @@ class _SetupTabState extends State<SetupTab> {
   Future<void> _saveDefaultRounds(int v) async {
     setState(() => _defaultRounds = v);
     await _runWithLoading(() => api.updateScheduleConfig(widget.eventId, defaultRounds: v));
+  }
+
+  Future<void> _saveMinCrewsPerRace(int v) async {
+    setState(() => _minCrewsPerRace = v);
+    await _runWithLoading(() => api.updateScheduleConfig(widget.eventId, minCrewsPerRace: v));
   }
 
   Future<void> _addDay() async {
@@ -321,6 +331,8 @@ class _SetupTabState extends State<SetupTab> {
           _laneCountCard(),
           const SizedBox(height: 12),
           _defaultRoundsCard(),
+          const SizedBox(height: 12),
+          _minCrewsPerRaceCard(),
           const SizedBox(height: 16),
           ...(widget.config.days.toList()..sort((a, b) => a.date.compareTo(b.date))).map(_dayCard),
           const SizedBox(height: 8),
@@ -396,6 +408,39 @@ class _SetupTabState extends State<SetupTab> {
             ],
             onChanged: _saving ? null : (v) {
               if (v != null) _saveDefaultRounds(v);
+            },
+          ),
+        ]),
+      ),
+    );
+  }
+
+  Widget _minCrewsPerRaceCard() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+          const Icon(Icons.groups, color: Color.fromARGB(255, 0, 80, 150)),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Min crews per race', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                'Disciplines with fewer crews than this are auto-marked inactive '
+                'after every registration import.',
+                style: TextStyle(fontSize: 11, color: Colors.grey),
+              ),
+            ]),
+          ),
+          const SizedBox(width: 12),
+          DropdownButton<int>(
+            value: _minCrewsPerRace,
+            items: [
+              for (final n in const [1, 2, 3, 4, 5, 6, 7, 8])
+                DropdownMenuItem(value: n, child: Text('$n crew${n == 1 ? "" : "s"}')),
+            ],
+            onChanged: _saving ? null : (v) {
+              if (v != null) _saveMinCrewsPerRace(v);
             },
           ),
         ]),

@@ -339,6 +339,9 @@ class _ResultPanel extends StatelessWidget {
     final unregistered = (result['crews_unregistered'] ?? 0) as int;
     final matched = (result['matched_count'] ?? 0) as int;
     final discCreated = (result['disciplines_created'] ?? 0) as int;
+    final discActivated = (result['disciplines_activated'] ?? 0) as int;
+    final discDeactivated = (result['disciplines_deactivated'] ?? 0) as int;
+    final minCrews = (result['min_crews_per_race'] ?? 0) as int;
     final sections = (result['sections_parsed'] ?? 0) as int;
     final syncMode = (result['sync_mode'] ?? false) == true;
     final unregisteredPairs = ((result['unregistered_pairs'] ?? const []) as List)
@@ -386,6 +389,8 @@ class _ResultPanel extends StatelessWidget {
           _row(dryRun ? 'Crews to create' : 'Crews created', created),
           _row('Crews already registered (skipped)', skipped),
           _row('Disciplines auto-created', discCreated),
+          _row('Disciplines activated (≥ $minCrews crews)', discActivated),
+          _row('Disciplines deactivated (< $minCrews crews)', discDeactivated),
           if (syncMode)
             _row(dryRun ? 'Crews to unregister' : 'Crews unregistered', unregistered),
           if (unregisteredPairs.isNotEmpty) ...[
