@@ -327,8 +327,8 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   Widget _buildActiveFiltersChips() {
     final hasFilters = _filterAgeGroups.isNotEmpty || _filterGenderGroups.isNotEmpty ||
         _filterBoatGroups.isNotEmpty || _filterDistances.isNotEmpty ||
-        _filterStages.isNotEmpty || _filterTeamName.isNotEmpty ||
-        _filterCountry.isNotEmpty;
+        _filterStages.isNotEmpty || _filterDates.isNotEmpty ||
+        _filterTeamName.isNotEmpty || _filterCountry.isNotEmpty;
 
     if (!hasFilters) return const SizedBox.shrink();
 
@@ -340,6 +340,21 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
         runSpacing: 4,
         alignment: WrapAlignment.start,
         children: [
+          // Date chips
+          ..._filterDates.map((d) => Chip(
+                label: Text('Date: ${DateFormat('EEE, d MMM').format(d)}',
+                    style: const TextStyle(fontSize: 11)),
+                deleteIcon: const Icon(Icons.close, size: 16),
+                onDeleted: () {
+                  setState(() {
+                    _filterDates.removeWhere(
+                        (td) => dayKey(td) == dayKey(d));
+                    _applyFilters();
+                  });
+                },
+                backgroundColor: Colors.indigo.shade50,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              )),
           // Age group chips
           ..._filterAgeGroups.map((age) => Chip(
             label: Text('Age: $age', style: const TextStyle(fontSize: 11)),
@@ -439,6 +454,16 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   }
 
   void _showFilters() {
+    // Populate available race dates from the loaded race results.
+    final dateSet = <DateTime>{};
+    if (_raceResults != null) {
+      for (final race in _raceResults!) {
+        final t = race.raceTime;
+        if (t != null) dateSet.add(dayKey(t));
+      }
+    }
+    final availableDates = dateSet.toList()..sort();
+
     // Populate available stages from current race results
     final stages = <String>{};
     if (_raceResults != null) {
@@ -451,6 +476,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     final availableStages = stages.toList()..sort();
 
     // Create local copies of filter values for the dialog (lists for multiselect)
+    List<DateTime> tempDates = List<DateTime>.from(_filterDates);
     List<String> tempAgeGroups = List.from(_filterAgeGroups);
     List<String> tempGenderGroups = List.from(_filterGenderGroups);
     List<String> tempBoatGroups = List.from(_filterBoatGroups);
@@ -475,6 +501,41 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Date filter (multiselect with chips) — placed first
+                    // because it is the most coarse-grained.
+                    if (availableDates.isNotEmpty) ...[
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Date',
+                              style: TextStyle(fontSize: 12, color: Colors.black54)),
+                          const SizedBox(height: 4),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: availableDates.map((d) {
+                              final isSelected =
+                                  tempDates.any((td) => dayKey(td) == d);
+                              return FilterChip(
+                                label: Text(DateFormat('EEE, d MMM').format(d)),
+                                selected: isSelected,
+                                onSelected: (selected) {
+                                  setDialogState(() {
+                                    if (selected) {
+                                      tempDates.add(d);
+                                    } else {
+                                      tempDates
+                                          .removeWhere((td) => dayKey(td) == d);
+                                    }
+                                  });
+                                },
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     // Age Group filter (multiselect with chips)
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -660,6 +721,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                 TextButton(
                   onPressed: () {
                     setDialogState(() {
+                      tempDates.clear();
                       tempAgeGroups.clear();
                       tempGenderGroups.clear();
                       tempBoatGroups.clear();
@@ -683,6 +745,8 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                     Navigator.of(context).pop();
                     setState(() {
                       // Copy temp values to actual filter state
+                      _filterDates.clear();
+                      _filterDates.addAll(tempDates);
                       _filterAgeGroups.clear();
                       _filterAgeGroups.addAll(tempAgeGroups);
                       _filterGenderGroups.clear();
@@ -702,6 +766,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                       final hasActiveFilters = _filterAgeGroups.isNotEmpty || _filterGenderGroups.isNotEmpty ||
                           _filterBoatGroups.isNotEmpty || _filterDistances.isNotEmpty ||
                           _filterStages.isNotEmpty || _filterCompetitions.isNotEmpty ||
+                          _filterDates.isNotEmpty ||
                           _filterTeamName.isNotEmpty || _filterCountry.isNotEmpty;
                       // Expand all if filters are active, collapse all if no filters
                       if (hasActiveFilters) {
