@@ -1844,11 +1844,12 @@ Future<Map<String, dynamic>> importCrewRegistrations(
   int eventId, {
   required String csv,
   bool dryRun = false,
+  bool sync = false,
 }) async {
   final res = await http.post(
     Uri.parse('$apiURL/events/$eventId/registrations/import'),
     headers: _jsonAuthHeaders(),
-    body: jsonEncode({'csv': csv, 'dry_run': dryRun}),
+    body: jsonEncode({'csv': csv, 'dry_run': dryRun, 'sync': sync}),
   );
   return _unwrap(res, action: 'import registrations') as Map<String, dynamic>;
 }

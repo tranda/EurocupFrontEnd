@@ -21,6 +21,7 @@ class _RegisterCrewsTabState extends State<RegisterCrewsTab> {
   final TextEditingController _matrixController = TextEditingController();
   String? _fileName;
   bool _busy = false;
+  bool _syncMode = false;
   Map<String, dynamic>? _lastResult;
   bool _lastWasDryRun = false;
   String? _errorMessage;
@@ -85,6 +86,7 @@ class _RegisterCrewsTabState extends State<RegisterCrewsTab> {
         widget.eventId,
         csv: csv,
         dryRun: dryRun,
+        sync: _syncMode,
       );
       setState(() {
         _lastResult = result;
@@ -152,6 +154,24 @@ class _RegisterCrewsTabState extends State<RegisterCrewsTab> {
             ),
           ),
           const SizedBox(height: 12),
+          CheckboxListTile(
+            value: _syncMode,
+            onChanged: _busy ? null : (v) => setState(() => _syncMode = v ?? false),
+            controlAffinity: ListTileControlAffinity.leading,
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            title: const Text(
+              'Sync mode (destructive)',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            subtitle: const Text(
+              'Also unregister teams whose cell is empty in the CSV. '
+              'Only touches teams/disciplines that appear in the CSV; '
+              'crews outside the CSV scope are left alone.',
+              style: TextStyle(fontSize: 12),
+            ),
+          ),
+          const SizedBox(height: 8),
           Row(children: [
             ElevatedButton.icon(
               onPressed: _busy ? null : () => _run(true),
@@ -162,11 +182,13 @@ class _RegisterCrewsTabState extends State<RegisterCrewsTab> {
             ElevatedButton.icon(
               onPressed: _busy ? null : () => _run(false),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 0, 80, 150),
+                backgroundColor: _syncMode
+                    ? Colors.red.shade700
+                    : const Color.fromARGB(255, 0, 80, 150),
                 foregroundColor: Colors.white,
               ),
-              icon: const Icon(Icons.cloud_upload),
-              label: const Text('Import'),
+              icon: Icon(_syncMode ? Icons.sync : Icons.cloud_upload),
+              label: Text(_syncMode ? 'Import + Sync' : 'Import'),
             ),
           ]),
           if (_errorMessage != null) ...[
@@ -207,9 +229,14 @@ class _ResultPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final created = (result['crews_created'] ?? 0) as int;
     final skipped = (result['crews_skipped_existing'] ?? 0) as int;
+    final unregistered = (result['crews_unregistered'] ?? 0) as int;
     final matched = (result['matched_count'] ?? 0) as int;
     final discCreated = (result['disciplines_created'] ?? 0) as int;
     final sections = (result['sections_parsed'] ?? 0) as int;
+    final syncMode = (result['sync_mode'] ?? false) == true;
+    final unregisteredPairs = ((result['unregistered_pairs'] ?? const []) as List)
+        .map((e) => e.toString())
+        .toList();
     final unmatchedTeams = ((result['unmatched_teams'] ?? const []) as List)
         .map((e) => e.toString())
         .toList();
@@ -243,6 +270,33 @@ class _ResultPanel extends StatelessWidget {
           _row(dryRun ? 'Crews to create' : 'Crews created', created),
           _row('Crews already registered (skipped)', skipped),
           _row('Disciplines auto-created', discCreated),
+          if (syncMode)
+            _row(dryRun ? 'Crews to unregister' : 'Crews unregistered', unregistered),
+          if (unregisteredPairs.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              dryRun
+                  ? 'Would unregister (team — discipline):'
+                  : 'Unregistered (team — discipline):',
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Colors.red,
+              ),
+            ),
+            const SizedBox(height: 4),
+            ...unregisteredPairs.take(50).map((p) => Padding(
+                  padding: const EdgeInsets.only(left: 12, top: 2),
+                  child: Text('• $p', style: const TextStyle(fontSize: 12)),
+                )),
+            if (unregisteredPairs.length > 50)
+              Padding(
+                padding: const EdgeInsets.only(left: 12, top: 2),
+                child: Text(
+                  '… and ${unregisteredPairs.length - 50} more.',
+                  style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                ),
+              ),
+          ],
           if (unmatchedTeams.isNotEmpty) ...[
             const SizedBox(height: 12),
             const Text(
