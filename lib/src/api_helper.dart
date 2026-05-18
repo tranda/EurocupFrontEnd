@@ -1853,3 +1853,20 @@ Future<Map<String, dynamic>> importCrewRegistrations(
   );
   return _unwrap(res, action: 'import registrations') as Map<String, dynamic>;
 }
+
+/// Create a team in a specific club. Used by the Register Crews tab to
+/// resolve unmatched teams without leaving the screen. The existing
+/// createTeam helper doesn't return the created row, so we have our own.
+Future<void> createTeamForImport(String name, int clubId) async {
+  final res = await http.post(
+    Uri.parse('$apiURL/team'),
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': 'Bearer $token',
+    },
+    body: {'name': name, 'club_id': clubId.toString()},
+  );
+  if (res.statusCode != 200) {
+    throw Exception('Failed to create team (${res.statusCode}): ${res.body}');
+  }
+}

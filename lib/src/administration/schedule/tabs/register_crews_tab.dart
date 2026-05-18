@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
+import 'package:eurocup_frontend/src/model/club/club.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -205,7 +206,11 @@ class _RegisterCrewsTabState extends State<RegisterCrewsTab> {
           ],
           if (_lastResult != null) ...[
             const SizedBox(height: 16),
-            _ResultPanel(result: _lastResult!, dryRun: _lastWasDryRun),
+            _ResultPanel(
+              result: _lastResult!,
+              dryRun: _lastWasDryRun,
+              onRequestPreview: _busy ? null : () => _run(true),
+            ),
           ],
         ]),
       ),
@@ -223,7 +228,12 @@ class _RegisterCrewsTabState extends State<RegisterCrewsTab> {
 class _ResultPanel extends StatelessWidget {
   final Map<String, dynamic> result;
   final bool dryRun;
-  const _ResultPanel({required this.result, required this.dryRun});
+  final VoidCallback? onRequestPreview;
+  const _ResultPanel({
+    required this.result,
+    required this.dryRun,
+    this.onRequestPreview,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -238,7 +248,16 @@ class _ResultPanel extends StatelessWidget {
         .map((e) => e.toString())
         .toList();
     final unmatchedTeams = ((result['unmatched_teams'] ?? const []) as List)
-        .map((e) => e.toString())
+        .map<_UnmatchedTeam>((e) {
+          if (e is Map) {
+            return _UnmatchedTeam(
+              teamName: (e['team_name'] ?? '').toString(),
+              clubName: (e['club_name'] ?? '').toString(),
+            );
+          }
+          // Backward compat: older payloads sent a formatted string.
+          return _UnmatchedTeam(teamName: e.toString(), clubName: '');
+        })
         .toList();
     final warnings = ((result['warnings'] ?? const []) as List)
         .map((e) => e.toString())
@@ -299,15 +318,10 @@ class _ResultPanel extends StatelessWidget {
           ],
           if (unmatchedTeams.isNotEmpty) ...[
             const SizedBox(height: 12),
-            const Text(
-              'Unmatched teams (not in DB — add them in Admin first):',
-              style: TextStyle(fontWeight: FontWeight.w600),
+            _UnmatchedTeamsSection(
+              teams: unmatchedTeams,
+              onTeamCreated: onRequestPreview,
             ),
-            const SizedBox(height: 4),
-            ...unmatchedTeams.map((t) => Padding(
-                  padding: const EdgeInsets.only(left: 12, top: 2),
-                  child: Text('• $t', style: const TextStyle(fontSize: 12)),
-                )),
           ],
           if (warnings.isNotEmpty) ...[
             const SizedBox(height: 12),
@@ -342,6 +356,185 @@ class _ResultPanel extends StatelessWidget {
         Text(
           '$n',
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
+      ]),
+    );
+  }
+}
+
+class _UnmatchedTeam {
+  final String teamName;
+  final String clubName;
+  const _UnmatchedTeam({required this.teamName, required this.clubName});
+}
+
+/// Per-row UI for unmatched teams: shows the CSV's team/club, a dropdown
+/// of existing clubs (auto-preselected if the CSV club name matches one
+/// case-insensitively), and a "Create team" button. After a successful
+/// create, calls [onTeamCreated] so the parent can re-run preview and
+/// pick up the now-matched team on the next pass.
+class _UnmatchedTeamsSection extends StatefulWidget {
+  final List<_UnmatchedTeam> teams;
+  final VoidCallback? onTeamCreated;
+  const _UnmatchedTeamsSection({required this.teams, this.onTeamCreated});
+
+  @override
+  State<_UnmatchedTeamsSection> createState() => _UnmatchedTeamsSectionState();
+}
+
+class _UnmatchedTeamsSectionState extends State<_UnmatchedTeamsSection> {
+  List<Club>? _clubs;
+  String? _loadError;
+  final Map<int, int?> _selectedClubId = {};
+  final Set<int> _busyRows = {};
+  final Set<int> _doneRows = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadClubs();
+  }
+
+  Future<void> _loadClubs() async {
+    try {
+      final clubs = await api.getClubs();
+      clubs.sort((a, b) =>
+          (a.name ?? '').toLowerCase().compareTo((b.name ?? '').toLowerCase()));
+      if (!mounted) return;
+      setState(() {
+        _clubs = clubs;
+        for (var i = 0; i < widget.teams.length; i++) {
+          final csvClub = widget.teams[i].clubName.trim().toLowerCase();
+          if (csvClub.isEmpty) continue;
+          final match = clubs.firstWhere(
+            (c) => (c.name ?? '').trim().toLowerCase() == csvClub,
+            orElse: () => const Club(),
+          );
+          if (match.id != null) {
+            _selectedClubId[i] = match.id;
+          }
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loadError = 'Could not load clubs: $e');
+    }
+  }
+
+  Future<void> _createTeam(int rowIndex) async {
+    final clubId = _selectedClubId[rowIndex];
+    if (clubId == null) return;
+    final team = widget.teams[rowIndex];
+    setState(() => _busyRows.add(rowIndex));
+    try {
+      await api.createTeamForImport(team.teamName, clubId);
+      if (!mounted) return;
+      setState(() {
+        _doneRows.add(rowIndex);
+        _busyRows.remove(rowIndex);
+      });
+      widget.onTeamCreated?.call();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _busyRows.remove(rowIndex));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to create team: $e')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Text(
+        'Unmatched teams (not in DB)',
+        style: TextStyle(fontWeight: FontWeight.w600),
+      ),
+      const SizedBox(height: 2),
+      const Text(
+        'Pick the club each team belongs to and click Create. Re-run '
+        'Preview afterwards to pick them up.',
+        style: TextStyle(fontSize: 11, color: Colors.black54),
+      ),
+      const SizedBox(height: 8),
+      if (_loadError != null)
+        Text(_loadError!, style: const TextStyle(color: Colors.red, fontSize: 12))
+      else if (_clubs == null)
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: SizedBox(
+            height: 16,
+            width: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        )
+      else
+        ...List.generate(widget.teams.length, (i) => _buildRow(i)),
+    ]);
+  }
+
+  Widget _buildRow(int i) {
+    final team = widget.teams[i];
+    final done = _doneRows.contains(i);
+    final busy = _busyRows.contains(i);
+    final selectedId = _selectedClubId[i];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+        SizedBox(
+          width: 180,
+          child: Text(
+            team.clubName.isEmpty
+                ? team.teamName
+                : '${team.teamName}\n(${team.clubName})',
+            style: const TextStyle(fontSize: 12),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: DropdownButtonFormField<int>(
+            value: selectedId,
+            isDense: true,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              labelText: 'Club',
+            ),
+            items: _clubs!
+                .where((c) => c.id != null)
+                .map((c) => DropdownMenuItem<int>(
+                      value: c.id,
+                      child: Text(
+                        c.name ?? '(unnamed)',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ))
+                .toList(),
+            onChanged: done || busy
+                ? null
+                : (v) => setState(() => _selectedClubId[i] = v),
+          ),
+        ),
+        const SizedBox(width: 8),
+        SizedBox(
+          width: 110,
+          child: done
+              ? const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(Icons.check_circle, color: Colors.green, size: 18),
+                  SizedBox(width: 4),
+                  Text('Created', style: TextStyle(fontSize: 12, color: Colors.green)),
+                ])
+              : ElevatedButton(
+                  onPressed: busy || selectedId == null ? null : () => _createTeam(i),
+                  child: busy
+                      ? const SizedBox(
+                          height: 14,
+                          width: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Create team'),
+                ),
         ),
       ]),
     );
