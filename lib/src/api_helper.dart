@@ -1845,13 +1845,31 @@ Future<Map<String, dynamic>> importCrewRegistrations(
   required String csv,
   bool dryRun = false,
   bool sync = false,
+  List<Map<String, dynamic>>? teamMappings,
 }) async {
+  final body = <String, dynamic>{
+    'csv': csv,
+    'dry_run': dryRun,
+    'sync': sync,
+  };
+  if (teamMappings != null && teamMappings.isNotEmpty) {
+    body['team_mappings'] = teamMappings;
+  }
   final res = await http.post(
     Uri.parse('$apiURL/events/$eventId/registrations/import'),
     headers: _jsonAuthHeaders(),
-    body: jsonEncode({'csv': csv, 'dry_run': dryRun, 'sync': sync}),
+    body: jsonEncode(body),
   );
   return _unwrap(res, action: 'import registrations') as Map<String, dynamic>;
+}
+
+Future<int> clearAllCrewRegistrations(int eventId) async {
+  final res = await http.delete(
+    Uri.parse('$apiURL/events/$eventId/registrations'),
+    headers: _jsonAuthHeaders(),
+  );
+  final data = _unwrap(res, action: 'clear registrations') as Map<String, dynamic>;
+  return (data['crews_deleted'] ?? 0) as int;
 }
 
 /// Create a team in a specific club. Used by the Register Crews tab to
