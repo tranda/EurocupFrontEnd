@@ -1346,170 +1346,265 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
       );
     }
 
-    final races = _filteredRaceResults ?? _raceResults ?? [];
-    print('Building UI - using ${_filteredRaceResults != null ? "FILTERED" : "UNFILTERED"} results: ${races.length} races');
-    races.sort((a, b) => (a.raceNumber ?? 0).compareTo(b.raceNumber ?? 0));
+    final items = _buildRenderItems();
+    print('Building UI - using ${_filteredRaceResults != null ? "FILTERED" : "UNFILTERED"} results: ${items.whereType<_RaceItem>().length} race rows in ${items.whereType<_DayHeaderItem>().length} day sections');
 
     return RefreshIndicator(
       onRefresh: _refreshResults,
       child: ListView.builder(
-        itemCount: races.isEmpty ? 2 : races.length + 1, // +1 for header, +1 for empty message if no races
+        itemCount: items.length,
         itemBuilder: (context, index) {
-        // First item is the header
-        if (index == 0) {
-          return Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: Colors.white,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  _getEventFullName(),
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    color: Colors.black87,
-                    fontWeight: FontWeight.bold,
+          final item = items[index];
+          if (item is _HeaderItem) {
+            return _buildScreenHeader();
+          }
+          if (item is _EmptyItem) {
+            return Container(
+              padding: const EdgeInsets.all(32),
+              child: Center(
+                child: Text(
+                  _filteredRaceResults != null
+                      ? 'No race results match your filters'
+                      : 'No race results available',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: Colors.black54,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Left side: Expand/Collapse/Filter buttons
-                    Row(
-                      children: [
-                        ElevatedButton(
-                          onPressed: _expandAll,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1],
-                            foregroundColor: Colors.white,
-                            minimumSize: const Size(80, 28),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                            textStyle: const TextStyle(fontSize: 12),
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: const Text('Expand All'),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: _collapseAll,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1],
-                            foregroundColor: Colors.white,
-                            minimumSize: const Size(80, 28),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                            textStyle: const TextStyle(fontSize: 12),
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: const Text('Collapse All'),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: _showFilters,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1],
-                            foregroundColor: Colors.white,
-                            minimumSize: const Size(70, 28),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                            textStyle: const TextStyle(fontSize: 12),
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: const Text('Filters'),
-                        ),
-                        ..._buildCompetitionChips(),
-                      ],
-                    ),
-                    // Right side: Export PDF button in green
-                    ElevatedButton(
-                      onPressed: _exportToPDF,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(80, 28),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        textStyle: const TextStyle(fontSize: 12),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: const Text('Export PDF'),
-                    ),
-                  ],
-                ),
-                // Active filters chips display
-                _buildActiveFiltersChips(),
-              ],
-            ),
-          );
-        }
-
-        // If there are no races, show a message
-        if (races.isEmpty && index == 1) {
-          return Container(
-            padding: const EdgeInsets.all(32),
-            child: Center(
-              child: Text(
-                _filteredRaceResults != null
-                    ? 'No race results match your filters'
-                    : 'No race results available',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Colors.black54,
                 ),
               ),
-            ),
-          );
-        }
-
-        // Adjust index for race results (subtract 1 because of header)
-        final raceResult = races[index - 1];
-        try {
-          final discipline = raceResult.discipline;
-          
-          final isExpanded = _expandedRaces.contains(raceResult.id);
-          final crewResults = raceResult.crewResults ?? [];
-          
-          // Calculate positions based on time and sort crew results
-          final isFinal = _isFinalStage(raceResult);
-          _calculatePositions(crewResults, isFinalRound: isFinal);
-
-          // Sort crew results based on position
-          if (isFinal) {
-            // For final rounds, sort by position (based on accumulated final times)
-            crewResults.sort((a, b) {
-              final aPos = a.position;
-              final bPos = b.position;
-              if (aPos == null && bPos == null) {
-                // If both have no position, sort by final time if available
-                if (a.finalTimeMs != null && b.finalTimeMs != null) {
-                  return a.finalTimeMs!.compareTo(b.finalTimeMs!);
-                }
-                return 0;
-              }
-              if (aPos == null) return 1;
-              if (bPos == null) return -1;
-              return aPos.compareTo(bPos);
-            });
-          } else {
-            // For regular rounds, sort by current round position
-            crewResults.sort((a, b) {
-              if (a.position == null && b.position == null) return 0;
-              if (a.position == null) return 1;
-              if (b.position == null) return -1;
-              return a.position!.compareTo(b.position!);
-            });
+            );
           }
+          if (item is _DayHeaderItem) {
+            return _buildDayHeader(item);
+          }
+          if (item is _RaceItem) {
+            return _buildRaceRow(item.race);
+          }
+          return const SizedBox.shrink();
+        },
+      ),
+    );
+  }
 
-          return Column(
+  /// Builds the flat render-item list consumed by ListView.builder.
+  /// Always emits a header. Day sections appear in chronological order.
+  /// A day's race items are only emitted when the day is expanded.
+  List<_RenderItem> _buildRenderItems() {
+    final items = <_RenderItem>[const _HeaderItem()];
+
+    final races = List<RaceResult>.from(_filteredRaceResults ?? _raceResults ?? []);
+    races.sort((a, b) => (a.raceNumber ?? 0).compareTo(b.raceNumber ?? 0));
+
+    final grouped = groupRacesByDay(races);
+
+    if (grouped.isEmpty) {
+      items.add(const _EmptyItem());
+      return items;
+    }
+
+    grouped.forEach((day, dayRaces) {
+      items.add(_DayHeaderItem(day, dayRaces.length));
+      if (_expandedDays.contains(day)) {
+        for (final r in dayRaces) {
+          items.add(_RaceItem(r));
+        }
+      }
+    });
+
+    return items;
+  }
+
+  Widget _buildDayHeader(_DayHeaderItem item) {
+    final color = competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1];
+    final isExpanded = _expandedDays.contains(item.day);
+    final dateText = DateFormat('EEEE, d MMM yyyy').format(item.day);
+    return Material(
+      color: color,
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            if (isExpanded) {
+              _expandedDays.remove(item.day);
+            } else {
+              _expandedDays.add(item.day);
+            }
+          });
+        },
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(color: Colors.white.withOpacity(0.4), width: 1),
+              bottom: BorderSide(color: Colors.white.withOpacity(0.4), width: 1),
+            ),
+          ),
+          child: Row(
             children: [
-                Container(
-                  color: competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1],
-                  child: ListTile(
-                    onTap: crewResults.isEmpty ? () {
+              Icon(
+                isExpanded ? Icons.expand_more : Icons.chevron_right,
+                color: Colors.white,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  dateText,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ),
+              Text(
+                '${item.raceCount} race${item.raceCount == 1 ? '' : 's'}',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.85),
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScreenHeader() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: Colors.white,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            _getEventFullName(),
+            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+              color: Colors.black87,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Left side: Expand/Collapse/Filter buttons
+              Row(
+                children: [
+                  ElevatedButton(
+                    onPressed: _expandAll,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1],
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(80, 28),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      textStyle: const TextStyle(fontSize: 12),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: const Text('Expand All'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: _collapseAll,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1],
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(80, 28),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      textStyle: const TextStyle(fontSize: 12),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: const Text('Collapse All'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: _showFilters,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1],
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(70, 28),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      textStyle: const TextStyle(fontSize: 12),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: const Text('Filters'),
+                  ),
+                  ..._buildCompetitionChips(),
+                ],
+              ),
+              // Right side: Export PDF button in green
+              ElevatedButton(
+                onPressed: _exportToPDF,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(80, 28),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  textStyle: const TextStyle(fontSize: 12),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Text('Export PDF'),
+              ),
+            ],
+          ),
+          // Active filters chips display
+          _buildActiveFiltersChips(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRaceRow(RaceResult raceResult) {
+    try {
+      final discipline = raceResult.discipline;
+
+      final isExpanded = _expandedRaces.contains(raceResult.id);
+      final crewResults = raceResult.crewResults ?? [];
+
+      // Calculate positions based on time and sort crew results
+      final isFinal = _isFinalStage(raceResult);
+      _calculatePositions(crewResults, isFinalRound: isFinal);
+
+      // Sort crew results based on position
+      if (isFinal) {
+        crewResults.sort((a, b) {
+          final aPos = a.position;
+          final bPos = b.position;
+          if (aPos == null && bPos == null) {
+            if (a.finalTimeMs != null && b.finalTimeMs != null) {
+              return a.finalTimeMs!.compareTo(b.finalTimeMs!);
+            }
+            return 0;
+          }
+          if (aPos == null) return 1;
+          if (bPos == null) return -1;
+          return aPos.compareTo(bPos);
+        });
+      } else {
+        crewResults.sort((a, b) {
+          if (a.position == null && b.position == null) return 0;
+          if (a.position == null) return 1;
+          if (b.position == null) return -1;
+          return a.position!.compareTo(b.position!);
+        });
+      }
+
+      return Column(
+        children: [
+          Container(
+            color: competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1],
+            child: ListTile(
+              onTap: crewResults.isEmpty
+                  ? () {
                       Navigator.pushNamed(
                         context,
                         RaceResultDetailView.routeName,
                         arguments: {'raceResultId': raceResult.id},
                       );
-                    } : () {
+                    }
+                  : () {
                       setState(() {
                         if (isExpanded) {
                           _expandedRaces.remove(raceResult.id);
@@ -1518,147 +1613,140 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                         }
                       });
                     },
-                    leading: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _getEventTitle(),
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+              leading: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _getEventTitle(),
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
-                        Text(
-                          _getEventYear(),
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ],
-                    ),
-                    title: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '#${raceResult.raceNumber} ${raceResult.raceTimeDisplay}',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                                fontSize: 16,
-                              ),
-                            ),
-                            Text(
-                              '${raceResult.stage}',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                discipline?.getDisplayName() ?? 'Unknown',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
-                                ),
-                              ),
-                            ),
-                            if (discipline?.competition != null &&
-                                discipline!.competition!.isNotEmpty) ...[
-                              const SizedBox(width: 10),
-                              _competitionBadge(discipline.competition!),
-                            ],
-                          ],
-                        ),
-                      ],
-                    ),
-                    subtitle: Text(
-                      '${raceResult.statusDisplay} (${crewResults.length})',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white70,
-                      ),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (crewResults.isNotEmpty)
-                          Icon(
-                            isExpanded ? Icons.expand_less : Icons.expand_more,
-                            color: Colors.white,
-                          ),
-                        const SizedBox(width: 8),
-                        InkWell(
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              RaceResultDetailView.routeName,
-                              arguments: {'raceResultId': raceResult.id},
-                            );
-                          },
-                          child: const Icon(Icons.arrow_forward, color: Colors.white),
-                        ),
-                      ],
-                    ),
                   ),
-                ),
-                const Divider(
-                  height: 4,
-                ),
-
-                // Expandable crew results section
-                if (isExpanded && crewResults.isNotEmpty)
-                  Column(
+                  Text(
+                    _getEventYear(),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.white70,
+                        ),
+                  ),
+                ],
+              ),
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      ...crewResults.map((crewResult) => _buildCrewResultItem(context, crewResult, raceResult, isFinal)),
+                      Text(
+                        '#${raceResult.raceNumber} ${raceResult.raceTimeDisplay}',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16,
+                            ),
+                      ),
+                      Text(
+                        '${raceResult.stage}',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16,
+                            ),
+                      ),
                     ],
                   ),
-
-                if (isExpanded && crewResults.isEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    child: const Text(
-                      'No crews registered for this race yet',
-                      style: TextStyle(
-                        color: Colors.black54,
-                        fontStyle: FontStyle.italic,
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          discipline?.getDisplayName() ?? 'Unknown',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                        ),
                       ),
-                    ),
+                      if (discipline?.competition != null &&
+                          discipline!.competition!.isNotEmpty) ...[
+                        const SizedBox(width: 10),
+                        _competitionBadge(discipline.competition!),
+                      ],
+                    ],
                   ),
-
-                // Race images section
-                if (isExpanded && raceResult.images != null && raceResult.images!.isNotEmpty)
-                  _buildRaceImages(raceResult.images!),
-
-                const Divider(
-                  height: smallSpace,
-                ),
-              ],
-            );
-        } catch (e) {
-          // Error building race result item: $e
-          return Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'Error displaying race result: $e',
-                style: const TextStyle(color: Colors.red),
+                ],
+              ),
+              subtitle: Text(
+                '${raceResult.statusDisplay} (${crewResults.length})',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.white70,
+                    ),
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (crewResults.isNotEmpty)
+                    Icon(
+                      isExpanded ? Icons.expand_less : Icons.expand_more,
+                      color: Colors.white,
+                    ),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        RaceResultDetailView.routeName,
+                        arguments: {'raceResultId': raceResult.id},
+                      );
+                    },
+                    child: const Icon(Icons.arrow_forward, color: Colors.white),
+                  ),
+                ],
               ),
             ),
-          );
-        }
-      },
-      ),
-    );
+          ),
+          const Divider(height: 4),
+
+          // Expandable crew results section
+          if (isExpanded && crewResults.isNotEmpty)
+            Column(
+              children: [
+                ...crewResults.map((crewResult) =>
+                    _buildCrewResultItem(context, crewResult, raceResult, isFinal)),
+              ],
+            ),
+
+          if (isExpanded && crewResults.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(16),
+              child: const Text(
+                'No crews registered for this race yet',
+                style: TextStyle(
+                  color: Colors.black54,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+
+          // Race images section
+          if (isExpanded && raceResult.images != null && raceResult.images!.isNotEmpty)
+            _buildRaceImages(raceResult.images!),
+
+          const Divider(height: smallSpace),
+        ],
+      );
+    } catch (e) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            'Error displaying race result: $e',
+            style: const TextStyle(color: Colors.red),
+          ),
+        ),
+      );
+    }
   }
 
   Widget _buildCrewResultItem(BuildContext context, CrewResult crewResult, RaceResult raceResult, bool isFinalRound) {
@@ -2267,4 +2355,27 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
         return Colors.grey.shade700;
     }
   }
+}
+
+abstract class _RenderItem {
+  const _RenderItem();
+}
+
+class _HeaderItem extends _RenderItem {
+  const _HeaderItem();
+}
+
+class _DayHeaderItem extends _RenderItem {
+  final DateTime day;
+  final int raceCount;
+  const _DayHeaderItem(this.day, this.raceCount);
+}
+
+class _RaceItem extends _RenderItem {
+  final RaceResult race;
+  const _RaceItem(this.race);
+}
+
+class _EmptyItem extends _RenderItem {
+  const _EmptyItem();
 }
