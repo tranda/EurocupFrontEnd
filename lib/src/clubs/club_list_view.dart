@@ -61,10 +61,16 @@ class ListViewState extends State<ClubListView> {
             }
             if (snapshot.hasData) {
               final clubs = snapshot.data!;
-              // Sort clubs: active first, then inactive
+              // Sort clubs: active first, then alphabetically by name
               clubs.sort((a, b) {
-                if (a.active == b.active) return 0;
-                return (a.active ?? false) ? -1 : 1;
+                final aActive = a.active ?? false;
+                final bActive = b.active ?? false;
+                if (aActive != bActive) {
+                  return aActive ? -1 : 1;
+                }
+                return (a.name ?? '')
+                    .toLowerCase()
+                    .compareTo((b.name ?? '').toLowerCase());
               });
               // Debug: clubs list
               return ListView.builder(
@@ -111,7 +117,14 @@ class ListViewState extends State<ClubListView> {
                                 arguments: {
                                   'clubId': clubs[index].id,
                                 }).then((value) {
-                              setState(() {});
+                              setState(() {
+                                dataFuture = api.getClubs(
+                                    activeOnly: currentUser.accessLevel !=
+                                                null &&
+                                            currentUser.accessLevel! >= 2
+                                        ? false
+                                        : true);
+                              });
                             });
                           },
                           trailing: const Icon(Icons.arrow_forward)),
