@@ -1847,6 +1847,7 @@ Future<Map<String, dynamic>> importCrewRegistrations(
   required String csv,
   bool dryRun = false,
   bool sync = false,
+  String? competition,
   List<Map<String, dynamic>>? teamMappings,
 }) async {
   final body = <String, dynamic>{
@@ -1854,6 +1855,9 @@ Future<Map<String, dynamic>> importCrewRegistrations(
     'dry_run': dryRun,
     'sync': sync,
   };
+  if (competition != null && competition.trim().isNotEmpty) {
+    body['competition'] = competition.trim();
+  }
   if (teamMappings != null && teamMappings.isNotEmpty) {
     body['team_mappings'] = teamMappings;
   }

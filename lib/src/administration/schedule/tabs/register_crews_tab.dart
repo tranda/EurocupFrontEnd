@@ -21,6 +21,7 @@ class RegisterCrewsTab extends StatefulWidget {
 
 class _RegisterCrewsTabState extends State<RegisterCrewsTab> {
   final TextEditingController _matrixController = TextEditingController();
+  final TextEditingController _competitionController = TextEditingController();
   String? _fileName;
   bool _busy = false;
   bool _syncMode = false;
@@ -36,6 +37,7 @@ class _RegisterCrewsTabState extends State<RegisterCrewsTab> {
   @override
   void dispose() {
     _matrixController.dispose();
+    _competitionController.dispose();
     super.dispose();
   }
 
@@ -103,6 +105,7 @@ class _RegisterCrewsTabState extends State<RegisterCrewsTab> {
         csv: csv,
         dryRun: dryRun,
         sync: _syncMode,
+        competition: _competitionController.text,
         teamMappings: mappings.isEmpty ? null : mappings,
       );
       setState(() {
@@ -240,6 +243,19 @@ class _RegisterCrewsTabState extends State<RegisterCrewsTab> {
               'Only touches teams/disciplines that appear in the CSV; '
               'crews outside the CSV scope are left alone.',
               style: TextStyle(fontSize: 12),
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _competitionController,
+            enabled: !_busy,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              isDense: true,
+              labelText: 'Competition (optional)',
+              hintText: 'e.g. Club, Corporate, Highschool, University',
+              helperText: 'Stamped on auto-created disciplines. Disciplines '
+                  'under different competitions are kept separate.',
             ),
           ),
           const SizedBox(height: 8),
