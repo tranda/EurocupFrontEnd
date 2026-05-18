@@ -905,7 +905,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
       final pdf = pw.Document();
 
       // Prepare race results with sorted crew results
-      final races = List<RaceResult>.from(_raceResults!);
+      final races = List<RaceResult>.from(_filteredRaceResults ?? _raceResults!);
       races.sort((a, b) => (a.raceNumber ?? 0).compareTo(b.raceNumber ?? 0));
 
       // Process each race to ensure proper positioning and sorting
@@ -982,7 +982,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   List<pw.Widget> _buildPDFContent(List<RaceResult> races) {
     final widgets = <pw.Widget>[];
 
-    // Header
+    // Title
     widgets.add(
       pw.Column(
         children: [
@@ -996,13 +996,51 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
       ),
     );
 
-    // Race results
-    for (var race in races) {
-      widgets.add(_buildPDFRaceSection(race));
-      widgets.add(pw.SizedBox(height: 20));
-    }
+    // Group by day; races with null raceTime are omitted from the PDF too.
+    final grouped = groupRacesByDay(races);
+
+    grouped.forEach((day, dayRaces) {
+      widgets.add(_buildPDFDayHeader(day, dayRaces.length));
+      for (final race in dayRaces) {
+        widgets.add(_buildPDFRaceSection(race));
+        widgets.add(pw.SizedBox(height: 20));
+      }
+    });
 
     return widgets;
+  }
+
+  pw.Widget _buildPDFDayHeader(DateTime day, int raceCount) {
+    final dateText = DateFormat('EEEE, d MMM yyyy').format(day);
+    return pw.Container(
+      width: double.infinity,
+      margin: const pw.EdgeInsets.only(top: 8, bottom: 8),
+      padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: pw.BoxDecoration(
+        color: PdfColors.blueGrey800,
+        borderRadius: pw.BorderRadius.circular(4),
+      ),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text(
+            dateText,
+            style: pw.TextStyle(
+              color: PdfColors.white,
+              fontWeight: pw.FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+          pw.Text(
+            '$raceCount race${raceCount == 1 ? '' : 's'}',
+            style: pw.TextStyle(
+              color: PdfColors.grey300,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   pw.Widget _buildPDFRaceSection(RaceResult race) {
