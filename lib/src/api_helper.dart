@@ -1469,11 +1469,19 @@ Future<ScheduleConfig> getScheduleConfig(int eventId) async {
   return ScheduleConfig.fromMap(_unwrap(res, action: 'load schedule config') as Map<String, dynamic>);
 }
 
-Future<void> updateScheduleConfig(int eventId, {required int laneCount}) async {
+Future<void> updateScheduleConfig(
+  int eventId, {
+  int? laneCount,
+  int? defaultRounds,
+}) async {
+  final body = <String, dynamic>{};
+  if (laneCount != null) body['lane_count'] = laneCount;
+  if (defaultRounds != null) body['default_rounds'] = defaultRounds;
+  if (body.isEmpty) return;
   final res = await http.put(
     Uri.parse('$apiURL/events/$eventId/schedule-config'),
     headers: _jsonAuthHeaders(),
-    body: jsonEncode({'lane_count': laneCount}),
+    body: jsonEncode(body),
   );
   _unwrap(res, action: 'update schedule config');
 }

@@ -3,6 +3,7 @@ import 'event_day.dart';
 class ScheduleConfig {
   final int eventId;
   final int laneCount;
+  final int defaultRounds;
   final String scheduleStatus; // "draft" | "published"
   final DateTime? schedulePublishedAt;
   final List<EventDay> days;
@@ -10,6 +11,7 @@ class ScheduleConfig {
   ScheduleConfig({
     required this.eventId,
     required this.laneCount,
+    this.defaultRounds = 3,
     required this.scheduleStatus,
     this.schedulePublishedAt,
     this.days = const [],
@@ -20,6 +22,7 @@ class ScheduleConfig {
   factory ScheduleConfig.fromMap(Map<String, dynamic> data) => ScheduleConfig(
         eventId: (data['event_id'] ?? 0) as int,
         laneCount: (data['lane_count'] ?? 6) as int,
+        defaultRounds: (data['default_rounds'] ?? 3) as int,
         scheduleStatus: (data['schedule_status'] ?? 'draft') as String,
         schedulePublishedAt: data['schedule_published_at'] == null
             ? null
