@@ -6,6 +6,7 @@ import '../../../model/race/crew_result.dart';
 import '../../../model/race/race_result.dart';
 import '../../../model/schedule/crew_seed.dart';
 import '../../../model/schedule/schedule_config.dart';
+import '../../../model/schedule/schedule_block.dart';
 import '../../../widgets/compact_icon.dart';
 import '../race_color_palette.dart';
 
@@ -487,6 +488,88 @@ class _GridTabState extends State<GridTab> {
     );
   }
 
+  /// Flatten config days/blocks into a single list ordered like the backend
+  /// orderedBlocks() — day.sort_order then block.sort_order. Cached per build.
+  late final List<_BlockWithDate> _orderedBlocksCache = (() {
+    final out = <_BlockWithDate>[];
+    final days = [...widget.config.days]
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    for (final day in days) {
+      final blocks = [...day.blocks]
+        ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+      for (final b in blocks) {
+        out.add(_BlockWithDate(block: b, date: day.date));
+      }
+    }
+    return out;
+  })();
+
+  /// First block matching the race's discipline filters (gender/distance/
+  /// stage/competition). Mirrors backend findMatchingBlock so the separator
+  /// boundaries line up with where placeRacesIntoBlocks dropped each race.
+  ScheduleBlock? _blockForRace(RaceResult race) {
+    final d = race.discipline;
+    if (d == null) return null;
+    for (final bd in _orderedBlocksCache) {
+      if (_blockMatches(bd.block, d, race.stage)) return bd.block;
+    }
+    return null;
+  }
+
+  bool _blockMatches(ScheduleBlock block, dynamic discipline, String? stage) {
+    final genderMap = {'M': 'Open', 'W': 'Women', 'X': 'Mixed'};
+    if (block.genderFilter != null && block.genderFilter!.isNotEmpty) {
+      final needles = block.genderFilter!
+          .map((v) => genderMap[v.toUpperCase()] ?? v)
+          .toList();
+      if (!needles.contains(discipline.genderGroup)) return false;
+    }
+    if (block.distanceFilter != null && block.distanceFilter!.isNotEmpty) {
+      final needles = block.distanceFilter!
+          .map((v) => v.replaceAll(RegExp(r'\D'), ''))
+          .where((v) => v.isNotEmpty)
+          .toList();
+      if (!needles.contains('${discipline.distance}')) return false;
+    }
+    if (block.stageFilter != null && block.stageFilter!.isNotEmpty) {
+      final s = (stage ?? '').toLowerCase();
+      if (!block.stageFilter!.any((n) => s.contains(n.toLowerCase()))) {
+        return false;
+      }
+    }
+    if (block.competitionFilter != null && block.competitionFilter!.isNotEmpty) {
+      final c = (discipline.competition ?? '').toString().toLowerCase();
+      final needles = block.competitionFilter!.map((v) => v.toLowerCase()).toList();
+      if (!needles.contains(c)) return false;
+    }
+    return true;
+  }
+
+  Widget _blockSeparator(ScheduleBlock block) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      color: const Color(0xFFE3F2FD),
+      child: Row(children: [
+        const Icon(Icons.subdirectory_arrow_right, size: 16, color: Color(0xFF1565C0)),
+        const SizedBox(width: 8),
+        Text(
+          block.name.isNotEmpty ? block.name : 'Block',
+          style: const TextStyle(
+            color: Color(0xFF1565C0),
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          'starts ${block.startTime} · gap ${block.gapSeconds ~/ 60} min',
+          style: const TextStyle(color: Colors.black54, fontSize: 12),
+        ),
+      ]),
+    );
+  }
+
   Widget _grid() {
     final filtered = _races.where((r) {
       if (_filterDisciplineId != null && r.disciplineId != _filterDisciplineId) return false;
@@ -548,8 +631,10 @@ class _GridTabState extends State<GridTab> {
           itemBuilder: (ctx, i) {
             final race = rows[i];
             final canDrag = race.status == 'SCHEDULED';
-            return Row(
-              key: ValueKey('race-${race.id}'),
+            final block = _blockForRace(race);
+            final prevBlock = i == 0 ? null : _blockForRace(rows[i - 1]);
+            final showSeparator = block != null && block.id != prevBlock?.id;
+            final row = Row(
               children: [
                 if (canDrag)
                   ReorderableDragStartListener(
@@ -567,6 +652,14 @@ class _GridTabState extends State<GridTab> {
                 else
                   const SizedBox(width: 44),
                 Expanded(child: _raceCard(race)),
+              ],
+            );
+            return Column(
+              key: ValueKey('race-${race.id}'),
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (showSeparator) _blockSeparator(block),
+                row,
               ],
             );
           },
@@ -1119,6 +1212,12 @@ class _GridTabState extends State<GridTab> {
     return m == 0 ? '${h}h' : '${h}h ${m}m';
   }
 
+}
+
+class _BlockWithDate {
+  final ScheduleBlock block;
+  final DateTime date;
+  const _BlockWithDate({required this.block, required this.date});
 }
 
 class _BreakDraft {
