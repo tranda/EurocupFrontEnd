@@ -2,6 +2,7 @@ import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:eurocup_frontend/src/clubs/club_athlete_list_view.dart';
 import 'package:eurocup_frontend/src/clubs/club_details_view.dart';
 import 'package:eurocup_frontend/src/common.dart';
+import 'package:eurocup_frontend/src/teams/team_list_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 
@@ -363,6 +364,27 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
                             Navigator.pushNamed(
                               context,
                               ClubAthleteListView.routeName,
+                              arguments: {
+                                'clubId': club!.id,
+                                'title': club!.name!
+                              },
+                            );
+                          },
+                        ),
+                        Divider(
+                            height: 1,
+                            color: Colors.grey.shade200,
+                            indent: 16,
+                            endIndent: 16),
+                        _actionCard(
+                          icon: Icons.groups,
+                          iconColor: Colors.deepPurple,
+                          title: 'Club Teams',
+                          subtitle: 'View and manage teams of this club',
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              TeamListView.routeName,
                               arguments: {
                                 'clubId': club!.id,
                                 'title': club!.name!

@@ -22,6 +22,7 @@ class ListViewState extends State<TeamListView> {
   late Future<List<Team>> dataFuture;
   List<Team> list = [];
   List<Club> clubs = [];
+  Club? _selectedClub;
 
   String teamName = "";
 
@@ -55,12 +56,18 @@ class ListViewState extends State<TeamListView> {
 
   @override
   Widget build(BuildContext context) {
+    final routeArgs = ModalRoute.of(context)?.settings.arguments;
+    final int? filterClubId = routeArgs is Map ? routeArgs['clubId'] as int? : null;
+    final String pageTitle = (routeArgs is Map && routeArgs['title'] is String)
+        ? routeArgs['title'] as String
+        : "Team List";
+
     return Scaffold(
       appBar: appBarWithAction(
           locked
               ? () {}
               : () {
-                  openDialog().then((value) {
+                  openDialog(forcedClubId: filterClubId).then((value) {
                     if (value != null && value['name'] != null && value['name'].isNotEmpty) {
                       api.createTeam(value['name'], clubId: value['clubId']).then((v) {
                         setState(() {
@@ -79,7 +86,7 @@ class ListViewState extends State<TeamListView> {
                     // Error: dialog failed
                   });
                 },
-          title: "Team List",
+          title: pageTitle,
           icon: Icons.add),
       body: Container(
         decoration: bckDecoration(),
@@ -90,7 +97,9 @@ class ListViewState extends State<TeamListView> {
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasData) {
-              final teams = snapshot.data!;
+              final teams = filterClubId != null
+                  ? snapshot.data!.where((t) => t.clubId == filterClubId).toList()
+                  : snapshot.data!;
               // Sort teams: teams from active clubs first, then inactive clubs
               teams.sort((a, b) {
                 final aClubActive = a.club?.active ?? false;
@@ -137,6 +146,18 @@ class ListViewState extends State<TeamListView> {
                               ),
                             ],
                           ),
+                          subtitle: (teams[index].club?.name != null && teams[index].club!.name!.isNotEmpty)
+                              ? Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    teams[index].club!.name!,
+                                    style: TextStyle(
+                                      color: Colors.grey.shade700,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                )
+                              : null,
                           onTap: () {
                             Navigator.pushNamed(
                                 context, DisciplineListView.routeName,
@@ -179,8 +200,9 @@ class ListViewState extends State<TeamListView> {
     );
   }
 
-  Future<Map<String, dynamic>?> openDialog() async {
-    Club? selectedClub;
+  Future<Map<String, dynamic>?> openDialog({int? forcedClubId}) async {
+    _selectedClub = null;
+    final bool showClubPicker = forcedClubId == null && currentUser.accessLevel! > 0;
 
     return await showDialog<Map<String, dynamic>>(
         context: context,
@@ -195,13 +217,13 @@ class ListViewState extends State<TeamListView> {
                       decoration: buildStandardInputDecoration("Enter team name"),
                       style: Theme.of(context).textTheme.displaySmall,
                     ),
-                    // Show club selector for users with access level > 0
-                    if (currentUser.accessLevel! > 0) ...[
+                    // Show club selector only when the club isn't already scoped by the route.
+                    if (showClubPicker) ...[
                       const SizedBox(height: 16),
                       StatefulBuilder(
                         builder: (context, setDialogState) {
                           return DropdownButtonFormField<Club>(
-                            initialValue: selectedClub,
+                            initialValue: _selectedClub,
                             decoration: buildStandardInputDecoration("Select Club"),
                             hint: const Text("Select Club"),
                             items: clubs.map((Club club) {
@@ -212,7 +234,7 @@ class ListViewState extends State<TeamListView> {
                             }).toList(),
                             onChanged: (Club? value) {
                               setDialogState(() {
-                                selectedClub = value;
+                                _selectedClub = value;
                               });
                             },
                           );
@@ -224,7 +246,7 @@ class ListViewState extends State<TeamListView> {
                 actions: <Widget>[
                   TextButton(onPressed: cancel, child: const Text("Cancel")),
                   TextButton(
-                    onPressed: () => submit(selectedClub),
+                    onPressed: () => submit(forcedClubId ?? _selectedClub?.id),
                     child: const Text("OK")
                   ),
                 ],
@@ -237,10 +259,10 @@ class ListViewState extends State<TeamListView> {
     controller.clear();
   }
 
-  void submit(Club? selectedClub) {
+  void submit(int? clubId) {
     Navigator.of(context).pop({
       'name': controller.text,
-      'clubId': selectedClub?.id,
+      'clubId': clubId,
     });
     controller.clear();
   }
