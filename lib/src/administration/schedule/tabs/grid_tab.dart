@@ -1294,6 +1294,7 @@ class _ExportDialogState extends State<_ExportDialog> {
             isExpanded: true,
             decoration: const InputDecoration(labelText: 'Format'),
             items: const [
+              DropdownMenuItem(value: 'pdf', child: Text('PDF')),
               DropdownMenuItem(value: 'csv', child: Text('CSV (spreadsheet)')),
               DropdownMenuItem(value: 'txt', child: Text('Plain text')),
             ],
