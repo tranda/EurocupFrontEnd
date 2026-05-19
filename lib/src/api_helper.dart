@@ -280,27 +280,16 @@ Future createTeam(String name, {int? clubId}) async {
     'Authorization': 'Bearer $token'
   };
   var request = http.Request('POST', Uri.parse('$apiURL/team'));
-  request.bodyFields = {
-    'name': name,
-  };
-
-  // Add club_id if provided (for referees, event managers, and admins)
+  // bodyFields setter encodes the body at assignment time; later mutations
+  // of the getter map are dropped. Build the full map first and assign once.
+  final fields = <String, String>{'name': name};
   if (clubId != null) {
-    request.bodyFields['club_id'] = clubId.toString();
+    fields['club_id'] = clubId.toString();
   }
-
+  request.bodyFields = fields;
   request.headers.addAll(headers);
 
-  http.StreamedResponse response = await request.send();
-
-  // Debug: response status
-  var responseString = await response.stream.bytesToString();
-  // Debug: API response received
-  if (response.statusCode == 200) {
-    // Debug: API response received
-  } else {
-    // Error: API request failed
-  }
+  await request.send();
 }
 
 Future<void> deleteTeam(int teamId) async {
