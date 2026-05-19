@@ -1,3 +1,6 @@
+import 'dart:html' as html;
+import 'dart:typed_data';
+
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:flutter/material.dart';
 
@@ -477,6 +480,12 @@ class _GridTabState extends State<GridTab> {
           onPressed: _addBreak,
           icon: const Icon(Icons.coffee, size: 18),
           label: const Text('Add break'),
+        ),
+        const SizedBox(width: 8),
+        TextButton.icon(
+          onPressed: _exportSchedule,
+          icon: const Icon(Icons.download, size: 18),
+          label: const Text('Export'),
         ),
         const SizedBox(width: 8),
         CompactIcon(
@@ -1014,6 +1023,38 @@ class _GridTabState extends State<GridTab> {
     ]);
   }
 
+  Future<void> _exportSchedule() async {
+    // Collect distinct dates currently in the grid for the day filter.
+    final dates = <String>{};
+    for (final r in _races) {
+      if (r.raceTime != null) dates.add(_formatDateOnly(r.raceTime!));
+    }
+    final dateList = dates.toList()..sort();
+
+    final choice = await showDialog<_ExportChoice>(
+      context: context,
+      builder: (ctx) => _ExportDialog(dates: dateList),
+    );
+    if (choice == null) return;
+
+    await _runWithBusy(() async {
+      final result = await api.exportSchedule(
+        widget.eventId,
+        format: choice.format,
+        day: choice.day,
+      );
+      final bytes = result['bytes'] as Uint8List;
+      final filename = result['filename'] as String;
+      final contentType = result['contentType'] as String;
+      final blob = html.Blob([bytes], contentType);
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      html.AnchorElement(href: url)
+        ..setAttribute('download', filename)
+        ..click();
+      html.Url.revokeObjectUrl(url);
+    });
+  }
+
   Future<void> _addBreak() async {
     final draft = await _showBreakDialog();
     if (draft == null) return;
@@ -1221,6 +1262,73 @@ class _BlockWithDate {
   final ScheduleBlock block;
   final DateTime date;
   const _BlockWithDate({required this.block, required this.date});
+}
+
+class _ExportChoice {
+  final String format; // 'txt' | 'csv'
+  final String? day;   // 'YYYY-MM-DD' or null = all days
+  const _ExportChoice({required this.format, this.day});
+}
+
+class _ExportDialog extends StatefulWidget {
+  final List<String> dates;
+  const _ExportDialog({required this.dates});
+
+  @override
+  State<_ExportDialog> createState() => _ExportDialogState();
+}
+
+class _ExportDialogState extends State<_ExportDialog> {
+  String _format = 'csv';
+  String? _day; // null = all days
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Export schedule'),
+      content: SizedBox(
+        width: 360,
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          DropdownButtonFormField<String>(
+            value: _format,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: 'Format'),
+            items: const [
+              DropdownMenuItem(value: 'csv', child: Text('CSV (spreadsheet)')),
+              DropdownMenuItem(value: 'txt', child: Text('Plain text')),
+            ],
+            onChanged: (v) => setState(() => _format = v ?? 'csv'),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String?>(
+            value: _day,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: 'Day'),
+            items: [
+              const DropdownMenuItem<String?>(value: null, child: Text('All days')),
+              for (final d in widget.dates)
+                DropdownMenuItem<String?>(value: d, child: Text(d)),
+            ],
+            onChanged: (v) => setState(() => _day = v),
+          ),
+        ]),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton.icon(
+          icon: const Icon(Icons.download),
+          label: const Text('Download'),
+          onPressed: () => Navigator.pop(
+            context,
+            _ExportChoice(format: _format, day: _day),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _BreakDraft {

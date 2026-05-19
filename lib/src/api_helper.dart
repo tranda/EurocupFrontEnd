@@ -1870,6 +1870,31 @@ Future<int> clearAllCrewRegistrations(int eventId) async {
   return (data['crews_deleted'] ?? 0) as int;
 }
 
+/// Fetches a schedule export as raw bytes. [format] = 'txt' or 'csv';
+/// [day] = 'YYYY-MM-DD' or null for the whole event. Returns a Map with
+/// keys 'bytes' (Uint8List), 'filename' (String), 'contentType' (String).
+Future<Map<String, dynamic>> exportSchedule(
+  int eventId, {
+  required String format,
+  String? day,
+}) async {
+  final params = <String, String>{'format': format};
+  if (day != null) params['day'] = day;
+  final uri = Uri.parse('$apiURL/events/$eventId/schedule/export')
+      .replace(queryParameters: params);
+  final res = await http.get(uri, headers: {'Authorization': 'Bearer $token'});
+  if (res.statusCode != 200) {
+    throw Exception('Export failed (${res.statusCode}): ${res.body}');
+  }
+  final cd = res.headers['content-disposition'] ?? '';
+  final m = RegExp(r'filename="?([^"]+)"?').firstMatch(cd);
+  return {
+    'bytes': res.bodyBytes,
+    'filename': m?.group(1) ?? 'schedule.$format',
+    'contentType': res.headers['content-type'] ?? 'application/octet-stream',
+  };
+}
+
 /// Create a team in a specific club. Used by the Register Crews tab to
 /// resolve unmatched teams without leaving the screen. The existing
 /// createTeam helper doesn't return the created row, so we have our own.
