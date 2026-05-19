@@ -135,18 +135,22 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
                 label: Text(_config!.isPublished ? 'Unpublish' : 'Publish'),
               ),
           ],
-          bottom: TabBar(
-            controller: _tabController,
-            labelColor: const Color.fromARGB(255, 0, 80, 150),
-            unselectedLabelColor: Colors.black54,
-            isScrollable: true,
-            tabs: const [
-              Tab(text: 'Setup', icon: Icon(Icons.tune)),
-              Tab(text: 'Plan & Seeds', icon: Icon(Icons.format_list_numbered)),
-              Tab(text: 'Grid', icon: Icon(Icons.grid_on)),
-              Tab(text: 'Register Crews', icon: Icon(Icons.group_add)),
-              Tab(text: 'Import', icon: Icon(Icons.file_upload)),
-            ],
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(60),
+            child: AnimatedBuilder(
+              animation: _tabController,
+              builder: (context, _) => Material(
+                color: Colors.white,
+                child: Row(children: [
+                  _tabButton(0, Icons.tune, 'Setup'),
+                  _tabButton(1, Icons.format_list_numbered, 'Plan & Seeds'),
+                  _tabButton(2, Icons.grid_on, 'Grid'),
+                  const Spacer(),
+                  _tabButton(3, Icons.group_add, 'Register Crews'),
+                  _tabButton(4, Icons.file_upload, 'Import'),
+                ]),
+              ),
+            ),
           ),
         ),
         body: DefaultTextStyle.merge(
@@ -180,6 +184,34 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
         RegisterCrewsTab(eventId: _event!.id!),
         ImportTab(eventId: _event!.id!),
       ],
+    );
+  }
+
+  Widget _tabButton(int index, IconData icon, String label) {
+    const selectedColor = Color.fromARGB(255, 0, 80, 150);
+    final selected = _tabController.index == index;
+    final color = selected ? selectedColor : Colors.black54;
+    return InkWell(
+      onTap: () => _tabController.animateTo(index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: selected ? selectedColor : Colors.transparent,
+              width: 2,
+            ),
+          ),
+        ),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w500),
+          ),
+        ]),
+      ),
     );
   }
 
