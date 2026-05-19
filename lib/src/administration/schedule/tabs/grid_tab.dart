@@ -719,11 +719,6 @@ class _GridTabState extends State<GridTab> {
                 ),
               ),
               Expanded(child: _disciplineBadges(race)),
-              if (race.discipline?.competition != null &&
-                  race.discipline!.competition!.isNotEmpty) ...[
-                const SizedBox(width: 6),
-                _competitionBadge(race.discipline!.competition!),
-              ],
               const SizedBox(width: 8),
               _stageBadge(race.stage),
               const SizedBox(width: 8),
@@ -880,7 +875,8 @@ class _GridTabState extends State<GridTab> {
     if (d?.distance != null) {
       tokens.add(MapEntry('distance', '${d!.distance}m'));
     }
-    if (tokens.isEmpty) {
+    final competition = d?.competition;
+    if (tokens.isEmpty && (competition == null || competition.isEmpty)) {
       return const Text(
         'Unknown',
         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
@@ -889,7 +885,14 @@ class _GridTabState extends State<GridTab> {
     return Wrap(
       spacing: 4,
       runSpacing: 2,
-      children: [for (final t in tokens) _wordBadge(cm, t.key, t.value)],
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        for (final t in tokens) _wordBadge(cm, t.key, t.value),
+        if (competition != null && competition.isNotEmpty) ...[
+          const SizedBox(width: 2),
+          _competitionBadge(competition),
+        ],
+      ],
     );
   }
 
