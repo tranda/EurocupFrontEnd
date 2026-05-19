@@ -343,14 +343,19 @@ class _GridTabState extends State<GridTab> {
         return as.compareTo(bs);
       });
 
-      // Centre-out lane order, e.g. 4 lanes → [3,2,4,1]; 6 → [4,3,5,2,6,1].
+      // Centre-out lane order per IDBF: for even lane counts the centre lane
+      // is the LOWER of the two middle lanes (lane 2 of 4, lane 3 of 6, lane
+      // 4 of 8), then alternate RIGHT, LEFT. So 4 lanes → [2,3,1,4]; 6 →
+      // [3,4,2,5,1,6]. Empty lanes end up on the outside (highest lane
+      // number), never lane 1. Matches the backend ScheduleGeneratorService
+      // and RacePlan::compactCentreOut.
       final n = _laneCount;
-      final centre = ((n + 1) / 2).ceil();
+      final centre = (n + 1) ~/ 2;
       final order = <int>[centre];
       for (var d = 1; d < n; d++) {
-        final left = centre - d, right = centre + d;
-        if (left >= 1) order.add(left);
+        final right = centre + d, left = centre - d;
         if (right <= n) order.add(right);
+        if (left >= 1) order.add(left);
       }
 
       // Build assignment payload — empties for unused lanes.
