@@ -5,6 +5,10 @@ class ScheduleConfig {
   final int laneCount;
   final int defaultRounds;
   final int minCrewsPerRace;
+  /// Nested: { "boat": { "Standard": "#hex" }, "age": { ... },
+  /// "stage": { ... }, "gender": { ... } }. Missing entries fall back to
+  /// the frontend's default palette.
+  final Map<String, Map<String, String>> colorMap;
   final String scheduleStatus; // "draft" | "published"
   final DateTime? schedulePublishedAt;
   final List<EventDay> days;
@@ -14,6 +18,7 @@ class ScheduleConfig {
     required this.laneCount,
     this.defaultRounds = 3,
     this.minCrewsPerRace = 3,
+    this.colorMap = const {},
     required this.scheduleStatus,
     this.schedulePublishedAt,
     this.days = const [],
@@ -26,6 +31,7 @@ class ScheduleConfig {
         laneCount: (data['lane_count'] ?? 6) as int,
         defaultRounds: (data['default_rounds'] ?? 3) as int,
         minCrewsPerRace: (data['min_crews_per_race'] ?? 3) as int,
+        colorMap: _parseColorMap(data['color_map']),
         scheduleStatus: (data['schedule_status'] ?? 'draft') as String,
         schedulePublishedAt: data['schedule_published_at'] == null
             ? null
@@ -34,4 +40,17 @@ class ScheduleConfig {
             .map((d) => EventDay.fromMap(d as Map<String, dynamic>))
             .toList(),
       );
+
+  static Map<String, Map<String, String>> _parseColorMap(dynamic raw) {
+    if (raw is! Map) return const {};
+    final out = <String, Map<String, String>>{};
+    raw.forEach((cat, values) {
+      if (values is Map) {
+        out[cat.toString()] = {
+          for (final entry in values.entries) entry.key.toString(): entry.value.toString(),
+        };
+      }
+    });
+    return out;
+  }
 }

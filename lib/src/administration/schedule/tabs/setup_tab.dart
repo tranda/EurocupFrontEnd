@@ -6,6 +6,7 @@ import '../../../model/schedule/event_day.dart';
 import '../../../model/schedule/schedule_block.dart';
 import '../../../model/schedule/schedule_config.dart';
 import '../../../widgets/compact_icon.dart';
+import '../color_map_editor.dart';
 
 /// Setup tab: lane count + days + blocks editor.
 class SetupTab extends StatefulWidget {
@@ -78,6 +79,10 @@ class _SetupTabState extends State<SetupTab> {
   Future<void> _saveMinCrewsPerRace(int v) async {
     setState(() => _minCrewsPerRace = v);
     await _runWithLoading(() => api.updateScheduleConfig(widget.eventId, minCrewsPerRace: v));
+  }
+
+  Future<void> _saveColorMap(Map<String, Map<String, String>> v) async {
+    await _runWithLoading(() => api.updateScheduleConfig(widget.eventId, colorMap: v));
   }
 
   Future<void> _addDay() async {
@@ -333,6 +338,12 @@ class _SetupTabState extends State<SetupTab> {
           _defaultRoundsCard(),
           const SizedBox(height: 12),
           _minCrewsPerRaceCard(),
+          const SizedBox(height: 12),
+          ColorMapEditor(
+            value: widget.config.colorMap,
+            onChanged: _saveColorMap,
+            enabled: !_saving,
+          ),
           const SizedBox(height: 16),
           ...(widget.config.days.toList()..sort((a, b) => a.date.compareTo(b.date))).map(_dayCard),
           const SizedBox(height: 8),

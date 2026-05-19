@@ -7,6 +7,7 @@ import '../../../model/race/race_result.dart';
 import '../../../model/schedule/crew_seed.dart';
 import '../../../model/schedule/schedule_config.dart';
 import '../../../widgets/compact_icon.dart';
+import '../race_color_palette.dart';
 
 /// Grid view of all scheduled races in chronological order, with inline edit
 /// of time/stage, lane assignment dialogs, and per-row delete.
@@ -624,36 +625,14 @@ class _GridTabState extends State<GridTab> {
                   ),
                 ),
               ),
-              Expanded(
-                child: Text(
-                  race.discipline?.getDisplayName() ?? 'Unknown',
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
+              Expanded(child: _disciplineBadges(race)),
               if (race.discipline?.competition != null &&
                   race.discipline!.competition!.isNotEmpty) ...[
                 const SizedBox(width: 6),
                 _competitionBadge(race.discipline!.competition!),
               ],
               const SizedBox(width: 8),
-              SizedBox(
-                width: 78,
-                child: Text(
-                  race.stage ?? '',
-                  textAlign: TextAlign.right,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
+              _stageBadge(race.stage),
               const SizedBox(width: 8),
               SizedBox(
                 width: 36,
@@ -785,6 +764,75 @@ class _GridTabState extends State<GridTab> {
                 ),
               )
             : const Icon(Icons.add, size: 18, color: Colors.grey),
+      ),
+    );
+  }
+
+  /// Renders the discipline as a row of colored word-badges:
+  /// [Boat] [Age] [Gender] [Distance]. Each word gets its category colour
+  /// from the event's color_map (or the default palette).
+  Widget _disciplineBadges(RaceResult race) {
+    final d = race.discipline;
+    final cm = widget.config.colorMap;
+    final tokens = <MapEntry<String, String>>[];
+    if ((d?.boatGroup ?? '').isNotEmpty) {
+      tokens.add(MapEntry('boat', d!.boatGroup!));
+    }
+    if ((d?.ageGroup ?? '').isNotEmpty) {
+      tokens.add(MapEntry('age', d!.ageGroup!));
+    }
+    if ((d?.genderGroup ?? '').isNotEmpty) {
+      tokens.add(MapEntry('gender', d!.genderGroup!));
+    }
+    if (d?.distance != null) {
+      tokens.add(MapEntry('distance', '${d!.distance}m'));
+    }
+    if (tokens.isEmpty) {
+      return const Text(
+        'Unknown',
+        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+      );
+    }
+    return Wrap(
+      spacing: 4,
+      runSpacing: 2,
+      children: [for (final t in tokens) _wordBadge(cm, t.key, t.value)],
+    );
+  }
+
+  Widget _stageBadge(String? stage) {
+    if (stage == null || stage.isEmpty) return const SizedBox.shrink();
+    return _wordBadge(widget.config.colorMap, 'stage', stage, displayValue: stage);
+  }
+
+  /// Renders a single colored word-badge. The colour comes from the
+  /// resolved category palette; the displayed text is the raw value
+  /// (or `displayValue` if the lookup key needs to be normalized — e.g.
+  /// "Round 1" displayed but looked up as "Round").
+  Widget _wordBadge(
+    Map<String, Map<String, String>> colorMap,
+    String category,
+    String value, {
+    String? displayValue,
+  }) {
+    final lookupKey = category == 'stage'
+        ? RaceColorPalette.stageType(value)
+        : value;
+    final bg = RaceColorPalette.resolve(colorMap, category, lookupKey);
+    final fg = bg.computeLuminance() > 0.5 ? Colors.black87 : Colors.white;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        displayValue ?? value,
+        style: TextStyle(
+          color: fg,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
