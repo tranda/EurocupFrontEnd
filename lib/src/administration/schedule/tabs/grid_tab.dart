@@ -1295,7 +1295,8 @@ class _ExportDialogState extends State<_ExportDialog> {
             decoration: const InputDecoration(labelText: 'Format'),
             items: const [
               DropdownMenuItem(value: 'pdf', child: Text('PDF')),
-              DropdownMenuItem(value: 'csv', child: Text('CSV (spreadsheet)')),
+              DropdownMenuItem(value: 'xlsx', child: Text('Excel (XLSX)')),
+              DropdownMenuItem(value: 'csv', child: Text('CSV')),
               DropdownMenuItem(value: 'txt', child: Text('Plain text')),
             ],
             onChanged: (v) => setState(() => _format = v ?? 'csv'),
