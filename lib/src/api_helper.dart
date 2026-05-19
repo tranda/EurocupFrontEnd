@@ -1652,10 +1652,11 @@ Future<void> resetDisciplineCrewSeeds(int disciplineId) async {
   _unwrap(res, action: 'reset crew seeds');
 }
 
-Future<GenerationResult> generateSchedule(int eventId) async {
+Future<GenerationResult> generateSchedule(int eventId, {bool clean = false}) async {
   final res = await http.post(
     Uri.parse('$apiURL/events/$eventId/schedule/generate'),
     headers: _jsonAuthHeaders(),
+    body: jsonEncode({'clean': clean}),
   );
   return GenerationResult.fromMap(_unwrap(res, action: 'generate schedule') as Map<String, dynamic>);
 }

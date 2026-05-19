@@ -142,9 +142,9 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
             isScrollable: true,
             tabs: const [
               Tab(text: 'Setup', icon: Icon(Icons.tune)),
-              Tab(text: 'Register Crews', icon: Icon(Icons.group_add)),
               Tab(text: 'Plan & Seeds', icon: Icon(Icons.format_list_numbered)),
               Tab(text: 'Grid', icon: Icon(Icons.grid_on)),
+              Tab(text: 'Register Crews', icon: Icon(Icons.group_add)),
               Tab(text: 'Import', icon: Icon(Icons.file_upload)),
             ],
           ),
@@ -175,9 +175,9 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
       controller: _tabController,
       children: [
         SetupTab(eventId: _event!.id!, config: _config!, onChanged: _loadConfig),
-        RegisterCrewsTab(eventId: _event!.id!),
         PlanAndSeedsTab(eventId: _event!.id!),
         GridTab(eventId: _event!.id!, config: _config!),
+        RegisterCrewsTab(eventId: _event!.id!),
         ImportTab(eventId: _event!.id!),
       ],
     );

@@ -66,19 +66,25 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
     }
   }
 
-  Future<void> _generate() async {
+  Future<void> _generate({bool clean = false}) async {
     final ok = await _confirm(
-      'Generate Schedule',
-      'This deletes all existing scheduled races for this event and rebuilds them. Continue?',
+      clean ? 'Clean Generate' : 'Generate Schedule',
+      clean
+          ? 'Wipe ALL existing races AND ignore any manual drag-reorders — '
+              'rebuild every block from scratch using block filters and '
+              'IDBF seeding. Continue?'
+          : 'Rebuild races but preserve manual drag-reorders where stages '
+              'still match. Continue?',
     );
     if (!ok) return;
     setState(() => _generating = true);
     try {
-      final result = await api.generateSchedule(widget.eventId);
+      final result = await api.generateSchedule(widget.eventId, clean: clean);
       setState(() => _lastResult = result);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Generated ${result.racesCreated} races · '
+        content: Text('${clean ? "Clean-generated" : "Generated"} '
+            '${result.racesCreated} races · '
             '${result.warnings.length} warning(s)'),
       ));
     } catch (e) {
@@ -295,6 +301,18 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
             style: TextStyle(fontSize: 12),
           ),
         ),
+        OutlinedButton.icon(
+          onPressed: _generating ? null : () => _generate(clean: true),
+          icon: const Icon(Icons.cleaning_services, color: Colors.red),
+          label: const Text(
+            'Clean Generate',
+            style: TextStyle(color: Colors.red),
+          ),
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(color: Colors.red.shade300),
+          ),
+        ),
+        const SizedBox(width: 8),
         ElevatedButton.icon(
           onPressed: _generating ? null : _generate,
           icon: const Icon(Icons.play_arrow),
