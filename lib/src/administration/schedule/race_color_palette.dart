@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 class RaceColorPalette {
   static const Map<String, List<String>> categoryValues = {
     'boat': ['Standard', 'Small'],
-    'age': ['Premier', 'Senior A', 'Senior B', 'Senior C', 'Junior', 'U24', 'BCP', 'ACP'],
+    'age': ['Junior', 'Junior A', 'Junior B', 'U24', 'Premier', 'Senior A', 'Senior B', 'Senior C', 'Senior D', 'BCP', 'ACP'],
     'gender': ['Open', 'Women', 'Mixed'],
     'distance': ['100m', '200m', '250m', '500m', '1000m', '2000m'],
     // Stage TYPE (not full name). "Round 1"/"Round 2" both → 'Round'.
@@ -30,14 +30,17 @@ class RaceColorPalette {
       'Small': 0xFF7B1FA2,    // purple
     },
     'age': {
-      'Premier': 0xFFD32F2F,  // red
-      'Senior A': 0xFFF57C00, // orange
-      'Senior B': 0xFFFBC02D, // amber
-      'Senior C': 0xFF689F38, // light green
-      'Junior': 0xFF388E3C,   // green
-      'U24': 0xFF00ACC1,      // cyan
-      'BCP': 0xFF5D4037,      // brown
-      'ACP': 0xFF455A64,      // blue-grey
+      'Junior': 0xFF388E3C,    // green
+      'Junior A': 0xFF66BB6A,  // lighter green
+      'Junior B': 0xFFAED581,  // even lighter green
+      'U24': 0xFF00ACC1,       // cyan
+      'Premier': 0xFFD32F2F,   // red
+      'Senior A': 0xFFF57C00,  // orange
+      'Senior B': 0xFFFBC02D,  // amber
+      'Senior C': 0xFFFFA726,  // light orange
+      'Senior D': 0xFFFFCC80,  // pale orange
+      'BCP': 0xFF5D4037,       // brown
+      'ACP': 0xFF455A64,       // blue-grey
     },
     'gender': {
       'Open': 0xFF1565C0,   // dark blue
