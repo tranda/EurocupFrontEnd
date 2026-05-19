@@ -69,6 +69,14 @@ class ListViewState extends State<TeamListView> {
               : () {
                   openDialog(forcedClubId: filterClubId).then((value) {
                     if (value != null && value['name'] != null && value['name'].isNotEmpty) {
+                      // TEMP DEBUG: surface clubId being sent so we can verify the
+                      // dropdown selection is reaching the API. Remove once verified.
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('DEBUG creating team "${value['name']}" clubId=${value['clubId']} (selectedClub=${_selectedClub?.name} id=${_selectedClub?.id})'),
+                          duration: const Duration(seconds: 6),
+                        ),
+                      );
                       api.createTeam(value['name'], clubId: value['clubId']).then((v) {
                         setState(() {
                           teamName = value['name'];
