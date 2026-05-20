@@ -1617,6 +1617,53 @@ Future<List<String>> getDisciplineRacePlanOptions(int disciplineId) async {
   return (data['options'] as List<dynamic>).map((e) => e.toString()).toList();
 }
 
+/// One-shot row for the Plan & Seeds tab — the discipline plus its
+/// progression and race-plan options. Populated by getPlanAndSeedsBulk.
+class PlanAndSeedsRow {
+  final Discipline discipline;
+  final DisciplineProgressionInfo progression;
+  final List<String> options;
+  const PlanAndSeedsRow({
+    required this.discipline,
+    required this.progression,
+    required this.options,
+  });
+}
+
+/// One-shot fetch for the Plan & Seeds tab — active disciplines, their
+/// progression, and their race-plan options in a single request. Replaces
+/// the previous N+1 chatty pattern (getDisciplinesAll + per-discipline
+/// progression + per-discipline options).
+Future<List<PlanAndSeedsRow>> getPlanAndSeedsBulk(int eventId) async {
+  final res = await http.get(
+    Uri.parse('$apiURL/events/$eventId/plan-and-seeds'),
+    headers: _jsonAuthHeaders(),
+  );
+  final data = _unwrap(res, action: 'load plan & seeds') as Map<String, dynamic>;
+  final list = (data['disciplines'] as List<dynamic>? ?? []);
+  return list.map((raw) {
+    final m = raw as Map<String, dynamic>;
+    return PlanAndSeedsRow(
+      discipline: Discipline.fromMap({
+        'id': m['id'],
+        'event_id': data['event_id'],
+        'boat_group': m['boat_group'],
+        'age_group': m['age_group'],
+        'gender_group': m['gender_group'],
+        'distance': m['distance'],
+        'competition': m['competition'],
+        'status': m['status'],
+      }),
+      progression: DisciplineProgressionInfo.fromMap(
+        m['progression'] as Map<String, dynamic>,
+      ),
+      options: ((m['race_plan_options'] as List<dynamic>?) ?? const [])
+          .map((e) => e.toString())
+          .toList(),
+    );
+  }).toList();
+}
+
 Future<List<CrewSeed>> getDisciplineCrewSeeds(int disciplineId) async {
   final res = await http.get(
     Uri.parse('$apiURL/disciplines/$disciplineId/crew-seeds'),

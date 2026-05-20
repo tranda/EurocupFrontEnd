@@ -38,26 +38,20 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
       _error = null;
     });
     try {
-      final all = await api.getDisciplinesAll(eventId: widget.eventId);
-      // Hide inactive disciplines — they aren't generated and shouldn't take
-      // up space in the planner. Operator can reactivate via the regular
-      // discipline admin or by raising min_crews_per_race in Setup.
-      final disciplines = all
-          .where((d) => (d.status ?? 'active') == 'active')
-          .toList();
+      // Single bulk call — returns active disciplines + their progression
+      // + race-plan options in one payload. Replaces the previous 2N+1
+      // chatty pattern.
+      final rows = await api.getPlanAndSeedsBulk(widget.eventId);
       _progressionByDiscipline.clear();
       _optionsByDiscipline.clear();
-      for (final d in disciplines) {
-        if (d.id == null) continue;
-        try {
-          final prog = await api.getDisciplineProgression(d.id!);
-          _progressionByDiscipline[d.id!] = prog;
-          if (prog.crewCount >= 2 && prog.laneCount != null) {
-            _optionsByDiscipline[d.id!] =
-                await api.getDisciplineRacePlanOptions(d.id!);
-          }
-        } catch (_) {
-          // Skip per-discipline errors; UI shows "—".
+      final disciplines = <Discipline>[];
+      for (final row in rows) {
+        disciplines.add(row.discipline);
+        final id = row.discipline.id;
+        if (id == null) continue;
+        _progressionByDiscipline[id] = row.progression;
+        if (row.options.isNotEmpty) {
+          _optionsByDiscipline[id] = row.options;
         }
       }
       setState(() {
