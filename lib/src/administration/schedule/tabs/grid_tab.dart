@@ -704,8 +704,9 @@ class _GridTabState extends State<GridTab> {
                   }),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            child: Row(children: [
-              SizedBox(
+            child: LayoutBuilder(builder: (ctx, constraints) {
+              final narrow = constraints.maxWidth < 600;
+              final numCell = SizedBox(
                 width: 38,
                 child: Text(
                   '#${race.raceNumber ?? "—"}',
@@ -715,8 +716,8 @@ class _GridTabState extends State<GridTab> {
                     fontSize: 13,
                   ),
                 ),
-              ),
-              SizedBox(
+              );
+              final timeCell = SizedBox(
                 width: 48,
                 child: Text(
                   race.raceTime == null ? '—' : _formatTimeOnly(race.raceTime!),
@@ -726,45 +727,70 @@ class _GridTabState extends State<GridTab> {
                     fontSize: 13,
                   ),
                 ),
-              ),
-              Expanded(child: _disciplineBadges(race)),
-              const SizedBox(width: 8),
-              _stageBadge(race.stage),
-              const SizedBox(width: 8),
-              SizedBox(
+              );
+              final lanesCell = SizedBox(
                 width: 36,
                 child: Text(
                   '$filledLanes/$_laneCount',
                   textAlign: TextAlign.right,
                   style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
-              ),
-              const SizedBox(width: 4),
-              CompactIcon(
-                Icons.auto_fix_high,
-                tooltip: 'Auto-fill lanes (centre-out by seed)',
-                onPressed: () => _autoFillLanes(race),
-                color: Colors.white,
-              ),
-              CompactIcon(
-                Icons.edit,
-                tooltip: 'Edit time/stage',
-                onPressed: () => _editRace(race),
-                color: Colors.white,
-              ),
-              CompactIcon(
-                Icons.delete_outline,
-                tooltip: 'Delete race',
-                onPressed: () => _deleteRace(race),
-                color: Colors.white,
-              ),
-              if (raceId != null)
-                Icon(
-                  isExpanded ? Icons.expand_less : Icons.expand_more,
+              );
+              final actionIcons = [
+                CompactIcon(
+                  Icons.auto_fix_high,
+                  tooltip: 'Auto-fill lanes (centre-out by seed)',
+                  onPressed: () => _autoFillLanes(race),
                   color: Colors.white,
-                  size: 20,
                 ),
-            ]),
+                CompactIcon(
+                  Icons.edit,
+                  tooltip: 'Edit time/stage',
+                  onPressed: () => _editRace(race),
+                  color: Colors.white,
+                ),
+                CompactIcon(
+                  Icons.delete_outline,
+                  tooltip: 'Delete race',
+                  onPressed: () => _deleteRace(race),
+                  color: Colors.white,
+                ),
+                if (raceId != null)
+                  Icon(
+                    isExpanded ? Icons.expand_less : Icons.expand_more,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+              ];
+
+              if (!narrow) {
+                return Row(children: [
+                  numCell,
+                  timeCell,
+                  Expanded(child: _disciplineBadges(race)),
+                  const SizedBox(width: 8),
+                  _stageBadge(race.stage),
+                  const SizedBox(width: 8),
+                  lanesCell,
+                  const SizedBox(width: 4),
+                  ...actionIcons,
+                ]);
+              }
+
+              // Narrow layout: stack so badges get the full row width.
+              return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                Row(children: [
+                  numCell,
+                  timeCell,
+                  Expanded(child: _stageBadge(race.stage)),
+                  const SizedBox(width: 6),
+                  lanesCell,
+                  ...actionIcons,
+                ]),
+                const SizedBox(height: 4),
+                _disciplineBadges(race),
+              ]);
+            }),
           ),
         ),
       ),
@@ -956,6 +982,9 @@ class _GridTabState extends State<GridTab> {
       ),
       child: Text(
         competition,
+        softWrap: false,
+        overflow: TextOverflow.clip,
+        maxLines: 1,
         style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: color.shade700),
       ),
     );
