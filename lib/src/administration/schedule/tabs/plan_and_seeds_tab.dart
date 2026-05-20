@@ -38,7 +38,13 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
       _error = null;
     });
     try {
-      final disciplines = await api.getDisciplinesAll(eventId: widget.eventId);
+      final all = await api.getDisciplinesAll(eventId: widget.eventId);
+      // Hide inactive disciplines — they aren't generated and shouldn't take
+      // up space in the planner. Operator can reactivate via the regular
+      // discipline admin or by raising min_crews_per_race in Setup.
+      final disciplines = all
+          .where((d) => (d.status ?? 'active') == 'active')
+          .toList();
       _progressionByDiscipline.clear();
       _optionsByDiscipline.clear();
       for (final d in disciplines) {
