@@ -1877,9 +1877,11 @@ Future<Map<String, dynamic>> exportSchedule(
   int eventId, {
   required String format,
   String? day,
+  bool includeCrews = false,
 }) async {
   final params = <String, String>{'format': format};
   if (day != null) params['day'] = day;
+  if (includeCrews) params['include_crews'] = '1';
   final uri = Uri.parse('$apiURL/events/$eventId/schedule/export')
       .replace(queryParameters: params);
   final res = await http.get(uri, headers: {'Authorization': 'Bearer $token'});

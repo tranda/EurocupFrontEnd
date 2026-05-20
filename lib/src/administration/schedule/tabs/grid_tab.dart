@@ -1042,6 +1042,7 @@ class _GridTabState extends State<GridTab> {
         widget.eventId,
         format: choice.format,
         day: choice.day,
+        includeCrews: choice.includeCrews,
       );
       final bytes = result['bytes'] as Uint8List;
       final filename = result['filename'] as String;
@@ -1265,9 +1266,14 @@ class _BlockWithDate {
 }
 
 class _ExportChoice {
-  final String format; // 'txt' | 'csv'
+  final String format; // 'pdf' | 'xlsx' | 'csv' | 'txt'
   final String? day;   // 'YYYY-MM-DD' or null = all days
-  const _ExportChoice({required this.format, this.day});
+  final bool includeCrews;
+  const _ExportChoice({
+    required this.format,
+    this.day,
+    this.includeCrews = false,
+  });
 }
 
 class _ExportDialog extends StatefulWidget {
@@ -1281,6 +1287,7 @@ class _ExportDialog extends StatefulWidget {
 class _ExportDialogState extends State<_ExportDialog> {
   String _format = 'csv';
   String? _day; // null = all days
+  bool _includeCrews = false;
 
   @override
   Widget build(BuildContext context) {
@@ -1313,6 +1320,19 @@ class _ExportDialogState extends State<_ExportDialog> {
             ],
             onChanged: (v) => setState(() => _day = v),
           ),
+          const SizedBox(height: 4),
+          CheckboxListTile(
+            value: _includeCrews,
+            onChanged: (v) => setState(() => _includeCrews = v ?? false),
+            controlAffinity: ListTileControlAffinity.leading,
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            title: const Text('Include crews (start list)'),
+            subtitle: const Text(
+              'Off = race plan only. On = lane-by-lane team assignments.',
+              style: TextStyle(fontSize: 11),
+            ),
+          ),
         ]),
       ),
       actions: [
@@ -1325,7 +1345,11 @@ class _ExportDialogState extends State<_ExportDialog> {
           label: const Text('Download'),
           onPressed: () => Navigator.pop(
             context,
-            _ExportChoice(format: _format, day: _day),
+            _ExportChoice(
+              format: _format,
+              day: _day,
+              includeCrews: _includeCrews,
+            ),
           ),
         ),
       ],
