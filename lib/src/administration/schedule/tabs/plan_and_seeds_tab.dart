@@ -289,36 +289,64 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
   }
 
   Widget _generatorBar() {
+    final cleanBtn = OutlinedButton.icon(
+      onPressed: _generating ? null : () => _generate(clean: true),
+      icon: const Icon(Icons.cleaning_services, color: Colors.red),
+      label: const Text(
+        'Clean Generate',
+        style: TextStyle(color: Colors.red),
+      ),
+      style: OutlinedButton.styleFrom(
+        side: BorderSide(color: Colors.red.shade300),
+      ),
+    );
+    final mainBtn = ElevatedButton.icon(
+      onPressed: _generating ? null : _generate,
+      icon: const Icon(Icons.play_arrow),
+      label: const Text('Generate Schedule'),
+    );
     return Container(
       padding: const EdgeInsets.all(12),
       color: const Color.fromARGB(255, 240, 245, 252),
-      child: Row(children: [
-        const Icon(Icons.auto_awesome, color: Color.fromARGB(255, 0, 80, 150)),
-        const SizedBox(width: 8),
-        const Expanded(
-          child: Text(
-            'Generates the full schedule for all disciplines below.',
-            style: TextStyle(fontSize: 12),
+      child: LayoutBuilder(builder: (ctx, constraints) {
+        // Below ~640px the buttons stack under the description so the text
+        // doesn't get squeezed into a vertical character column on phones.
+        final narrow = constraints.maxWidth < 640;
+        if (narrow) {
+          return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Row(children: const [
+              Icon(Icons.auto_awesome, color: Color.fromARGB(255, 0, 80, 150)),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Generates the full schedule for all disciplines below.',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ),
+            ]),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.end,
+              children: [cleanBtn, mainBtn],
+            ),
+          ]);
+        }
+        return Row(children: [
+          const Icon(Icons.auto_awesome, color: Color.fromARGB(255, 0, 80, 150)),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Text(
+              'Generates the full schedule for all disciplines below.',
+              style: TextStyle(fontSize: 12),
+            ),
           ),
-        ),
-        OutlinedButton.icon(
-          onPressed: _generating ? null : () => _generate(clean: true),
-          icon: const Icon(Icons.cleaning_services, color: Colors.red),
-          label: const Text(
-            'Clean Generate',
-            style: TextStyle(color: Colors.red),
-          ),
-          style: OutlinedButton.styleFrom(
-            side: BorderSide(color: Colors.red.shade300),
-          ),
-        ),
-        const SizedBox(width: 8),
-        ElevatedButton.icon(
-          onPressed: _generating ? null : _generate,
-          icon: const Icon(Icons.play_arrow),
-          label: const Text('Generate Schedule'),
-        ),
-      ]),
+          cleanBtn,
+          const SizedBox(width: 8),
+          mainBtn,
+        ]);
+      }),
     );
   }
 

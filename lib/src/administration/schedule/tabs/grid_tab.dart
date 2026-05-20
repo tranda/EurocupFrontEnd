@@ -933,6 +933,9 @@ class _GridTabState extends State<GridTab> {
       ),
       child: Text(
         displayValue ?? value,
+        softWrap: false,
+        overflow: TextOverflow.clip,
+        maxLines: 1,
         style: TextStyle(
           color: fg,
           fontSize: 12,
