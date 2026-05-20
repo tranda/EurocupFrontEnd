@@ -1,3 +1,4 @@
+import 'package:eurocup_frontend/config/app_version.dart';
 import 'package:eurocup_frontend/src/administration/administration_view.dart';
 import 'package:eurocup_frontend/src/administration/database_backup_view.dart';
 import 'package:eurocup_frontend/src/administration/event_list_view.dart';
@@ -131,12 +132,36 @@ class MyApp extends StatelessWidget {
             if (!StartupService.isInitialized && !StartupService.isLoading) {
               StartupService.initialize();
             }
-            return Center(
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 1024),
-                child: child ?? const SizedBox(),
+            return Stack(children: [
+              Center(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 1024),
+                  child: child ?? const SizedBox(),
+                ),
               ),
-            );
+              // Small version label visible on every page — bottom-right corner.
+              Positioned(
+                right: 6,
+                bottom: 4,
+                child: IgnorePointer(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.45),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'v${AppVersion.version}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ]);
           },
           localizationsDelegates: const [
             AppLocalizations.delegate,
