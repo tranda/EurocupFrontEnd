@@ -170,13 +170,20 @@ class ListViewState extends State<TeamListView> {
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              if (currentUser.accessLevel != null && currentUser.accessLevel! >= 2)
+                              if (currentUser.accessLevel != null && currentUser.accessLevel! >= 2) ...[
+                                IconButton(
+                                  icon: const Icon(Icons.edit, color: Colors.blue),
+                                  onPressed: () {
+                                    _showEditDialog(context, teams[index]);
+                                  },
+                                ),
                                 IconButton(
                                   icon: const Icon(Icons.delete, color: Colors.red),
                                   onPressed: () {
                                     _showDeleteConfirmation(context, teams[index]);
                                   },
                                 ),
+                              ],
                               const Icon(Icons.arrow_forward),
                             ],
                           )),
@@ -264,6 +271,65 @@ class ListViewState extends State<TeamListView> {
       'clubId': clubId,
     });
     controller.clear();
+  }
+
+  void _showEditDialog(BuildContext context, Team team) {
+    final editController = TextEditingController(text: team.name ?? '');
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Rename Team'),
+          content: TextField(
+            controller: editController,
+            autofocus: true,
+            decoration: buildStandardInputDecoration('Team name'),
+            style: Theme.of(context).textTheme.displaySmall,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                final newName = editController.text.trim();
+                if (newName.isEmpty || newName == team.name) {
+                  Navigator.pop(dialogContext);
+                  return;
+                }
+                Navigator.pop(dialogContext);
+                try {
+                  await api.updateTeam(team.id!, newName);
+                  setState(() {
+                    dataFuture = api.getTeams(
+                      currentUser.accessLevel!,
+                      activeOnly: currentUser.accessLevel != null && currentUser.accessLevel! >= 2 ? false : true
+                    );
+                  });
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Team renamed to "$newName"')),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to rename team: ${e.toString()}'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+          actionsAlignment: MainAxisAlignment.spaceBetween,
+        );
+      },
+    );
   }
 
   void _showDeleteConfirmation(BuildContext context, Team team) {
