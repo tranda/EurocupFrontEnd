@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../model/event/event.dart';
 import '../../model/schedule/schedule_config.dart';
+import 'snapshots_dialog.dart';
 import 'tabs/grid_tab.dart';
 import 'tabs/import_tab.dart';
 import 'tabs/plan_and_seeds_tab.dart';
@@ -128,6 +129,23 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
             if (_config != null) _statusBadge(_config!.scheduleStatus),
           ]),
           actions: [
+            if (_config != null && _event?.id != null)
+              IconButton(
+                tooltip: 'Snapshots',
+                onPressed: () async {
+                  final restored = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => SnapshotsDialog(
+                      eventId: _event!.id!,
+                      days: _config!.days,
+                    ),
+                  );
+                  if (restored == true) {
+                    await _loadConfig();
+                  }
+                },
+                icon: const Icon(Icons.bookmarks_outlined),
+              ),
             if (_config != null)
               TextButton.icon(
                 onPressed: _publishing ? null : _togglePublish,

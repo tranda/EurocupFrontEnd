@@ -1715,6 +1715,76 @@ Future<void> resetDisciplineCrewSeeds(int disciplineId) async {
   _unwrap(res, action: 'reset crew seeds');
 }
 
+// ---------------- Schedule snapshots ----------------
+
+class ScheduleSnapshot {
+  final int id;
+  final String category; // 'setup' | 'plan_seeds' | 'grid_day'
+  final String? day;     // 'YYYY-MM-DD' or null
+  final String name;
+  final DateTime? createdAt;
+  const ScheduleSnapshot({
+    required this.id,
+    required this.category,
+    required this.day,
+    required this.name,
+    required this.createdAt,
+  });
+
+  factory ScheduleSnapshot.fromMap(Map<String, dynamic> m) => ScheduleSnapshot(
+        id: (m['id'] ?? 0) as int,
+        category: (m['category'] ?? '') as String,
+        day: m['day'] as String?,
+        name: (m['name'] ?? '') as String,
+        createdAt: m['created_at'] == null ? null : DateTime.tryParse(m['created_at']),
+      );
+}
+
+Future<List<ScheduleSnapshot>> listScheduleSnapshots(int eventId) async {
+  final res = await http.get(
+    Uri.parse('$apiURL/events/$eventId/snapshots'),
+    headers: _jsonAuthHeaders(),
+  );
+  final data = _unwrap(res, action: 'list snapshots') as Map<String, dynamic>;
+  return ((data['snapshots'] as List<dynamic>? ?? []))
+      .map((e) => ScheduleSnapshot.fromMap(e as Map<String, dynamic>))
+      .toList();
+}
+
+Future<ScheduleSnapshot> createScheduleSnapshot(
+  int eventId, {
+  required String category,
+  String? day,
+  required String name,
+}) async {
+  final body = <String, dynamic>{'category': category, 'name': name};
+  if (day != null) body['day'] = day;
+  final res = await http.post(
+    Uri.parse('$apiURL/events/$eventId/snapshots'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode(body),
+  );
+  return ScheduleSnapshot.fromMap(
+    _unwrap(res, action: 'create snapshot') as Map<String, dynamic>,
+  );
+}
+
+Future<void> deleteScheduleSnapshot(int snapshotId) async {
+  final res = await http.delete(
+    Uri.parse('$apiURL/snapshots/$snapshotId'),
+    headers: _jsonAuthHeaders(),
+  );
+  _unwrap(res, action: 'delete snapshot');
+}
+
+Future<Map<String, dynamic>> restoreScheduleSnapshot(int snapshotId) async {
+  final res = await http.post(
+    Uri.parse('$apiURL/snapshots/$snapshotId/restore'),
+    headers: _jsonAuthHeaders(),
+  );
+  return _unwrap(res, action: 'restore snapshot') as Map<String, dynamic>;
+}
+
 Future<GenerationResult> generateSchedule(
   int eventId, {
   bool clean = false,
