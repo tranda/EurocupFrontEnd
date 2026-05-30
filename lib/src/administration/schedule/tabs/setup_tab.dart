@@ -153,6 +153,81 @@ class _SetupTabState extends State<SetupTab> {
     if (ok) await _runWithLoading(() => api.deleteEventDay(day.id));
   }
 
+  Future<void> _copyBlocksFrom(EventDay targetDay) async {
+    final otherDays = widget.config.days
+        .where((d) => d.id != targetDay.id)
+        .toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+    if (otherDays.isEmpty) return;
+
+    final source = await showDialog<EventDay>(
+      context: context,
+      builder: (ctx) {
+        EventDay? picked = otherDays.first;
+        return StatefulBuilder(
+          builder: (ctx, setSt) => AlertDialog(
+            title: const Text('Copy blocks from another day'),
+            content: SizedBox(
+              width: 360,
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Text(
+                  'Target: ${targetDay.date.toIso8601String().substring(0, 10)}'
+                  '${(targetDay.name ?? "").isEmpty ? "" : " (${targetDay.name})"}',
+                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Existing blocks on the target day will be REPLACED.',
+                  style: TextStyle(fontSize: 11, color: Colors.red),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<EventDay>(
+                  value: picked,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: 'Source day'),
+                  items: [
+                    for (final d in otherDays)
+                      DropdownMenuItem<EventDay>(
+                        value: d,
+                        child: Text(
+                          '${d.date.toIso8601String().substring(0, 10)}'
+                          '${(d.name ?? "").isEmpty ? "" : " — ${d.name}"}'
+                          ' (${d.blocks.length} block${d.blocks.length == 1 ? "" : "s"})',
+                        ),
+                      ),
+                  ],
+                  onChanged: (v) => setSt(() => picked = v),
+                ),
+              ]),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.content_copy),
+                label: const Text('Copy'),
+                onPressed: () => Navigator.pop(ctx, picked),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    if (source == null) return;
+
+    await _runWithLoading(() async {
+      final copied = await api.copyBlocksFromDay(targetDay.id, source.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Copied $copied block(s) from '
+            '${source.date.toIso8601String().substring(0, 10)} to '
+            '${targetDay.date.toIso8601String().substring(0, 10)}.'),
+      ));
+    });
+  }
+
   Future<void> _addBlock(EventDay day) async {
     final block = await _showBlockDialog();
     if (block == null) return;
@@ -489,6 +564,13 @@ class _SetupTabState extends State<SetupTab> {
                   ),
               ]),
             ),
+            if (widget.config.days.length > 1)
+              CompactIcon(
+                Icons.content_copy,
+                tooltip: 'Copy blocks from another day',
+                onPressed: () => _copyBlocksFrom(day),
+                color: Colors.white,
+              ),
             CompactIcon(
               Icons.edit,
               tooltip: 'Edit day',

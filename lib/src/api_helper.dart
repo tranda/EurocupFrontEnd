@@ -1534,6 +1534,19 @@ Future<void> deleteEventDay(int dayId) async {
   _unwrap(res, action: 'delete event day');
 }
 
+/// Copies every block from source day to target day. With replace=true
+/// (default), the target day's existing blocks are wiped first.
+/// Returns the number of blocks copied.
+Future<int> copyBlocksFromDay(int targetDayId, int fromDayId, {bool replace = true}) async {
+  final res = await http.post(
+    Uri.parse('$apiURL/event-days/$targetDayId/copy-blocks'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode({'from_day_id': fromDayId, 'replace': replace}),
+  );
+  final data = _unwrap(res, action: 'copy blocks') as Map<String, dynamic>;
+  return (data['blocks_copied'] ?? 0) as int;
+}
+
 Future<int> createScheduleBlock(
   int dayId, {
   required String name,
