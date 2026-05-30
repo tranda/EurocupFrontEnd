@@ -143,7 +143,7 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
                     await _loadConfig();
                   }
                 },
-                icon: const Icon(Icons.bookmarks_outlined),
+                icon: const Icon(Icons.bookmark_border),
                 label: const Text('Snapshots'),
               ),
             if (_config != null)

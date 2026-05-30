@@ -162,7 +162,7 @@ class _SnapshotsDialogState extends State<SnapshotsDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Row(children: [
-        const Icon(Icons.bookmarks, color: Color.fromARGB(255, 0, 80, 150)),
+        const Icon(Icons.bookmark, color: Color.fromARGB(255, 0, 80, 150)),
         const SizedBox(width: 8),
         const Text('Schedule snapshots'),
         const Spacer(),
