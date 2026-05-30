@@ -130,8 +130,7 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
           ]),
           actions: [
             if (_config != null && _event?.id != null)
-              IconButton(
-                tooltip: 'Snapshots',
+              TextButton.icon(
                 onPressed: () async {
                   final restored = await showDialog<bool>(
                     context: context,
@@ -145,6 +144,7 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
                   }
                 },
                 icon: const Icon(Icons.bookmarks_outlined),
+                label: const Text('Snapshots'),
               ),
             if (_config != null)
               TextButton.icon(
