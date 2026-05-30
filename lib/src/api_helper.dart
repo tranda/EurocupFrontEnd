@@ -1643,10 +1643,14 @@ class PlanAndSeedsRow {
   final Discipline discipline;
   final DisciplineProgressionInfo progression;
   final List<String> options;
+  /// 'YYYY-MM-DD' of the day this discipline's races land on (predicted by
+  /// the backend via first-matching-block). Null when no block matches.
+  final String? predictedDay;
   const PlanAndSeedsRow({
     required this.discipline,
     required this.progression,
     required this.options,
+    this.predictedDay,
   });
 }
 
@@ -1680,6 +1684,7 @@ Future<List<PlanAndSeedsRow>> getPlanAndSeedsBulk(int eventId) async {
       options: ((m['race_plan_options'] as List<dynamic>?) ?? const [])
           .map((e) => e.toString())
           .toList(),
+      predictedDay: m['predicted_day'] as String?,
     );
   }).toList();
 }
@@ -1710,11 +1715,17 @@ Future<void> resetDisciplineCrewSeeds(int disciplineId) async {
   _unwrap(res, action: 'reset crew seeds');
 }
 
-Future<GenerationResult> generateSchedule(int eventId, {bool clean = false}) async {
+Future<GenerationResult> generateSchedule(
+  int eventId, {
+  bool clean = false,
+  String? day,
+}) async {
+  final body = <String, dynamic>{'clean': clean};
+  if (day != null) body['day'] = day;
   final res = await http.post(
     Uri.parse('$apiURL/events/$eventId/schedule/generate'),
     headers: _jsonAuthHeaders(),
-    body: jsonEncode({'clean': clean}),
+    body: jsonEncode(body),
   );
   return GenerationResult.fromMap(_unwrap(res, action: 'generate schedule') as Map<String, dynamic>);
 }

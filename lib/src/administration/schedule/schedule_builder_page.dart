@@ -177,6 +177,10 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
     }
     return TabBarView(
       controller: _tabController,
+      // Disable horizontal swipe-to-change-tab — a stray swipe inside the
+      // Grid / Plan & Seeds was switching tabs unexpectedly on mobile.
+      // Operators change tabs by tapping the top icons.
+      physics: const NeverScrollableScrollPhysics(),
       children: [
         SetupTab(eventId: _event!.id!, config: _config!, onChanged: _loadConfig),
         PlanAndSeedsTab(eventId: _event!.id!),

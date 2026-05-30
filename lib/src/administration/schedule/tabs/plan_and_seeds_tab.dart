@@ -24,6 +24,9 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
   List<Discipline> _disciplines = [];
   final Map<int, DisciplineProgressionInfo> _progressionByDiscipline = {};
   final Map<int, List<String>> _optionsByDiscipline = {};
+  /// disciplineId → 'YYYY-MM-DD' the discipline's races land on (predicted
+  /// from block filter matches). Null = no matching block.
+  final Map<int, String?> _dayByDiscipline = {};
   GenerationResult? _lastResult;
 
   @override
@@ -44,12 +47,14 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
       final rows = await api.getPlanAndSeedsBulk(widget.eventId);
       _progressionByDiscipline.clear();
       _optionsByDiscipline.clear();
+      _dayByDiscipline.clear();
       final disciplines = <Discipline>[];
       for (final row in rows) {
         disciplines.add(row.discipline);
         final id = row.discipline.id;
         if (id == null) continue;
         _progressionByDiscipline[id] = row.progression;
+        _dayByDiscipline[id] = row.predictedDay;
         if (row.options.isNotEmpty) {
           _optionsByDiscipline[id] = row.options;
         }
@@ -66,27 +71,33 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
     }
   }
 
-  Future<void> _generate({bool clean = false}) async {
+  Future<void> _generate({bool clean = false, String? day}) async {
+    final scope = day == null ? 'whole event' : 'day $day';
     final ok = await _confirm(
       clean ? 'Clean Generate' : 'Generate Schedule',
       clean
-          ? 'Wipe ALL existing races AND ignore any manual drag-reorders — '
-              'rebuild every block from scratch using block filters and '
-              'IDBF seeding. Continue?'
-          : 'Rebuild races but preserve manual drag-reorders where stages '
-              'still match. Continue?',
+          ? 'Wipe ALL existing races for $scope AND ignore any manual '
+              'drag-reorders — rebuild from scratch using block filters '
+              'and IDBF seeding. Continue?'
+          : 'Rebuild races for $scope, preserving manual drag-reorders '
+              'where stages still match. Continue?',
     );
     if (!ok) return;
     setState(() => _generating = true);
     try {
-      final result = await api.generateSchedule(widget.eventId, clean: clean);
+      final result = await api.generateSchedule(
+        widget.eventId,
+        clean: clean,
+        day: day,
+      );
       setState(() => _lastResult = result);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('${clean ? "Clean-generated" : "Generated"} '
-            '${result.racesCreated} races · '
+            '${result.racesCreated} races${day == null ? "" : " for $day"} · '
             '${result.warnings.length} warning(s)'),
       ));
+      await _load(); // refresh predicted-day grouping in case blocks changed
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
@@ -385,13 +396,88 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
     if (_disciplines.isEmpty) {
       return const Center(child: Text('No disciplines for this event.'));
     }
+
+    // Group disciplines by predicted day. Within a day, keep original order.
+    // Unscheduled (no matching block) go last under a "— unscheduled —" header.
+    const noDay = '__no_day__';
+    final byDay = <String, List<Discipline>>{};
+    for (final d in _disciplines) {
+      final day = (_dayByDiscipline[d.id] ?? noDay).toString();
+      byDay.putIfAbsent(day, () => []).add(d);
+    }
+    final orderedKeys = byDay.keys.toList()
+      ..sort((a, b) {
+        if (a == noDay) return 1;
+        if (b == noDay) return -1;
+        return a.compareTo(b);
+      });
+
     return RefreshIndicator(
       onRefresh: _load,
-      child: ListView.separated(
-        itemCount: _disciplines.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
-        itemBuilder: (_, i) => _disciplineRow(_disciplines[i]),
+      child: ListView.builder(
+        itemCount: orderedKeys.length,
+        itemBuilder: (_, dayIdx) {
+          final key = orderedKeys[dayIdx];
+          final disciplinesInDay = byDay[key]!;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _dayHeader(key, disciplinesInDay.length, isUnscheduled: key == noDay),
+              for (var i = 0; i < disciplinesInDay.length; i++) ...[
+                _disciplineRow(disciplinesInDay[i]),
+                if (i < disciplinesInDay.length - 1) const Divider(height: 1),
+              ],
+            ],
+          );
+        },
       ),
+    );
+  }
+
+  Widget _dayHeader(String day, int count, {bool isUnscheduled = false}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      color: isUnscheduled
+          ? const Color(0xFF6B7280)
+          : const Color.fromARGB(255, 0, 80, 150),
+      child: Row(children: [
+        Icon(
+          isUnscheduled ? Icons.help_outline : Icons.event,
+          color: Colors.white,
+          size: 18,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          isUnscheduled ? 'Unscheduled (no matching block)' : day,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '· $count discipline${count == 1 ? "" : "s"}',
+          style: const TextStyle(color: Colors.white70, fontSize: 12),
+        ),
+        const Spacer(),
+        if (!isUnscheduled) ...[
+          TextButton.icon(
+            onPressed: _generating ? null : () => _generate(day: day),
+            icon: const Icon(Icons.play_arrow, color: Colors.white, size: 16),
+            label: const Text(
+              'Generate day',
+              style: TextStyle(color: Colors.white, fontSize: 12),
+            ),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: const Size(0, 28),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
+        ],
+      ]),
     );
   }
 
