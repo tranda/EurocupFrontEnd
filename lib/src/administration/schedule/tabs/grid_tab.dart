@@ -599,14 +599,17 @@ class _GridTabState extends State<GridTab> {
         return a.compareTo(b);
       });
 
+    // Real dates only (no "Unscheduled") for the copy-order picker.
+    final availableDates = keys.where((k) => k != 'Unscheduled').toList();
+
     return SingleChildScrollView(
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        for (final key in keys) _dateSection(key, groups[key]!),
+        for (final key in keys) _dateSection(key, groups[key]!, availableDates),
       ]),
     );
   }
 
-  Widget _dateSection(String dateLabel, List<RaceResult> rows) {
+  Widget _dateSection(String dateLabel, List<RaceResult> rows, List<String> availableDates) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -630,6 +633,25 @@ class _GridTabState extends State<GridTab> {
               '${rows.length} race${rows.length == 1 ? "" : "s"}',
               style: const TextStyle(color: Colors.white70, fontSize: 12),
             ),
+            const Spacer(),
+            // "Copy order from another day" — useful when day 2 has the
+            // same races as day 1 just at a different distance, and you
+            // want them in the same sequence.
+            if (dateLabel != 'Unscheduled' &&
+                availableDates.where((d) => d != dateLabel).isNotEmpty)
+              TextButton.icon(
+                onPressed: () => _copyDayOrder(dateLabel, availableDates),
+                icon: const Icon(Icons.swap_vert, color: Colors.white, size: 16),
+                label: const Text(
+                  'Copy order from…',
+                  style: TextStyle(color: Colors.white, fontSize: 12),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  minimumSize: const Size(0, 28),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
           ]),
         ),
         ReorderableListView.builder(
@@ -1053,6 +1075,80 @@ class _GridTabState extends State<GridTab> {
       const Divider(height: 4),
       const Divider(height: smallSpace),
     ]);
+  }
+
+  /// Pick a source day and ask the backend to reorder this (target) day to
+  /// follow the source day's race sequence. Matches by boat+age+gender+stage
+  /// (distance ignored), so day 2's 500m races line up with day 1's 200m
+  /// races of the same boat/age/gender/stage.
+  Future<void> _copyDayOrder(String targetDay, List<String> allDates) async {
+    final otherDays = allDates.where((d) => d != targetDay).toList();
+    if (otherDays.isEmpty) return;
+
+    String? picked = otherDays.first;
+    final source = await showDialog<String>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSt) => AlertDialog(
+          title: const Text('Copy race order from another day'),
+          content: SizedBox(
+            width: 360,
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Text(
+                'Target: $targetDay',
+                style: const TextStyle(fontSize: 12, color: Colors.black54),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Races on the target day will be re-timed to follow the '
+                'source day\'s order, matched by boat+age+gender+stage '
+                '(distance ignored).',
+                style: TextStyle(fontSize: 11, color: Colors.black54),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: picked,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Source day'),
+                items: [
+                  for (final d in otherDays)
+                    DropdownMenuItem<String>(value: d, child: Text(d)),
+                ],
+                onChanged: (v) => setSt(() => picked = v),
+              ),
+            ]),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.swap_vert),
+              label: const Text('Apply'),
+              onPressed: () => Navigator.pop(ctx, picked),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+
+    await _runWithBusy(() async {
+      final stats = await api.copyDayOrder(
+        widget.eventId,
+        sourceDay: source,
+        targetDay: targetDay,
+      );
+      if (!mounted) return;
+      final m = stats['matched'] ?? 0;
+      final us = stats['unmatched_source'] ?? 0;
+      final ut = stats['unmatched_target'] ?? 0;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Reordered $m race(s). '
+            '$us source-only · $ut target-only (kept).'),
+      ));
+    });
   }
 
   Future<void> _exportSchedule() async {

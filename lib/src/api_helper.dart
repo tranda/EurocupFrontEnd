@@ -1798,6 +1798,27 @@ Future<Map<String, dynamic>> restoreScheduleSnapshot(int snapshotId) async {
   return _unwrap(res, action: 'restore snapshot') as Map<String, dynamic>;
 }
 
+/// Reorder target_day races to follow source_day's race sequence
+/// (matched by boat+age+gender+stage; distance ignored). Returns the
+/// {matched, unmatched_source, unmatched_target} counts.
+Future<Map<String, int>> copyDayOrder(
+  int eventId, {
+  required String sourceDay,
+  required String targetDay,
+}) async {
+  final res = await http.post(
+    Uri.parse('$apiURL/events/$eventId/schedule/copy-day-order'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode({'source_day': sourceDay, 'target_day': targetDay}),
+  );
+  final data = _unwrap(res, action: 'copy day order') as Map<String, dynamic>;
+  return {
+    'matched': (data['matched'] ?? 0) as int,
+    'unmatched_source': (data['unmatched_source'] ?? 0) as int,
+    'unmatched_target': (data['unmatched_target'] ?? 0) as int,
+  };
+}
+
 Future<GenerationResult> generateSchedule(
   int eventId, {
   bool clean = false,
