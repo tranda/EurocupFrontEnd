@@ -817,10 +817,11 @@ class _GridTabState extends State<GridTab> {
         ),
       ),
       const Divider(height: 1),
-      _progressionRow(race),
-      if (isExpanded)
+      if (isExpanded) ...[
         for (var lane = 1; lane <= _laneCount; lane++)
           _laneRow(race, lane, crewByLane[lane]),
+        _progressionRow(race),
+      ],
       const Divider(height: smallSpace),
     ]);
   }
