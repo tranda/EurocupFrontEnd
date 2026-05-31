@@ -1517,11 +1517,10 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   }
 
   Widget _buildDayHeader(_DayHeaderItem item) {
-    final color = competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1];
     final isExpanded = _expandedDays.contains(item.day);
     final dateText = DateFormat('EEEE, d MMM yyyy').format(item.day);
     return Material(
-      color: color,
+      color: Colors.grey.shade900,
       child: InkWell(
         onTap: () {
           setState(() {
