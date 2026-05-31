@@ -20,6 +20,13 @@ class RaceResult {
   int? durationSeconds;
   String? label;
   bool shiftSubsequent;
+  // Per-race admin override of the auto-derived progression rule.
+  // Null/empty = use the auto rule (server returns it as progressionRule).
+  String? progressionNote;
+  // Auto-derived "where do these crews go next" line, computed by the
+  // server. Always populated for races (empty string when no rule applies);
+  // overridden by progressionNote when set.
+  String? progressionRule;
   DateTime? createdAt;
   DateTime? updatedAt;
 
@@ -40,6 +47,8 @@ class RaceResult {
     this.durationSeconds,
     this.label,
     this.shiftSubsequent = true,
+    this.progressionNote,
+    this.progressionRule,
     this.createdAt,
     this.updatedAt,
   });
@@ -73,6 +82,8 @@ class RaceResult {
         shiftSubsequent: data['shift_subsequent'] == null
             ? true
             : (data['shift_subsequent'] == true || data['shift_subsequent'] == 1),
+        progressionNote: data['progression_note'] as String?,
+        progressionRule: data['progression_rule'] as String?,
         createdAt: data['created_at'] == null
             ? null
             : DateTime.parse(data['created_at'] as String),
@@ -98,6 +109,8 @@ class RaceResult {
         'duration_seconds': durationSeconds,
         'label': label,
         'shift_subsequent': shiftSubsequent,
+        'progression_note': progressionNote,
+        'progression_rule': progressionRule,
         'created_at': createdAt?.toIso8601String(),
         'updated_at': updatedAt?.toIso8601String(),
       };

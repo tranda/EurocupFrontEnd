@@ -1864,12 +1864,18 @@ Future<void> updateRaceResultFields(int raceId, {
   String? stage,
   int? raceNumber,
   String? status,
+  // progressionNote: pass an empty string to clear the override and revert
+  // to the auto-derived rule; omit to leave unchanged.
+  String? progressionNote,
 }) async {
   final body = <String, dynamic>{};
   if (raceTime != null) body['race_time'] = raceTime.toIso8601String();
   if (stage != null) body['stage'] = stage;
   if (raceNumber != null) body['race_number'] = raceNumber;
   if (status != null) body['status'] = status;
+  if (progressionNote != null) {
+    body['progression_note'] = progressionNote.isEmpty ? null : progressionNote;
+  }
   final res = await http.put(
     Uri.parse('$apiURL/race-results/$raceId'),
     headers: _jsonAuthHeaders(),

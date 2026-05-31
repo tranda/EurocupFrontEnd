@@ -817,11 +817,131 @@ class _GridTabState extends State<GridTab> {
         ),
       ),
       const Divider(height: 1),
+      _progressionRow(race),
       if (isExpanded)
         for (var lane = 1; lane <= _laneCount; lane++)
           _laneRow(race, lane, crewByLane[lane]),
       const Divider(height: smallSpace),
     ]);
+  }
+
+  // One-line "where do these crews go next" rule. Reads progressionNote first
+  // (admin override) and falls back to progressionRule (auto-derived by the
+  // server). Hidden when both are empty so blocks without rules (e.g. Grand
+  // Final → 'Final standings.') stay clean.
+  Widget _progressionRow(RaceResult race) {
+    final note = race.progressionNote?.trim() ?? '';
+    final auto = race.progressionRule?.trim() ?? '';
+    final text = note.isNotEmpty ? note : auto;
+    final isOverride = note.isNotEmpty;
+    if (text.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        child: Row(children: [
+          Expanded(
+            child: Text(
+              'No progression rule',
+              style: TextStyle(color: Colors.grey[500], fontSize: 11, fontStyle: FontStyle.italic),
+            ),
+          ),
+          CompactIcon(
+            Icons.edit_note,
+            tooltip: 'Set progression rule',
+            onPressed: () => _editProgressionNote(race),
+            color: Colors.grey[600],
+          ),
+        ]),
+      );
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: isOverride ? Colors.amber.shade50 : Colors.blue.shade50,
+        border: Border(
+          left: BorderSide(
+            color: isOverride ? Colors.amber.shade700 : Colors.blue.shade700,
+            width: 3,
+          ),
+        ),
+      ),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+        Icon(
+          isOverride ? Icons.edit_note : Icons.arrow_forward,
+          size: 14,
+          color: isOverride ? Colors.amber.shade800 : Colors.blue.shade700,
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(fontSize: 11.5, color: Colors.grey[800]),
+          ),
+        ),
+        CompactIcon(
+          Icons.edit,
+          tooltip: isOverride ? 'Edit override (clear to revert to auto)' : 'Override progression rule',
+          onPressed: () => _editProgressionNote(race),
+          color: Colors.grey[700],
+        ),
+      ]),
+    );
+  }
+
+  Future<void> _editProgressionNote(RaceResult race) async {
+    final raceId = race.id;
+    if (raceId == null) return;
+    final controller = TextEditingController(text: race.progressionNote ?? '');
+    final auto = race.progressionRule ?? '';
+    final result = await showDialog<String?>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Progression rule'),
+        content: SizedBox(
+          width: 480,
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            if (auto.isNotEmpty) ...[
+              Text('Auto rule:', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey[700], fontSize: 12)),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.all(8),
+                color: Colors.grey.shade100,
+                child: Text(auto, style: const TextStyle(fontSize: 12)),
+              ),
+              const SizedBox(height: 12),
+            ],
+            Text('Override (leave empty to use auto rule):',
+                style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey[700], fontSize: 12)),
+            const SizedBox(height: 4),
+            TextField(
+              controller: controller,
+              maxLength: 500,
+              maxLines: 3,
+              decoration: const InputDecoration(border: OutlineInputBorder()),
+            ),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(null), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(''),
+            child: const Text('Clear override'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    if (result == null) return; // cancelled
+    try {
+      await api.updateRaceResultFields(raceId, progressionNote: result);
+      await _load();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Save failed: $e')));
+      }
+    }
   }
 
   Widget _laneRow(RaceResult race, int lane, CrewResult? crewResult) {
