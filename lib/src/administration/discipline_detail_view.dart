@@ -31,11 +31,18 @@ class _DisciplineDetailViewState extends State<DisciplineDetailView> {
   Discipline? _discipline;
   List<Competition> _events = [];
   bool _isEditMode = false;
+  bool _didInitialize = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
+
+    // Only read route arguments and populate the form once. didChangeDependencies
+    // re-fires on route status changes (e.g. opening/closing a dropdown), and
+    // re-running _populateForm() would silently revert the user's edits.
+    if (_didInitialize) return;
+    _didInitialize = true;
+
     final arguments = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     if (arguments != null) {
       if (arguments.containsKey('events')) {
