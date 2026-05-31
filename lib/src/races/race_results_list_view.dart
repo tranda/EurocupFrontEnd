@@ -1520,7 +1520,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     final isExpanded = _expandedDays.contains(item.day);
     final dateText = DateFormat('EEEE, d MMM yyyy').format(item.day);
     return Material(
-      color: Colors.grey.shade900,
+      color: Colors.orange.shade800,
       child: InkWell(
         onTap: () {
           setState(() {
