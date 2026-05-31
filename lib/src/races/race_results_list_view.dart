@@ -1658,6 +1658,39 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     );
   }
 
+  // Read-only one-liner showing how crews from this race progress to the
+  // next one. Hidden when neither override nor auto rule is set (e.g. plain
+  // grand finals get "Final standings." which we still show, but blocks
+  // with no rule at all collapse to nothing).
+  Widget _progressionLine(RaceResult race) {
+    final note = race.progressionNote?.trim() ?? '';
+    final auto = race.progressionRule?.trim() ?? '';
+    final text = note.isNotEmpty ? note : auto;
+    if (text.isEmpty) return const SizedBox.shrink();
+    final isOverride = note.isNotEmpty;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      decoration: BoxDecoration(
+        color: isOverride ? Colors.amber.shade50 : Colors.blue.shade50,
+        border: Border(
+          left: BorderSide(
+            color: isOverride ? Colors.amber.shade700 : Colors.blue.shade700,
+            width: 3,
+          ),
+        ),
+      ),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+        Icon(Icons.arrow_forward,
+            size: 14, color: isOverride ? Colors.amber.shade800 : Colors.blue.shade700),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(text, style: TextStyle(fontSize: 12, color: Colors.grey[800])),
+        ),
+      ]),
+    );
+  }
+
   Widget _buildRaceRow(RaceResult raceResult) {
     try {
       final discipline = raceResult.discipline;
@@ -1830,6 +1863,10 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                 ),
               ),
             ),
+
+          // Progression line — same source as the admin Grid (override first,
+          // else auto-derived from the IDBF Race Plan). Read-only here.
+          if (isExpanded) _progressionLine(raceResult),
 
           // Race images section
           if (isExpanded && raceResult.images != null && raceResult.images!.isNotEmpty)
