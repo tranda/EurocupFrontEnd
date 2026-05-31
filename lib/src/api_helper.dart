@@ -1260,7 +1260,10 @@ Future<RaceResult?> getRaceResult(int raceResultId) async {
   }
 }
 
-// Public Race Results API methods (no authentication required)
+// Public Race Results API methods (no authentication required).
+// When the user is logged in we still attach the bearer token — the
+// backend uses it to decide whether to bypass the schedule_status='published'
+// filter (admins see drafts for preview; anonymous users do not).
 Future<List<RaceResult>> getPublicRaceResults({int? eventId}) async {
   var timestamp = DateTime.now().millisecondsSinceEpoch;
   var url = '$apiURL/public/race-results';
@@ -1271,6 +1274,9 @@ Future<List<RaceResult>> getPublicRaceResults({int? eventId}) async {
   }
   var request = http.Request('GET', Uri.parse(url));
   request.headers.addAll({'Cache-Control': 'no-cache'});
+  if (token != null && token!.isNotEmpty) {
+    request.headers['Authorization'] = 'Bearer $token';
+  }
 
   http.StreamedResponse response = await request.send();
   List<RaceResult> raceResults = [];
