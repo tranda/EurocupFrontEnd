@@ -89,48 +89,24 @@ class _GridTabState extends State<GridTab> {
     if (newIndex > oldIndex) newIndex -= 1;
     if (newIndex == oldIndex) return;
 
-    final moved = rows[oldIndex];
+    // Unified slot-swap: races AND breaks participate. The slice between the
+    // old and new positions has its times rotated so the moved item picks up
+    // the time at its new position and everything else slides one slot to
+    // fill the gap. The backend recompute then normalizes block timing
+    // (advancing the cursor by gap_seconds for races, by duration for shift
+    // breaks, by zero for parallel breaks), so the on-screen result is
+    // always a clean re-layout.
+    //
+    // This is the path that makes "drag a race past a break" work: the
+    // break gets the race's old time and the race gets the break's time,
+    // then recompute slots them in their new order.
+    final lo = oldIndex < newIndex ? oldIndex : newIndex;
+    final hi = oldIndex < newIndex ? newIndex : oldIndex;
 
-    // Breaks don't participate in race slot-swap. Dragging a break re-times it:
-    // the break-update endpoint un-shifts/re-shifts for shift mode and is a
-    // no-op (just changes the time) for parallel mode.
-    if (moved.isBreak) {
-      await _retimeBreakOnDrag(rows, oldIndex, newIndex);
-      return;
-    }
-
-    // RACES: slot-swap among RACES ONLY. All breaks (shift or parallel) are
-    // bystanders on race drag — they keep their times and the race "flows
-    // around" them. Breaks are moved by dragging the break itself, which calls
-    // the break-update endpoint (handles parallel = no shift, shift = re-balance).
-    final raceItems = <RaceResult>[];
-    final raceItemRowsIdx = <int>[]; // rows[] index for each raceItem
-    for (var i = 0; i < rows.length; i++) {
-      if (rows[i].isBreak) continue;
-      raceItems.add(rows[i]);
-      raceItemRowsIdx.add(i);
-    }
-
-    final movedRaceOld = raceItemRowsIdx.indexOf(oldIndex);
-    if (movedRaceOld < 0) return; // shouldn't happen — moved is a race here
-
-    // In the post-move rows list, count races up to (but not including) newIndex
-    // — that's the moved race's position in raceItems.
-    final reorderedRows = List<RaceResult>.from(rows)
-      ..removeAt(oldIndex)
-      ..insert(newIndex, moved);
-    var movedRaceNew = 0;
-    for (var i = 0; i < newIndex; i++) {
-      if (!reorderedRows[i].isBreak) movedRaceNew++;
-    }
-    if (movedRaceNew == movedRaceOld) return;
-
-    final lo = movedRaceOld < movedRaceNew ? movedRaceOld : movedRaceNew;
-    final hi = movedRaceOld < movedRaceNew ? movedRaceNew : movedRaceOld;
-
-    // Block reorder if any race in the slice isn't SCHEDULED.
-    for (var k = lo; k <= hi; k++) {
-      if (raceItems[k].status != 'SCHEDULED') {
+    // Reject if any item in the slice is past SCHEDULED — finished/running
+    // races can't move.
+    for (var i = lo; i <= hi; i++) {
+      if (rows[i].status != 'SCHEDULED') {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cannot reorder: a race in this range is running or finished.')),
         );
@@ -138,87 +114,24 @@ class _GridTabState extends State<GridTab> {
       }
     }
 
-    // Slot-swap within the race-only slice.
-    final slotTimes = [for (var k = lo; k <= hi; k++) raceItems[k].raceTime];
-    final reorderedRaces = List<RaceResult>.from(raceItems);
-    final movedItem = reorderedRaces.removeAt(movedRaceOld);
-    reorderedRaces.insert(movedRaceNew, movedItem);
+    final slotTimes = [for (var i = lo; i <= hi; i++) rows[i].raceTime];
+
+    final reordered = List<RaceResult>.from(rows);
+    final movedItem = reordered.removeAt(oldIndex);
+    reordered.insert(newIndex, movedItem);
 
     final updates = <MapEntry<int, DateTime>>[];
-    for (var k = lo; k <= hi; k++) {
-      final r = reorderedRaces[k];
-      final time = slotTimes[k - lo];
+    for (var i = lo; i <= hi; i++) {
+      final r = reordered[i];
+      final time = slotTimes[i - lo];
       if (time == null) continue;
-      if (r.raceTime == time) continue;
       if (r.id == null) continue;
+      if (r.raceTime == time) continue;
       updates.add(MapEntry(r.id!, time));
     }
 
     if (updates.isEmpty) return;
     await _runWithBusy(() => api.reorderRaces(updates));
-  }
-
-  /// Drop position determines the break's time. Two modes:
-  ///
-  /// SHIFT break — the break occupies a slot in its block; subsequent races
-  /// shift down by its duration. We anchor it to the PREVIOUS row's time + 1s
-  /// so the server's `recomputeAllBlockTimes` sorts it right after that row
-  /// and assigns the canonical slot time. (Anchoring to the NEXT row's time
-  /// used to produce an overlap because the next race already sat at that
-  /// time before the recompute pass.)
-  ///
-  /// PARALLEL break — the break runs alongside races at a fixed time. We
-  /// anchor it to the NEXT row's time so it lines up with that race.
-  Future<void> _retimeBreakOnDrag(List<RaceResult> rows, int oldIndex, int newIndex) async {
-    final moved = rows[oldIndex];
-    if (moved.id == null) return;
-
-    final reordered = List<RaceResult>.from(rows)
-      ..removeAt(oldIndex)
-      ..insert(newIndex, moved);
-
-    final isShift = moved.shiftSubsequent;
-    DateTime? newTime;
-
-    if (isShift) {
-      // Prefer the previous row's time + 1s so sort order puts the break
-      // immediately after it; recompute then assigns the real slot time.
-      for (var i = newIndex - 1; i >= 0; i--) {
-        if (reordered[i].raceTime != null) {
-          newTime = reordered[i].raceTime!.add(const Duration(seconds: 1));
-          break;
-        }
-      }
-      // No previous row (dropped at the very top) → fall back to the next
-      // row's time minus 1s so we still sort before it.
-      if (newTime == null) {
-        for (var i = newIndex + 1; i < reordered.length; i++) {
-          if (reordered[i].raceTime != null) {
-            newTime = reordered[i].raceTime!.subtract(const Duration(seconds: 1));
-            break;
-          }
-        }
-      }
-    } else {
-      // Parallel: line the break up with the next race's clock time.
-      for (var i = newIndex + 1; i < reordered.length; i++) {
-        if (reordered[i].raceTime != null) {
-          newTime = reordered[i].raceTime;
-          break;
-        }
-      }
-      if (newTime == null) {
-        for (var i = newIndex - 1; i >= 0; i--) {
-          if (reordered[i].raceTime != null) {
-            newTime = reordered[i].raceTime!.add(const Duration(minutes: 1));
-            break;
-          }
-        }
-      }
-    }
-
-    if (newTime == null || newTime == moved.raceTime) return;
-    await _runWithBusy(() => api.updateScheduleBreak(moved.id!, time: newTime!));
   }
 
   Future<void> _runWithBusy(Future<void> Function() task) async {
