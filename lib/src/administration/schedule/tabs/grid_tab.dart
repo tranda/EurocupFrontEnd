@@ -1404,45 +1404,69 @@ class _GridTabState extends State<GridTab> {
                 ),
               ),
               const SizedBox(height: 12),
-              Row(children: [
-                const Text('Start: '),
-                Text(_formatDateTime(time)),
-                const Spacer(),
-                CompactIcon(
-                  Icons.access_time,
-                  tooltip: 'Pick time',
-                  onPressed: () async {
-                    final picked = await showTimePicker(
-                      context: ctx,
-                      initialTime: TimeOfDay.fromDateTime(time),
-                    );
-                    if (picked != null) {
-                      setLocal(() {
-                        time = DateTime(time.year, time.month, time.day,
-                            picked.hour, picked.minute);
-                      });
-                    }
-                  },
+              // Time picker only meaningful for parallel breaks — shift breaks
+              // get their time from position in the block (recompute owns it).
+              if (shiftSubsequent)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(children: [
+                    Icon(Icons.drag_indicator, size: 14, color: Colors.blue.shade700),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        initial == null
+                            ? 'Added at the end — drag it into position on the grid.'
+                            : 'Time set by position — drag on the grid to move.',
+                        style: TextStyle(fontSize: 11, color: Colors.grey[800]),
+                      ),
+                    ),
+                  ]),
                 ),
-                CompactIcon(
-                  Icons.calendar_today,
-                  tooltip: 'Pick date',
-                  onPressed: () async {
-                    final picked = await showDatePicker(
-                      context: ctx,
-                      initialDate: time,
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2100),
-                    );
-                    if (picked != null) {
-                      setLocal(() {
-                        time = DateTime(picked.year, picked.month, picked.day,
-                            time.hour, time.minute);
-                      });
-                    }
-                  },
-                ),
-              ]),
+              if (!shiftSubsequent)
+                Row(children: [
+                  const Text('Start: '),
+                  Text(_formatDateTime(time)),
+                  const Spacer(),
+                  CompactIcon(
+                    Icons.access_time,
+                    tooltip: 'Pick time',
+                    onPressed: () async {
+                      final picked = await showTimePicker(
+                        context: ctx,
+                        initialTime: TimeOfDay.fromDateTime(time),
+                      );
+                      if (picked != null) {
+                        setLocal(() {
+                          time = DateTime(time.year, time.month, time.day,
+                              picked.hour, picked.minute);
+                        });
+                      }
+                    },
+                  ),
+                  CompactIcon(
+                    Icons.calendar_today,
+                    tooltip: 'Pick date',
+                    onPressed: () async {
+                      final picked = await showDatePicker(
+                        context: ctx,
+                        initialDate: time,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2100),
+                      );
+                      if (picked != null) {
+                        setLocal(() {
+                          time = DateTime(picked.year, picked.month, picked.day,
+                              time.hour, time.minute);
+                        });
+                      }
+                    },
+                  ),
+                ]),
               const SizedBox(height: 8),
               TextField(
                 controller: durationController,
