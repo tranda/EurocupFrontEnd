@@ -1317,9 +1317,35 @@ class _GridTabState extends State<GridTab> {
                 ),
               ),
               const SizedBox(height: 12),
-              // Time picker only meaningful for parallel breaks — shift breaks
-              // get their time from position in the block (recompute owns it).
-              if (shiftSubsequent)
+              // Shift breaks: date matters (which day the break is on), time
+              // does not (slot in the day's block sequence is set by drag and
+              // canonicalised by the server recompute). Parallel breaks below
+              // get both date and time inputs because they sit at a fixed clock.
+              if (shiftSubsequent) ...[
+                Row(children: [
+                  const Text('Day: '),
+                  Text(_formatDateOnly(time)),
+                  const Spacer(),
+                  CompactIcon(
+                    Icons.calendar_today,
+                    tooltip: 'Pick day',
+                    onPressed: () async {
+                      final picked = await showDatePicker(
+                        context: ctx,
+                        initialDate: time,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2100),
+                      );
+                      if (picked != null) {
+                        setLocal(() {
+                          time = DateTime(picked.year, picked.month, picked.day,
+                              time.hour, time.minute);
+                        });
+                      }
+                    },
+                  ),
+                ]),
+                const SizedBox(height: 6),
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -1333,13 +1359,14 @@ class _GridTabState extends State<GridTab> {
                     Expanded(
                       child: Text(
                         initial == null
-                            ? 'Added at the end — drag it into position on the grid.'
+                            ? 'Added at the end of the day — drag it into position on the grid.'
                             : 'Time set by position — drag on the grid to move.',
                         style: TextStyle(fontSize: 11, color: Colors.grey[800]),
                       ),
                     ),
                   ]),
                 ),
+              ],
               if (!shiftSubsequent)
                 Row(children: [
                   const Text('Start: '),
