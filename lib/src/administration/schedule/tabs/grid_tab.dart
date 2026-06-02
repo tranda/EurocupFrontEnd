@@ -85,11 +85,8 @@ class _GridTabState extends State<GridTab> {
   }
 
   Future<void> _onReorder(List<RaceResult> rows, int oldIndex, int newIndex) async {
-    // Flutter 3.x's ReorderableListView already pre-adjusts newIndex for the
-    // dragged item's removal before invoking this callback — do NOT subtract
-    // again (the older `if (newIndex > oldIndex) newIndex -= 1;` pattern is
-    // for Flutter 2.x). Double-adjusting turned every 1–2 slot drag into a
-    // no-op because the adjusted newIndex collided with oldIndex.
+    // Flutter ReorderableListView quirk: newIndex is post-removal; adjust when moving down.
+    if (newIndex > oldIndex) newIndex -= 1;
     if (newIndex == oldIndex) return;
 
     // Unified slot-swap: races AND breaks participate. The slice between the
