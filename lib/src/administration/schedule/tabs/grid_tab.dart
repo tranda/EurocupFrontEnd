@@ -158,8 +158,17 @@ class _GridTabState extends State<GridTab> {
     await _runWithBusy(() => api.reorderRaces(updates));
   }
 
-  /// Set the break's time to the time of the row at its dropped position.
-  /// Falls back to (previous row time + 1 min) if dropped at the end.
+  /// Drop position determines the break's time. Two modes:
+  ///
+  /// SHIFT break — the break occupies a slot in its block; subsequent races
+  /// shift down by its duration. We anchor it to the PREVIOUS row's time + 1s
+  /// so the server's `recomputeAllBlockTimes` sorts it right after that row
+  /// and assigns the canonical slot time. (Anchoring to the NEXT row's time
+  /// used to produce an overlap because the next race already sat at that
+  /// time before the recompute pass.)
+  ///
+  /// PARALLEL break — the break runs alongside races at a fixed time. We
+  /// anchor it to the NEXT row's time so it lines up with that race.
   Future<void> _retimeBreakOnDrag(List<RaceResult> rows, int oldIndex, int newIndex) async {
     final moved = rows[oldIndex];
     if (moved.id == null) return;
@@ -168,18 +177,42 @@ class _GridTabState extends State<GridTab> {
       ..removeAt(oldIndex)
       ..insert(newIndex, moved);
 
+    final isShift = moved.shiftSubsequent;
     DateTime? newTime;
-    for (var i = newIndex + 1; i < reordered.length; i++) {
-      if (reordered[i].raceTime != null) {
-        newTime = reordered[i].raceTime;
-        break;
-      }
-    }
-    if (newTime == null) {
+
+    if (isShift) {
+      // Prefer the previous row's time + 1s so sort order puts the break
+      // immediately after it; recompute then assigns the real slot time.
       for (var i = newIndex - 1; i >= 0; i--) {
         if (reordered[i].raceTime != null) {
-          newTime = reordered[i].raceTime!.add(const Duration(minutes: 1));
+          newTime = reordered[i].raceTime!.add(const Duration(seconds: 1));
           break;
+        }
+      }
+      // No previous row (dropped at the very top) → fall back to the next
+      // row's time minus 1s so we still sort before it.
+      if (newTime == null) {
+        for (var i = newIndex + 1; i < reordered.length; i++) {
+          if (reordered[i].raceTime != null) {
+            newTime = reordered[i].raceTime!.subtract(const Duration(seconds: 1));
+            break;
+          }
+        }
+      }
+    } else {
+      // Parallel: line the break up with the next race's clock time.
+      for (var i = newIndex + 1; i < reordered.length; i++) {
+        if (reordered[i].raceTime != null) {
+          newTime = reordered[i].raceTime;
+          break;
+        }
+      }
+      if (newTime == null) {
+        for (var i = newIndex - 1; i >= 0; i--) {
+          if (reordered[i].raceTime != null) {
+            newTime = reordered[i].raceTime!.add(const Duration(minutes: 1));
+            break;
+          }
         }
       }
     }
