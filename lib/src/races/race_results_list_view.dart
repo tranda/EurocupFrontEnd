@@ -201,12 +201,16 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
       // Always use public API since it works correctly for both authenticated and non-authenticated users
       final results = await api.getPublicRaceResults(eventId: eventIdInt);
 
+      // Exclude non-race entries (ceremonies, breaks, team-manager meetings,
+      // etc. — they come back from the API with a null race_number).
+      final actualRaces = results.where((r) => r.raceNumber != null).toList();
+
       setState(() {
-        _raceResults = results;
+        _raceResults = actualRaces;
         // Default every day section to expanded so the page looks like the
         // current flat list on first load and after refreshes. Additive: an
         // existing fold state on a day is preserved across refreshes.
-        for (final r in results) {
+        for (final r in actualRaces) {
           final t = r.raceTime;
           if (t != null) _expandedDays.add(dayKey(t));
         }
