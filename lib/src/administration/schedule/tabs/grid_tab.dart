@@ -832,7 +832,7 @@ class _GridTabState extends State<GridTab> {
                 ),
                 if (_isProgressionStage(race))
                   CompactIcon(
-                    Icons.layers_clear,
+                    Icons.cleaning_services,
                     tooltip: 'Clear seeds (empty this stage so it can re-seed)',
                     onPressed: () => _clearSeeds(race),
                     color: Colors.white,
