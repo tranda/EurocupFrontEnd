@@ -299,6 +299,12 @@ class _GridTabState extends State<GridTab> {
   }
 
   /// Crews without a seed number get appended after seeded ones.
+  ///
+  /// For Round-plan stages "Round N" (N >= 1), the seed order is rotated by
+  /// (N-1) before placement so crews don't sit in the same lane every round —
+  /// same algorithm as the backend's ScheduleGeneratorService::roundLaneSeeding
+  /// (and RacePlan::compactCentreOut). For Heats / Reps / Semis / Finals the
+  /// rotation is a no-op (shift = 0).
   Future<void> _autoFillLanes(RaceResult race) async {
     if (race.id == null || race.disciplineId == null) return;
     try {
@@ -314,6 +320,16 @@ class _GridTabState extends State<GridTab> {
         if (bs == null) return -1;
         return as.compareTo(bs);
       });
+
+      // Per-round rotation: only kicks in for stage names like "Round 2",
+      // "Round 3". Round 1 / Heat / Rep / Semi / Final → shift = 0.
+      final roundNum = _extractRoundNumber(race.stage);
+      final shift = (roundNum > 1 && sorted.isNotEmpty)
+          ? (roundNum - 1) % sorted.length
+          : 0;
+      final rotated = shift == 0
+          ? sorted
+          : [...sorted.sublist(shift), ...sorted.sublist(0, shift)];
 
       // Centre-out lane order per IDBF: for even lane counts the centre lane
       // is the LOWER of the two middle lanes (lane 2 of 4, lane 3 of 6, lane
@@ -333,8 +349,8 @@ class _GridTabState extends State<GridTab> {
       // Build assignment payload — empties for unused lanes.
       final assignments = <Map<String, dynamic>>[];
       final used = <int>{};
-      for (var i = 0; i < sorted.length && i < order.length; i++) {
-        assignments.add({'crew_id': sorted[i].crewId, 'lane': order[i]});
+      for (var i = 0; i < rotated.length && i < order.length; i++) {
+        assignments.add({'crew_id': rotated[i].crewId, 'lane': order[i]});
         used.add(order[i]);
       }
       // Clear any crews currently assigned to lanes we're not using.
@@ -349,6 +365,14 @@ class _GridTabState extends State<GridTab> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
     }
+  }
+
+  /// "Round 2" → 2; "Round 10" → 10; everything else → 1 (so no rotation).
+  int _extractRoundNumber(String? stage) {
+    if (stage == null) return 1;
+    final m = RegExp(r'^Round\s+(\d+)$', caseSensitive: false).firstMatch(stage.trim());
+    if (m == null) return 1;
+    return int.tryParse(m.group(1)!) ?? 1;
   }
 
   Future<bool> _confirm(String title, String message) async {
