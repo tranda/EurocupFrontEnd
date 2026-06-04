@@ -972,6 +972,16 @@ class _GridTabState extends State<GridTab> {
     }
   }
 
+  /// Whether to show the accumulated/summed time beside the per-race time.
+  /// Mirrors race_results_list_view._isLastRound: only round-based final rounds
+  /// accumulate. Heat-based finals (Grand/Minor/Tail Final) show the single
+  /// race time alone — summing one race with itself is meaningless.
+  bool _showAccumulated(RaceResult race) {
+    if (race.showAccumulatedTime != null) return race.showAccumulatedTime!;
+    final stage = race.stage?.trim().toLowerCase() ?? '';
+    return stage.contains('round') && (race.isFinalRound ?? false);
+  }
+
   Widget _laneRow(RaceResult race, int lane, CrewResult? crewResult) {
     final teamName = crewResult?.crew?.team?.name ?? crewResult?.team?.name;
     final hasContent = crewResult != null && teamName != null;
@@ -979,7 +989,7 @@ class _GridTabState extends State<GridTab> {
 
     final status = crewResult?.status;
     final finalStatus = crewResult?.finalStatus;
-    final isFinalView = race.isFinalRound == true || race.showAccumulatedTime == true;
+    final isFinalView = _showAccumulated(race);
     final hasPerRaceResult = hasContent
         && (crewResult.timeMs != null
             || status == 'FINISHED'
@@ -1240,7 +1250,7 @@ class _GridTabState extends State<GridTab> {
   String _calcFinalDelay(CrewResult crewResult, RaceResult race) {
     final pos = crewResult.position;
     if (pos == null || pos == 1) return '';
-    final isAcc = race.isFinalRound == true || race.showAccumulatedTime == true;
+    final isAcc = _showAccumulated(race);
     int? current;
     int? first;
     if (isAcc && crewResult.finalTimeMs != null) {
