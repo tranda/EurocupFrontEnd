@@ -1898,6 +1898,16 @@ Future<void> deleteRaceResult(int raceId) async {
   _unwrap(res, action: 'delete race');
 }
 
+/// Clear the seeded crews from a progression race (Repechage/Semi/Final),
+/// leaving it empty to re-seed. Backend rejects heats/rounds.
+Future<void> clearRaceSeeds(int raceId) async {
+  final res = await http.delete(
+    Uri.parse('$apiURL/race-results/$raceId/crew-results'),
+    headers: _jsonAuthHeaders(),
+  );
+  _unwrap(res, action: 'clear seeds');
+}
+
 /// Bulk-update race_time for drag-reorder in the Grid tab. Each MapEntry pairs
 /// a race id with its new time. Backend updates atomically and renumbers chronologically.
 Future<void> reorderRaces(List<MapEntry<int, DateTime>> updates) async {

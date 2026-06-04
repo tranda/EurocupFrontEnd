@@ -298,6 +298,44 @@ class _GridTabState extends State<GridTab> {
     }
   }
 
+  /// Progression stages (Repechage/Semi/Final) whose lanes are seeded from
+  /// prior-round results and can be cleared to re-seed. Heats/Rounds hold
+  /// registered crews and are excluded.
+  bool _isProgressionStage(RaceResult race) {
+    final s = (race.stage ?? '').toLowerCase();
+    if (s.startsWith('heat') || s.startsWith('round')) return false;
+    return s.contains('repechage') || s.contains('semi') || s.contains('final');
+  }
+
+  /// Empty a progression race's seeded crews so it can re-seed fresh.
+  Future<void> _clearSeeds(RaceResult race) async {
+    if (race.id == null) return;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Clear seeds?'),
+        content: Text(
+          'Remove the seeded crews from "${race.stage ?? 'this race'}"? '
+          'It will be emptied and can be re-seeded from results.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Clear')),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    try {
+      await api.clearRaceSeeds(race.id!);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Seeds cleared.')));
+      await _load();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Clear failed: $e')));
+    }
+  }
+
   /// Crews without a seed number get appended after seeded ones.
   ///
   /// For Round-plan stages "Round N" (N >= 1), the seed order is rotated by
@@ -792,6 +830,13 @@ class _GridTabState extends State<GridTab> {
                   onPressed: () => _reseedNextStage(race),
                   color: Colors.white,
                 ),
+                if (_isProgressionStage(race))
+                  CompactIcon(
+                    Icons.layers_clear,
+                    tooltip: 'Clear seeds (empty this stage so it can re-seed)',
+                    onPressed: () => _clearSeeds(race),
+                    color: Colors.white,
+                  ),
                 CompactIcon(
                   Icons.edit,
                   tooltip: 'Edit time/stage',
