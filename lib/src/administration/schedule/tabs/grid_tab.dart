@@ -277,6 +277,27 @@ class _GridTabState extends State<GridTab> {
   }
 
   /// Auto-fill this race's lanes centre-out using crew seed numbers.
+  /// Trigger LaneSeeder for the discipline this race belongs to. Seeds the
+  /// next un-seeded stage based on current results. Surfaces warnings /
+  /// "skipped" reasons via a snackbar so the referee can see why nothing
+  /// changed (e.g. "source heats not all finished").
+  Future<void> _reseedNextStage(RaceResult race) async {
+    if (race.disciplineId == null) return;
+    try {
+      final result = await api.seedNextRound(race.disciplineId!);
+      if (!mounted) return;
+      final warnings = result.warnings;
+      final msg = warnings.isEmpty
+          ? 'Next stage seeded.'
+          : warnings.join(' · ');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      await _load();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Re-seed failed: $e')));
+    }
+  }
+
   /// Crews without a seed number get appended after seeded ones.
   Future<void> _autoFillLanes(RaceResult race) async {
     if (race.id == null || race.disciplineId == null) return;
@@ -712,6 +733,12 @@ class _GridTabState extends State<GridTab> {
                   color: Colors.white,
                 ),
                 CompactIcon(
+                  Icons.fast_forward,
+                  tooltip: 'Re-seed next un-seeded stage for this discipline (uses current results)',
+                  onPressed: () => _reseedNextStage(race),
+                  color: Colors.white,
+                ),
+                CompactIcon(
                   Icons.edit,
                   tooltip: 'Edit time/stage',
                   onPressed: () => _editRace(race),
@@ -896,6 +923,39 @@ class _GridTabState extends State<GridTab> {
     final hasContent = crewResult != null && teamName != null;
     final country = crewResult?.crew?.team?.club?.country;
 
+    // Result-aware trailing chip. Shows position (1st/2nd/…) + time if the
+    // crew has a result, status colour for DNS/DNF/DSQ, or "Registered" as a
+    // neutral placeholder when the crew is assigned but no result yet.
+    final status = crewResult?.status;
+    final hasResult = hasContent && (crewResult.timeMs != null
+        || status == 'FINISHED'
+        || status == 'DNS'
+        || status == 'DNF'
+        || status == 'DSQ');
+    Color resultBg;
+    Color resultFg;
+    String resultLabel;
+    if (!hasContent) {
+      resultBg = Colors.transparent;
+      resultFg = Colors.grey;
+      resultLabel = '';
+    } else if (!hasResult) {
+      resultBg = Colors.blue.shade400;
+      resultFg = Colors.white;
+      resultLabel = 'Registered';
+    } else if (status == 'FINISHED' || crewResult.timeMs != null) {
+      resultBg = Colors.green.shade600;
+      resultFg = Colors.white;
+      final pos = crewResult.position;
+      final t = crewResult.displayTime;
+      resultLabel = pos != null ? '#$pos · $t' : t;
+    } else {
+      // DNS / DNF / DSQ
+      resultBg = Colors.red.shade400;
+      resultFg = Colors.white;
+      resultLabel = status ?? '';
+    }
+
     return Container(
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5)),
@@ -913,10 +973,10 @@ class _GridTabState extends State<GridTab> {
             ),
             shape: BoxShape.circle,
           ),
-          child: const Center(
+          child: Center(
             child: Text(
-              '-',
-              style: TextStyle(
+              '$lane',
+              style: const TextStyle(
                 color: Colors.black54,
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
@@ -959,23 +1019,23 @@ class _GridTabState extends State<GridTab> {
           'Lane $lane',
           style: const TextStyle(color: Colors.black54, fontSize: 12),
         ),
-        trailing: hasContent
-            ? Container(
+        trailing: !hasContent
+            ? const Icon(Icons.add, size: 18, color: Colors.grey)
+            : Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade400,
+                  color: resultBg,
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: const Text(
-                  'Registered',
+                child: Text(
+                  resultLabel,
                   style: TextStyle(
-                    color: Colors.white,
+                    color: resultFg,
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),
                 ),
-              )
-            : const Icon(Icons.add, size: 18, color: Colors.grey),
+              ),
       ),
     );
   }
