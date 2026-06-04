@@ -1353,34 +1353,19 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
 
   void _calculatePositions(List<CrewResult> crewResults, {bool isFinalRound = false}) {
     if (isFinalRound) {
-      // For final rounds, use the backend-provided finalPosition
-      // The backend calculates positions based on accumulated final times
-
-      // Check if we have valid position data from backend
-      final hasValidPositions = crewResults.any((crew) => crew.position != null);
-
-      if (hasValidPositions) {
-        // Use backend-provided positions - no need to change anything
-        return;
-      } else {
-        // Fallback: calculate positions based on finalTimeMs if finalPosition is missing
-        final finishedCrews = crewResults
-            .where((crew) => crew.finalStatus == 'FINISHED' && crew.finalTimeMs != null)
-            .toList();
-
-        // Sort by final time (fastest first)
-        finishedCrews.sort((a, b) => a.finalTimeMs!.compareTo(b.finalTimeMs!));
-
-        // Assign positions based on final times
-        for (int i = 0; i < finishedCrews.length; i++) {
-          finishedCrews[i].position = i + 1;
-        }
-
-        // Clear positions for non-finished crews
-        crewResults
-            .where((crew) => crew.finalStatus != 'FINISHED' || crew.finalTimeMs == null)
-            .forEach((crew) => crew.position = null);
+      // Always recompute from finalTimeMs. The existing `position` field
+      // carries the single-race ranking, which is wrong for a final round —
+      // final standings are determined by accumulated time across all rounds.
+      final finishedCrews = crewResults
+          .where((crew) => crew.finalStatus == 'FINISHED' && crew.finalTimeMs != null)
+          .toList();
+      finishedCrews.sort((a, b) => a.finalTimeMs!.compareTo(b.finalTimeMs!));
+      for (int i = 0; i < finishedCrews.length; i++) {
+        finishedCrews[i].position = i + 1;
       }
+      crewResults
+          .where((crew) => crew.finalStatus != 'FINISHED' || crew.finalTimeMs == null)
+          .forEach((crew) => crew.position = null);
     } else {
       // Regular round logic - respect existing positions from database
       final hasValidPositions = crewResults.any((crew) => crew.position != null);
