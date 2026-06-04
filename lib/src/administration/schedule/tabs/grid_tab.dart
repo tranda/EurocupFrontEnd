@@ -667,10 +667,40 @@ class _GridTabState extends State<GridTab> {
     );
   }
 
+  /// For final rounds (last round of a Rounds plan, Grand Final, etc.) the
+  /// per-race `position` field is meaningless — final standings are decided
+  /// by accumulated time across all rounds. Mirror what the Race Results
+  /// page does: sort the FINISHED crews by finalTimeMs and overwrite
+  /// `position` with the 1-based rank; clear position on non-finished crews.
+  void _calculateFinalPositions(List<CrewResult> crewResults) {
+    final finished = crewResults
+        .where((c) => c.finalStatus == 'FINISHED' && c.finalTimeMs != null)
+        .toList()
+      ..sort((a, b) => a.finalTimeMs!.compareTo(b.finalTimeMs!));
+    for (var i = 0; i < finished.length; i++) {
+      finished[i].position = i + 1;
+    }
+    for (final c in crewResults) {
+      if (c.finalStatus != 'FINISHED' || c.finalTimeMs == null) {
+        c.position = null;
+      }
+    }
+  }
+
   Widget _raceCard(RaceResult race) {
     if (race.isBreak) return _breakCard(race);
     final raceId = race.id;
     final isExpanded = raceId != null && _expanded.contains(raceId);
+
+    // Mutate crew_results' `position` to the final-round ranking when the
+    // race is a final (last round of a Rounds plan, Grand Final, etc.) so
+    // _laneRow can render the same "#pos · time" badge the Race Results
+    // page shows. Matches `_calculatePositions(..., isFinalRound: true)`
+    // in race_results_list_view.dart.
+    if (race.isFinalRound == true) {
+      _calculateFinalPositions(race.crewResults ?? const []);
+    }
+
     final crewByLane = <int, CrewResult>{};
     for (final cr in race.crewResults ?? <CrewResult>[]) {
       if (cr.lane != null) crewByLane[cr.lane!] = cr;
@@ -923,15 +953,23 @@ class _GridTabState extends State<GridTab> {
     final hasContent = crewResult != null && teamName != null;
     final country = crewResult?.crew?.team?.club?.country;
 
-    // Result-aware trailing chip. Shows position (1st/2nd/…) + time if the
-    // crew has a result, status colour for DNS/DNF/DSQ, or "Registered" as a
-    // neutral placeholder when the crew is assigned but no result yet.
+    // Result-aware trailing chip. For races flagged as final rounds (last
+    // round of a Rounds plan, Grand Final, single "Final" stage) we show the
+    // accumulated/summed final time and final standing instead of the per-
+    // race time; that matches what the Race Results page renders for the
+    // same race. Otherwise we show the per-race position + time.
     final status = crewResult?.status;
-    final hasResult = hasContent && (crewResult.timeMs != null
-        || status == 'FINISHED'
-        || status == 'DNS'
-        || status == 'DNF'
-        || status == 'DSQ');
+    final finalStatus = crewResult?.finalStatus;
+    final isFinalView = race.isFinalRound == true || race.showAccumulatedTime == true;
+    final hasFinalResult = hasContent
+        && isFinalView
+        && (crewResult.finalTimeMs != null || finalStatus != null);
+    final hasPerRaceResult = hasContent
+        && (crewResult.timeMs != null
+            || status == 'FINISHED'
+            || status == 'DNS'
+            || status == 'DNF'
+            || status == 'DSQ');
     Color resultBg;
     Color resultFg;
     String resultLabel;
@@ -939,7 +977,17 @@ class _GridTabState extends State<GridTab> {
       resultBg = Colors.transparent;
       resultFg = Colors.grey;
       resultLabel = '';
-    } else if (!hasResult) {
+    } else if (isFinalView && hasFinalResult) {
+      // Final standings (summed across rounds, or final-race result). The
+      // crew's `position` field has been rewritten by _calculateFinalPositions
+      // above so it now carries the final rank, matching Race Results' UX.
+      final terminal = finalStatus == 'DNS' || finalStatus == 'DNF' || finalStatus == 'DSQ';
+      resultBg = terminal ? Colors.red.shade400 : Colors.green.shade700;
+      resultFg = Colors.white;
+      final pos = crewResult.position;
+      final t = crewResult.displayFinalTime;
+      resultLabel = (!terminal && pos != null) ? '#$pos · $t' : t;
+    } else if (!hasPerRaceResult) {
       resultBg = Colors.blue.shade400;
       resultFg = Colors.white;
       resultLabel = 'Registered';
