@@ -953,56 +953,19 @@ class _GridTabState extends State<GridTab> {
     final hasContent = crewResult != null && teamName != null;
     final country = crewResult?.crew?.team?.club?.country;
 
-    // Result-aware trailing chip. For races flagged as final rounds (last
-    // round of a Rounds plan, Grand Final, single "Final" stage) we show the
-    // accumulated/summed final time and final standing instead of the per-
-    // race time; that matches what the Race Results page renders for the
-    // same race. Otherwise we show the per-race position + time.
     final status = crewResult?.status;
     final finalStatus = crewResult?.finalStatus;
     final isFinalView = race.isFinalRound == true || race.showAccumulatedTime == true;
-    final hasFinalResult = hasContent
-        && isFinalView
-        && (crewResult.finalTimeMs != null || finalStatus != null);
     final hasPerRaceResult = hasContent
         && (crewResult.timeMs != null
             || status == 'FINISHED'
             || status == 'DNS'
             || status == 'DNF'
             || status == 'DSQ');
-    Color resultBg;
-    Color resultFg;
-    String resultLabel;
-    if (!hasContent) {
-      resultBg = Colors.transparent;
-      resultFg = Colors.grey;
-      resultLabel = '';
-    } else if (isFinalView && hasFinalResult) {
-      // Final standings (summed across rounds, or final-race result). The
-      // crew's `position` field has been rewritten by _calculateFinalPositions
-      // above so it now carries the final rank, matching Race Results' UX.
-      final terminal = finalStatus == 'DNS' || finalStatus == 'DNF' || finalStatus == 'DSQ';
-      resultBg = terminal ? Colors.red.shade400 : Colors.green.shade700;
-      resultFg = Colors.white;
-      final pos = crewResult.position;
-      final t = crewResult.displayFinalTime;
-      resultLabel = (!terminal && pos != null) ? '#$pos · $t' : t;
-    } else if (!hasPerRaceResult) {
-      resultBg = Colors.blue.shade400;
-      resultFg = Colors.white;
-      resultLabel = 'Registered';
-    } else if (status == 'FINISHED' || crewResult.timeMs != null) {
-      resultBg = Colors.green.shade600;
-      resultFg = Colors.white;
-      final pos = crewResult.position;
-      final t = crewResult.displayTime;
-      resultLabel = pos != null ? '#$pos · $t' : t;
-    } else {
-      // DNS / DNF / DSQ
-      resultBg = Colors.red.shade400;
-      resultFg = Colors.white;
-      resultLabel = status ?? '';
-    }
+    final hasFinalResult = hasContent
+        && isFinalView
+        && (crewResult.finalTimeMs != null || finalStatus != null);
+    final position = crewResult?.position;
 
     return Container(
       decoration: const BoxDecoration(
@@ -1010,27 +973,12 @@ class _GridTabState extends State<GridTab> {
       ),
       child: ListTile(
         onTap: () => _assignLane(race, lane),
-        leading: Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: hasContent ? Colors.blue.shade50 : Colors.grey.shade100,
-            border: Border.all(
-              color: hasContent ? Colors.blue.shade300 : Colors.grey.shade300,
-              width: 2,
-            ),
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: Text(
-              '$lane',
-              style: const TextStyle(
-                color: Colors.black54,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-          ),
+        leading: _positionOrLaneCircle(
+          lane: lane,
+          position: position,
+          isFinalView: isFinalView,
+          hasResult: hasPerRaceResult || hasFinalResult,
+          hasContent: hasContent,
         ),
         title: Row(children: [
           if (hasContent && country != null)
@@ -1069,23 +1017,224 @@ class _GridTabState extends State<GridTab> {
         ),
         trailing: !hasContent
             ? const Icon(Icons.add, size: 18, color: Colors.grey)
-            : Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: resultBg,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  resultLabel,
-                  style: TextStyle(
-                    color: resultFg,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
+            : _resultTrailing(
+                race: race,
+                crewResult: crewResult,
+                isFinalView: isFinalView,
+                hasPerRaceResult: hasPerRaceResult,
+                hasFinalResult: hasFinalResult,
               ),
       ),
     );
+  }
+
+  /// Position chip on the left of the lane row. Matches the Race Results
+  /// page's circle: for final rounds it's a coloured fill (gold/silver/
+  /// bronze/blue) with the position number; for non-final rounds (heats,
+  /// reps, etc.) it's a transparent fill with a coloured border + coloured
+  /// number. Falls back to the lane number when no result is in yet.
+  Widget _positionOrLaneCircle({
+    required int lane,
+    required int? position,
+    required bool isFinalView,
+    required bool hasResult,
+    required bool hasContent,
+  }) {
+    Color bg, border, fg;
+    String label;
+    if (hasResult && position != null) {
+      final base = _positionColor(position);
+      if (isFinalView) {
+        bg = base;
+        border = Colors.transparent;
+        fg = Colors.white;
+      } else {
+        bg = Colors.transparent;
+        border = base;
+        fg = base;
+      }
+      label = '$position';
+    } else {
+      // No result yet — show lane.
+      bg = hasContent ? Colors.blue.shade50 : Colors.grey.shade100;
+      border = hasContent ? Colors.blue.shade300 : Colors.grey.shade300;
+      fg = Colors.black54;
+      label = '$lane';
+    }
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: bg,
+        border: Border.all(color: border, width: 2),
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          label,
+          style: TextStyle(
+            color: fg,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Trailing chip(s). Final rounds get TWO stacked badges — per-race time
+  /// (lighter green) plus accumulated/summed time (darker green) — exactly
+  /// like the Race Results page. Non-final rounds get a single badge.
+  /// Delays below the badge appear when the crew is behind first place.
+  Widget _resultTrailing({
+    required RaceResult race,
+    required CrewResult crewResult,
+    required bool isFinalView,
+    required bool hasPerRaceResult,
+    required bool hasFinalResult,
+  }) {
+    if (!hasPerRaceResult && !hasFinalResult) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.blue.shade400,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: const Text(
+          'Registered',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        ),
+      );
+    }
+
+    Widget badge(String text, Color bg, {String delay = ''}) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ),
+          if (delay.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                delay,
+                style: const TextStyle(color: Colors.grey, fontSize: 11),
+              ),
+            ),
+        ],
+      );
+    }
+
+    if (isFinalView && hasFinalResult) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          badge(
+            crewResult.displayTime,
+            _statusColor(crewResult.status),
+            delay: _calcCurrentRoundDelay(crewResult, race),
+          ),
+          const SizedBox(width: 8),
+          badge(
+            crewResult.displayFinalTime,
+            _statusColorTotal(crewResult.finalStatus ?? crewResult.status),
+            delay: _calcFinalDelay(crewResult, race),
+          ),
+        ],
+      );
+    }
+
+    // Per-race only.
+    return badge(
+      crewResult.displayTime,
+      _statusColor(crewResult.status),
+      delay: _calcCurrentRoundDelay(crewResult, race),
+    );
+  }
+
+  Color _positionColor(int position) {
+    switch (position) {
+      case 1: return Colors.amber;
+      case 2: return Colors.grey;
+      case 3: return Colors.brown;
+      default: return Colors.blue;
+    }
+  }
+
+  Color _statusColor(String? status) {
+    switch (status) {
+      case 'FINISHED': return Colors.green;
+      case 'DNS': return Colors.orange;
+      case 'DNF': return Colors.red;
+      case 'DSQ': return Colors.purple;
+      case null: return Colors.blue;
+      default: return Colors.grey;
+    }
+  }
+
+  Color _statusColorTotal(String? status) {
+    switch (status) {
+      case 'FINISHED': return Colors.green.shade700;
+      case 'DNS': return Colors.orange.shade700;
+      case 'DNF': return Colors.red.shade700;
+      case 'DSQ': return Colors.purple.shade700;
+      case null: return Colors.blue.shade700;
+      default: return Colors.grey.shade700;
+    }
+  }
+
+  String _calcCurrentRoundDelay(CrewResult crewResult, RaceResult race) {
+    final pos = crewResult.position;
+    if (pos == null || pos == 1 || crewResult.timeMs == null) return '';
+    final firstMs = race.crewResults
+        ?.where((c) => c.position == 1 && c.timeMs != null)
+        .firstOrNull
+        ?.timeMs;
+    if (firstMs == null) return '';
+    final delaySec = (crewResult.timeMs! - firstMs) / 1000.0;
+    return '+${delaySec.toStringAsFixed(2)}s';
+  }
+
+  String _calcFinalDelay(CrewResult crewResult, RaceResult race) {
+    final pos = crewResult.position;
+    if (pos == null || pos == 1) return '';
+    final isAcc = race.isFinalRound == true || race.showAccumulatedTime == true;
+    int? current;
+    int? first;
+    if (isAcc && crewResult.finalTimeMs != null) {
+      current = crewResult.finalTimeMs;
+      first = race.crewResults
+          ?.where((c) => c.position == 1 && c.finalTimeMs != null)
+          .firstOrNull
+          ?.finalTimeMs;
+    } else if (crewResult.timeMs != null) {
+      current = crewResult.timeMs;
+      first = race.crewResults
+          ?.where((c) => c.position == 1 && c.timeMs != null)
+          .firstOrNull
+          ?.timeMs;
+    }
+    if (current == null || first == null) return '';
+    final delaySec = (current - first) / 1000.0;
+    return '+${delaySec.toStringAsFixed(2)}s';
   }
 
   /// Renders the discipline as a row of colored word-badges:
