@@ -159,6 +159,11 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
       _eventId = (active.isNotEmpty ? active.first.id : competitions.first.id).toString();
     }
 
+    // Persist the resolved event into the URL so a browser refresh keeps
+    // context. Without this, the in-memory route argument is lost on reload
+    // and the page falls back to eventId 0 → no races shown.
+    syncRaceResultsUrl(_eventId);
+
     _hasInitialized = true;
     _loadEventData();
   }

@@ -155,6 +155,17 @@ void clearToken() {
   }
 }
 
+/// Stamp the Race Results event context into the browser URL so a page
+/// refresh can recover it. Navigator.pushNamed arguments live only in memory;
+/// without this the eventId is lost on reload and no race is shown. Uses
+/// replaceState (no new history entry, no popstate → router is undisturbed).
+/// The read side is App._extractArgumentsFromSettings, which parses ?eventId=.
+void syncRaceResultsUrl(String? eventId) {
+  if (!kIsWeb || eventId == null) return;
+  html.window.history
+      .replaceState(null, '', '#/race_results_list?eventId=$eventId');
+}
+
 // Country code mappings and flag utilities
 const Map<String, String> countryNameToCode = {
   'Serbia': 'SRB',
