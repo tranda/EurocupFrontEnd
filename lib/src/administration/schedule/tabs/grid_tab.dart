@@ -1032,7 +1032,7 @@ class _GridTabState extends State<GridTab> {
                   color: Colors.white,
                 ),
                 CompactIcon(
-                  Icons.timer,
+                  Icons.access_time,
                   tooltip: 'Enter results (manual stopwatch times)',
                   onPressed: () => _enterResults(race),
                   color: Colors.white,
