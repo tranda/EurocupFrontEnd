@@ -120,9 +120,11 @@ class MyApp extends StatelessWidget {
   /// Walk the parent chain to build the implicit navigation stack for a
   /// deep-linked or refreshed route. Cycles are guarded against.
   List<String> _resolveStack(String leafRoute) {
-    final leaf = _stripRouteQuery(leafRoute);
-    final stack = <String>[leaf];
-    String? cursor = _routeParents[leaf];
+    // Keep the leaf intact — it may carry a query (e.g. '?competitionId=12') so
+    // the built route name, and thus the browser URL, preserves it. Parent
+    // lookup uses the clean path.
+    final stack = <String>[leafRoute];
+    String? cursor = _routeParents[_stripRouteQuery(leafRoute)];
     while (cursor != null && !stack.contains(cursor)) {
       stack.insert(0, cursor);
       cursor = _routeParents[cursor];
@@ -296,8 +298,11 @@ class MyApp extends StatelessWidget {
     final extractedArguments = _extractArgumentsFromSettings(cleanSettings);
     final finalArguments = routeSettings.arguments ?? extractedArguments;
 
+    // Preserve the original name (incl. any query) so Flutter keeps it in the
+    // browser URL — the page stays a real deep link. Matching below uses the
+    // clean name via [routeName].
     final updatedSettings = RouteSettings(
-      name: cleanName,
+      name: routeSettings.name,
       arguments: finalArguments,
     );
 

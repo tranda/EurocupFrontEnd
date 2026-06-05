@@ -73,7 +73,7 @@ class _CompetitionSelectorViewState extends State<CompetitionSelectorView> {
     if (selectedEventId != null) {
       Navigator.pushNamed(
         context,
-        RaceResultsListView.routeName,
+        '${RaceResultsListView.routeName}?eventId=$selectedEventId',
         arguments: {
           'eventId': selectedEventId,
           'eventName': competitions.firstWhere((c) => c.id.toString() == selectedEventId, orElse: () => competitions.first).getShortName(),

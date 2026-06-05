@@ -108,7 +108,7 @@ class _ScheduleEventPickerState extends State<ScheduleEventPicker> {
         trailing: const Icon(Icons.chevron_right),
         onTap: () => Navigator.pushNamed(
           context,
-          ScheduleBuilderPage.routeName,
+          '${ScheduleBuilderPage.routeName}?competitionId=${event.id}',
           arguments: event,
         ),
       ),
