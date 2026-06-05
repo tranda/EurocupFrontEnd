@@ -91,7 +91,10 @@ class MyApp extends StatelessWidget {
     RaceDetailView.routeName: DisciplineRaceListView.routeName,
     RaceCrewDetailView.routeName: RaceDetailView.routeName,
 
-    // Race results (public branch — parent is the public selector)
+    // Race results (public branch — roots at the public selector, NOT home).
+    // The selector deliberately has no parent: rooting it at the auth-gated
+    // HomePage would drag HomePage's StartupWrapper into the reconstructed
+    // stack on refresh and bounce unauthenticated public viewers to login.
     RaceResultsListView.routeName: CompetitionSelectorView.routeName,
     RaceResultDetailView.routeName: RaceResultsListView.routeName,
 
@@ -100,7 +103,6 @@ class MyApp extends StatelessWidget {
     CrewListView.routeName: HomePage.routeName,
     DisciplineListView.routeName: HomePage.routeName,
     DisciplineRaceListView.routeName: HomePage.routeName,
-    CompetitionSelectorView.routeName: HomePage.routeName,
     AthleteListView.routeName: HomePage.routeName,
     BarCodeScannerController.routeName: HomePage.routeName,
     AiBarcodeScanner.routeName: HomePage.routeName,
