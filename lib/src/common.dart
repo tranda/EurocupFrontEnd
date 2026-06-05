@@ -186,10 +186,11 @@ String? loadSelectedEventId() {
 /// The builder receives a Competition object via Navigator arguments, which is
 /// lost on reload; the read side (App._extractArgumentsFromSettings) parses
 /// ?competitionId= and the page re-fetches the event by id.
-void syncScheduleBuilderUrl(String? competitionId) {
+void syncScheduleBuilderUrl(String? competitionId, {int? tabIndex}) {
   if (!kIsWeb || competitionId == null) return;
-  html.window.history
-      .replaceState(null, '', '#/schedule_builder?competitionId=$competitionId');
+  final tab = tabIndex != null ? '&tab=$tabIndex' : '';
+  html.window.history.replaceState(
+      null, '', '#/schedule_builder?competitionId=$competitionId$tab');
 }
 
 /// Local-storage fallback for the Schedule Builder event, mirroring the Race
@@ -203,6 +204,21 @@ void saveScheduleBuilderEventId(String? competitionId) {
 String? loadScheduleBuilderEventId() {
   if (kIsWeb) {
     return html.window.localStorage['schedule_builder_event_id'];
+  }
+  return null;
+}
+
+/// Remember the active Schedule Builder tab so a refresh restores it. The URL
+/// (&tab=) is the source of truth; this is the bare-URL fallback.
+void saveScheduleBuilderTab(int index) {
+  if (kIsWeb) {
+    html.window.localStorage['schedule_builder_tab'] = index.toString();
+  }
+}
+
+int? loadScheduleBuilderTab() {
+  if (kIsWeb) {
+    return int.tryParse(html.window.localStorage['schedule_builder_tab'] ?? '');
   }
   return null;
 }

@@ -31,6 +31,16 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
+    _tabController.addListener(_persistTab);
+  }
+
+  /// Persist the active tab (URL &tab= + local storage) once a change settles,
+  /// so a refresh restores it.
+  void _persistTab() {
+    if (_tabController.indexIsChanging) return;
+    saveScheduleBuilderTab(_tabController.index);
+    syncScheduleBuilderUrl(_event?.id?.toString(),
+        tabIndex: _tabController.index);
   }
 
   @override
@@ -48,10 +58,22 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
   Future<void> _resolveEvent() async {
     final args = ModalRoute.of(context)?.settings.arguments;
 
+    // Restore the active tab on refresh/deep-link (rides in the URL as &tab=,
+    // with a local-storage fallback). Warm navigation (Competition arg) starts
+    // on Setup.
+    if (args is Map) {
+      final t = int.tryParse(args['tab']?.toString() ?? '') ??
+          loadScheduleBuilderTab();
+      if (t != null && t >= 0 && t < _tabController.length) {
+        _tabController.index = t;
+      }
+    }
+
     // Warm navigation from the picker passes the full Competition object.
     if (args is Competition) {
       _event = args;
-      syncScheduleBuilderUrl(_event!.id?.toString());
+      syncScheduleBuilderUrl(_event!.id?.toString(),
+          tabIndex: _tabController.index);
       saveScheduleBuilderEventId(_event!.id?.toString());
       _loadConfig();
       return;
@@ -93,7 +115,8 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
         return;
       }
       _event = event;
-      syncScheduleBuilderUrl(event.id?.toString());
+      syncScheduleBuilderUrl(event.id?.toString(),
+          tabIndex: _tabController.index);
       saveScheduleBuilderEventId(event.id?.toString());
       _loadConfig();
     } catch (e) {

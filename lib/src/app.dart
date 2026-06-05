@@ -634,6 +634,9 @@ class MyApp extends StatelessWidget {
             if (queryParams.containsKey('competitionId')) {
               arguments['competitionId'] = queryParams['competitionId'];
             }
+            if (queryParams.containsKey('tab')) {
+              arguments['tab'] = queryParams['tab'];
+            }
             break;
           case AthleteDetailView.routeName:
             if (queryParams.containsKey('athleteId')) {
