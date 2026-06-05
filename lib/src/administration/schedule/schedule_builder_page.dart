@@ -79,8 +79,12 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
       _error = null;
     });
     try {
-      final event = await api.getEvent(id);
+      // Refetch via the list endpoint the picker uses (GET /events?all=true);
+      // the by-id /events/{id} endpoint isn't available, so look up by id.
+      final list = await api.getCompetitions(allEvents: true);
       if (!mounted) return;
+      final matches = list.where((c) => c.id == id);
+      final event = matches.isEmpty ? null : matches.first;
       if (event == null) {
         setState(() {
           _loading = false;
