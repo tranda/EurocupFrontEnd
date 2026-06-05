@@ -534,6 +534,7 @@ class MyApp extends StatelessWidget {
         DisciplineListView.routeName,
         UserListView.routeName,
         ScheduleEventPicker.routeName,
+        ScheduleBuilderPage.routeName,
       ];
 
       if (validDirectRoutes.contains(routePath)) {
@@ -602,6 +603,11 @@ class MyApp extends StatelessWidget {
             }
             if (queryParams.containsKey('eventName')) {
               arguments['eventName'] = queryParams['eventName'];
+            }
+            break;
+          case ScheduleBuilderPage.routeName:
+            if (queryParams.containsKey('competitionId')) {
+              arguments['competitionId'] = queryParams['competitionId'];
             }
             break;
           case AthleteDetailView.routeName:

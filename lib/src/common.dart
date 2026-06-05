@@ -182,6 +182,31 @@ String? loadSelectedEventId() {
   return null;
 }
 
+/// Stamp the Schedule Builder event into the URL so a refresh can recover it.
+/// The builder receives a Competition object via Navigator arguments, which is
+/// lost on reload; the read side (App._extractArgumentsFromSettings) parses
+/// ?competitionId= and the page re-fetches the event by id.
+void syncScheduleBuilderUrl(String? competitionId) {
+  if (!kIsWeb || competitionId == null) return;
+  html.window.history
+      .replaceState(null, '', '#/schedule_builder?competitionId=$competitionId');
+}
+
+/// Local-storage fallback for the Schedule Builder event, mirroring the Race
+/// Results pair. Recovers context on a bare URL with no query param.
+void saveScheduleBuilderEventId(String? competitionId) {
+  if (kIsWeb && competitionId != null) {
+    html.window.localStorage['schedule_builder_event_id'] = competitionId;
+  }
+}
+
+String? loadScheduleBuilderEventId() {
+  if (kIsWeb) {
+    return html.window.localStorage['schedule_builder_event_id'];
+  }
+  return null;
+}
+
 // Country code mappings and flag utilities
 const Map<String, String> countryNameToCode = {
   'Serbia': 'SRB',

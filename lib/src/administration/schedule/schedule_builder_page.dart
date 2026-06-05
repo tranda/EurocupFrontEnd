@@ -1,7 +1,7 @@
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
+import 'package:eurocup_frontend/src/common.dart';
 import 'package:flutter/material.dart';
 
-import '../../model/event/event.dart';
 import '../../model/schedule/schedule_config.dart';
 import 'snapshots_dialog.dart';
 import 'tabs/grid_tab.dart';
@@ -36,16 +36,70 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_event != null) return;
+    if (_event != null || _resolving) return;
+    _resolveEvent();
+  }
+
+  bool _resolving = false;
+
+  /// Resolve the event from the warm-navigation Competition object, or — on a
+  /// browser refresh where that in-memory argument is gone — recover the id
+  /// from the URL (?competitionId=) or local storage and re-fetch the event.
+  Future<void> _resolveEvent() async {
     final args = ModalRoute.of(context)?.settings.arguments;
+
+    // Warm navigation from the picker passes the full Competition object.
     if (args is Competition) {
       _event = args;
+      syncScheduleBuilderUrl(_event!.id?.toString());
+      saveScheduleBuilderEventId(_event!.id?.toString());
       _loadConfig();
-    } else {
+      return;
+    }
+
+    // Refresh / deep link: recover the id, then fetch the Competition.
+    String? eventId;
+    if (args is Map && args['competitionId'] != null) {
+      eventId = args['competitionId'].toString();
+    }
+    eventId ??= loadScheduleBuilderEventId();
+
+    final id = int.tryParse(eventId ?? '');
+    if (id == null) {
       setState(() {
         _loading = false;
         _error = 'No event provided.';
       });
+      return;
+    }
+
+    _resolving = true;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final event = await api.getEvent(id);
+      if (!mounted) return;
+      if (event == null) {
+        setState(() {
+          _loading = false;
+          _error = 'Event not found.';
+        });
+        return;
+      }
+      _event = event;
+      syncScheduleBuilderUrl(event.id?.toString());
+      saveScheduleBuilderEventId(event.id?.toString());
+      _loadConfig();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = e.toString();
+      });
+    } finally {
+      _resolving = false;
     }
   }
 
