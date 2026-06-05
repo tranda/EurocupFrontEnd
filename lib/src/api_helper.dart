@@ -1954,6 +1954,20 @@ Future<void> setCrewLanes(int raceId, List<Map<String, dynamic>> assignments) as
   _unwrap(res, action: 'set crew lanes');
 }
 
+/// Submit manually-entered race results for a whole race in one call. Used
+/// when TimeKeeper missed a race and human timekeepers are reading off
+/// stopwatches per lane. Each entry: {'crew_id', 'lane', 'time_ms', 'status'}.
+/// Backend auto-computes positions, marks race FINISHED, and runs LaneSeeder
+/// for the next stage when applicable.
+Future<void> saveCrewResults(int raceId, List<Map<String, dynamic>> results) async {
+  final res = await http.post(
+    Uri.parse('$apiURL/race-results/$raceId/crew-results'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode({'crew_results': results}),
+  );
+  _unwrap(res, action: 'save crew results');
+}
+
 /// Shift all SCHEDULED races at-or-after the pivot race by N minutes (signed).
 /// Returns the number of races shifted.
 Future<int> shiftScheduleFrom(

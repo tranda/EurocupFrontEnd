@@ -302,6 +302,195 @@ class _GridTabState extends State<GridTab> {
   }
 
   /// Auto-fill this race's lanes centre-out using crew seed numbers.
+  /// Open a per-race "Enter results" dialog for manual timekeeping — used
+  /// when TimeKeeper missed a race and the referee is reading off stopwatches
+  /// per lane. One row per assigned lane: a time field (MM:SS.mmm or just
+  /// SS.mmm) plus a status segment (FINISHED/DNS/DNF/DSQ). Save → POST to
+  /// the existing crew-results endpoint → backend computes positions, marks
+  /// race FINISHED, fires LaneSeeder for the next stage.
+  Future<void> _enterResults(RaceResult race) async {
+    if (race.id == null) return;
+    final crews = (race.crewResults ?? <CrewResult>[])
+        .where((c) => c.crewId != null && c.lane != null)
+        .toList()
+      ..sort((a, b) => a.lane!.compareTo(b.lane!));
+    if (crews.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No crews assigned to lanes yet.')),
+      );
+      return;
+    }
+
+    final timeControllers = {
+      for (final c in crews) c.crewId!: TextEditingController(
+        text: c.timeMs == null ? '' : _formatMsForEntry(c.timeMs!),
+      ),
+    };
+    final statuses = {
+      for (final c in crews) c.crewId!: c.status ?? 'FINISHED',
+    };
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          title: const Text('Enter results'),
+          content: SizedBox(
+            width: 520,
+            child: SingleChildScrollView(
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Text(
+                  'Race #${race.raceNumber ?? "—"} · ${race.stage ?? ""} · Time format: MM:SS.mmm or SS.mmm',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                const SizedBox(height: 12),
+                for (final c in crews)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+                      SizedBox(
+                        width: 30,
+                        child: Text(
+                          'L${c.lane}',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          c.crew?.team?.name ?? c.team?.name ?? '—',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        width: 130,
+                        child: TextField(
+                          controller: timeControllers[c.crewId!],
+                          enabled: statuses[c.crewId!] == 'FINISHED',
+                          decoration: const InputDecoration(
+                            isDense: true,
+                            hintText: '00:00.000',
+                            border: OutlineInputBorder(),
+                          ),
+                          style: const TextStyle(fontFamily: 'monospace'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _statusSegment(
+                        statuses[c.crewId!]!,
+                        (s) => setLocal(() {
+                          statuses[c.crewId!] = s;
+                          if (s != 'FINISHED') {
+                            timeControllers[c.crewId!]!.clear();
+                          }
+                        }),
+                      ),
+                    ]),
+                  ),
+              ]),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (saved != true) return;
+
+    final payload = <Map<String, dynamic>>[];
+    for (final c in crews) {
+      final status = statuses[c.crewId!]!;
+      final entry = <String, dynamic>{
+        'crew_id': c.crewId,
+        'lane': c.lane,
+        'status': status,
+      };
+      if (status == 'FINISHED') {
+        final ms = _parseTimeToMs(timeControllers[c.crewId!]!.text);
+        if (ms == null) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Lane ${c.lane}: invalid time, skipping save.')),
+          );
+          return;
+        }
+        entry['time_ms'] = ms;
+      }
+      payload.add(entry);
+    }
+
+    await _runWithBusy(() => api.saveCrewResults(race.id!, payload));
+  }
+
+  /// Three-segment status selector used in the Enter-results dialog.
+  Widget _statusSegment(String current, void Function(String) onChange) {
+    Widget seg(String label, String value) {
+      final selected = current == value;
+      return InkWell(
+        onTap: () => onChange(value),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          decoration: BoxDecoration(
+            color: selected ? Colors.blue.shade600 : Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? Colors.white : Colors.black87,
+              fontWeight: FontWeight.bold,
+              fontSize: 11,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      seg('OK', 'FINISHED'),
+      const SizedBox(width: 2),
+      seg('DNS', 'DNS'),
+      const SizedBox(width: 2),
+      seg('DNF', 'DNF'),
+      const SizedBox(width: 2),
+      seg('DSQ', 'DSQ'),
+    ]);
+  }
+
+  /// Format an internal time_ms back into the entry-field text "MM:SS.mmm".
+  String _formatMsForEntry(int ms) {
+    final m = ms ~/ 60000;
+    final s = (ms % 60000) ~/ 1000;
+    final r = ms % 1000;
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}.${r.toString().padLeft(3, '0')}';
+  }
+
+  /// Parse human input into milliseconds. Accepts:
+  ///   "MM:SS.mmm"   "M:SS.mmm"   "SS.mmm"   "SS,mmm"   "MM:SS"   "SS"
+  /// Returns null when the input doesn't parse.
+  int? _parseTimeToMs(String raw) {
+    final s = raw.trim().replaceAll(',', '.');
+    if (s.isEmpty) return null;
+    final m = RegExp(r'^(?:(\d+):)?(\d+)(?:\.(\d{1,3}))?$').firstMatch(s);
+    if (m == null) return null;
+    final minutes = int.tryParse(m.group(1) ?? '0') ?? 0;
+    final seconds = int.tryParse(m.group(2) ?? '0') ?? 0;
+    final fracStr = (m.group(3) ?? '').padRight(3, '0');
+    final millis = int.tryParse(fracStr) ?? 0;
+    return minutes * 60000 + seconds * 1000 + millis;
+  }
+
   /// Trigger LaneSeeder for the discipline this race belongs to. Seeds the
   /// next un-seeded stage based on current results. Surfaces warnings /
   /// "skipped" reasons via a snackbar so the referee can see why nothing
@@ -840,6 +1029,12 @@ class _GridTabState extends State<GridTab> {
                   Icons.auto_fix_high,
                   tooltip: 'Auto-fill lanes (centre-out by seed)',
                   onPressed: () => _autoFillLanes(race),
+                  color: Colors.white,
+                ),
+                CompactIcon(
+                  Icons.timer,
+                  tooltip: 'Enter results (manual stopwatch times)',
+                  onPressed: () => _enterResults(race),
                   color: Colors.white,
                 ),
                 CompactIcon(
