@@ -37,6 +37,8 @@ class _GridTabState extends State<GridTab> {
   String? _filterStage;
   // which race rows are currently expanded
   final Set<int> _expanded = <int>{};
+  // scroll position is preserved across action refreshes (see _load)
+  final ScrollController _scrollCtrl = ScrollController();
 
   int get _laneCount => widget.config.laneCount;
 
@@ -46,18 +48,41 @@ class _GridTabState extends State<GridTab> {
     _load();
   }
 
+  @override
+  void dispose() {
+    _scrollCtrl.dispose();
+    super.dispose();
+  }
+
   Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+    // On the initial load (no data yet) show the full-screen spinner. On any
+    // subsequent refresh (after a Grid action) keep the list on screen and
+    // restore the scroll position, so the user doesn't jump to the top.
+    final hadData = _races.isNotEmpty;
+    final savedOffset =
+        hadData && _scrollCtrl.hasClients ? _scrollCtrl.offset : null;
+    if (!hadData) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
     try {
       final races = await api.getRaceResults(eventId: widget.eventId, includeDrafts: true);
       races.sort(_compareForGrid);
       setState(() {
         _races = races;
         _loading = false;
+        _error = null;
       });
+      if (savedOffset != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_scrollCtrl.hasClients) {
+            final max = _scrollCtrl.position.maxScrollExtent;
+            _scrollCtrl.jumpTo(savedOffset > max ? max : savedOffset);
+          }
+        });
+      }
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -624,6 +649,7 @@ class _GridTabState extends State<GridTab> {
     final availableDates = keys.where((k) => k != 'Unscheduled').toList();
 
     return SingleChildScrollView(
+      controller: _scrollCtrl,
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         for (final key in keys) _dateSection(key, groups[key]!, availableDates),
       ]),
