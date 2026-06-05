@@ -107,11 +107,22 @@ class MyApp extends StatelessWidget {
     SettingsView.routeName: HomePage.routeName,
   };
 
+  /// Strip a trailing query string from a route name. On refresh, the browser's
+  /// defaultRouteName is the full hash fragment including any query (e.g.
+  /// '/schedule_builder?competitionId=12'), but all our route-name matching uses
+  /// clean paths. Query params are read separately from Uri.base.
+  static String _stripRouteQuery(String? name) {
+    final n = name ?? '';
+    final i = n.indexOf('?');
+    return i == -1 ? n : n.substring(0, i);
+  }
+
   /// Walk the parent chain to build the implicit navigation stack for a
   /// deep-linked or refreshed route. Cycles are guarded against.
   List<String> _resolveStack(String leafRoute) {
-    final stack = <String>[leafRoute];
-    String? cursor = _routeParents[leafRoute];
+    final leaf = _stripRouteQuery(leafRoute);
+    final stack = <String>[leaf];
+    String? cursor = _routeParents[leaf];
     while (cursor != null && !stack.contains(cursor)) {
       stack.insert(0, cursor);
       cursor = _routeParents[cursor];
@@ -273,18 +284,27 @@ class MyApp extends StatelessWidget {
   /// `onGenerateRoute` (for runtime navigation) and by `onGenerateInitialRoutes`
   /// (when reconstructing the initial stack on cold load).
   Route<dynamic>? _buildRoute(RouteSettings routeSettings) {
-    final extractedArguments = _extractArgumentsFromSettings(routeSettings);
+    // On refresh the name can carry a query string (e.g.
+    // '/schedule_builder?competitionId=12') from the browser's defaultRouteName.
+    // Strip it so the route-name switches below match; query params are read
+    // from Uri.base inside _extractArgumentsFromSettings.
+    final cleanName = _stripRouteQuery(routeSettings.name);
+    final cleanSettings = RouteSettings(
+      name: cleanName,
+      arguments: routeSettings.arguments,
+    );
+    final extractedArguments = _extractArgumentsFromSettings(cleanSettings);
     final finalArguments = routeSettings.arguments ?? extractedArguments;
 
     final updatedSettings = RouteSettings(
-      name: routeSettings.name,
+      name: cleanName,
       arguments: finalArguments,
     );
 
     return MaterialPageRoute<void>(
       settings: updatedSettings,
       builder: (BuildContext context) {
-        final routeName = routeSettings.name ?? '';
+        final routeName = cleanName;
 
         // The bootstrap '/' slot — render a wrapped HomePage so it has a
         // working init/auth path rather than a dead-end spinner.
