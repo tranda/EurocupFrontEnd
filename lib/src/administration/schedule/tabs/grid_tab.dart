@@ -382,9 +382,10 @@ class _GridTabState extends State<GridTab> {
                         statuses[c.crewId!]!,
                         (s) => setLocal(() {
                           statuses[c.crewId!] = s;
-                          if (s != 'FINISHED') {
-                            timeControllers[c.crewId!]!.clear();
-                          }
+                          // Don't touch the time field — preserve whatever
+                          // the user typed so toggling DNS→OK doesn't lose
+                          // it. Time field disables for non-FINISHED, and
+                          // gets ignored on save in those cases.
                         }),
                       ),
                     ]),
@@ -414,18 +415,31 @@ class _GridTabState extends State<GridTab> {
       final entry = <String, dynamic>{
         'crew_id': c.crewId,
         'lane': c.lane,
-        'status': status,
       };
       if (status == 'FINISHED') {
-        final ms = _parseTimeToMs(timeControllers[c.crewId!]!.text);
-        if (ms == null) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Lane ${c.lane}: invalid time, skipping save.')),
-          );
-          return;
+        final raw = timeControllers[c.crewId!]!.text.trim();
+        if (raw.isEmpty) {
+          // OK selected but no time → user is reverting this crew to
+          // "no result yet" (the Registered placeholder). Send a null
+          // status + null time so the backend clears any previous result.
+          entry['status'] = null;
+          entry['time_ms'] = null;
+        } else {
+          final ms = _parseTimeToMs(raw);
+          if (ms == null) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Lane ${c.lane}: invalid time, skipping save.')),
+            );
+            return;
+          }
+          entry['status'] = 'FINISHED';
+          entry['time_ms'] = ms;
         }
-        entry['time_ms'] = ms;
+      } else {
+        // Terminal: DNS / DNF / DSQ — explicit status, no time.
+        entry['status'] = status;
+        entry['time_ms'] = null;
       }
       payload.add(entry);
     }
