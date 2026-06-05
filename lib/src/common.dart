@@ -166,6 +166,22 @@ void syncRaceResultsUrl(String? eventId) {
       .replaceState(null, '', '#/race_results_list?eventId=$eventId');
 }
 
+/// Remember the last viewed Race Results event in local storage. The URL
+/// (?eventId=) is the source of truth; this is the fallback that recovers
+/// context on a bare URL (e.g. an old bookmark with no query param).
+void saveSelectedEventId(String? eventId) {
+  if (kIsWeb && eventId != null) {
+    html.window.localStorage['race_results_event_id'] = eventId;
+  }
+}
+
+String? loadSelectedEventId() {
+  if (kIsWeb) {
+    return html.window.localStorage['race_results_event_id'];
+  }
+  return null;
+}
+
 // Country code mappings and flag utilities
 const Map<String, String> countryNameToCode = {
   'Serbia': 'SRB',

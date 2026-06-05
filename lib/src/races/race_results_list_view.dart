@@ -153,16 +153,21 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
       _eventName = arguments['eventName'] as String?;
     }
 
-    // Default to first active competition if no event ID provided
+    // Fall back to the last viewed event saved in local storage. This recovers
+    // context on a bare URL (e.g. an old bookmark) that carries no eventId for
+    // the URL extraction path to read.
+    _eventId ??= loadSelectedEventId();
+
+    // Default to first active competition if still unresolved.
     if (_eventId == null && competitions.isNotEmpty) {
       final active = competitions.where((c) => c.isActive).toList();
       _eventId = (active.isNotEmpty ? active.first.id : competitions.first.id).toString();
     }
 
-    // Persist the resolved event into the URL so a browser refresh keeps
-    // context. Without this, the in-memory route argument is lost on reload
-    // and the page falls back to eventId 0 → no races shown.
+    // Persist the resolved event in both the URL (shareable, per-tab) and local
+    // storage (survives a bare-URL refresh) so a reload keeps context.
     syncRaceResultsUrl(_eventId);
+    saveSelectedEventId(_eventId);
 
     _hasInitialized = true;
     _loadEventData();
