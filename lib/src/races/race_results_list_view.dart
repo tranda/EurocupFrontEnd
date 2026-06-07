@@ -937,7 +937,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
               if (a.finalTimeMs != null && b.finalTimeMs != null) {
                 return a.finalTimeMs!.compareTo(b.finalTimeMs!);
               }
-              return 0;
+              return _laneFallback(a, b);
             }
             if (aPos == null) return 1;
             if (bPos == null) return -1;
@@ -945,7 +945,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
           });
         } else {
           crewResults.sort((a, b) {
-            if (a.position == null && b.position == null) return 0;
+            if (a.position == null && b.position == null) return _laneFallback(a, b);
             if (a.position == null) return 1;
             if (b.position == null) return -1;
             return a.position!.compareTo(b.position!);
@@ -1361,6 +1361,17 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     return baseColor;
   }
 
+  /// Tie-breaker for crew_result sorting when no position is available
+  /// (e.g. registered but not raced yet). Sorts by lane number ascending —
+  /// Lane 1 first, missing-lane (null) crews to the bottom — so the list
+  /// matches the physical lane order on the water instead of arbitrary
+  /// crew_results.id insertion order.
+  int _laneFallback(CrewResult a, CrewResult b) {
+    final aLane = a.lane ?? 999;
+    final bLane = b.lane ?? 999;
+    return aLane.compareTo(bLane);
+  }
+
   void _calculatePositions(List<CrewResult> crewResults, {bool isFinalRound = false}) {
     if (isFinalRound) {
       // Always recompute from finalTimeMs. The existing `position` field
@@ -1710,7 +1721,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
             if (a.finalTimeMs != null && b.finalTimeMs != null) {
               return a.finalTimeMs!.compareTo(b.finalTimeMs!);
             }
-            return 0;
+            return _laneFallback(a, b);
           }
           if (aPos == null) return 1;
           if (bPos == null) return -1;
@@ -1718,7 +1729,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
         });
       } else {
         crewResults.sort((a, b) {
-          if (a.position == null && b.position == null) return 0;
+          if (a.position == null && b.position == null) return _laneFallback(a, b);
           if (a.position == null) return 1;
           if (b.position == null) return -1;
           return a.position!.compareTo(b.position!);
