@@ -1736,10 +1736,19 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
         });
       }
 
+      // Cancelled races get the same dark-red header + CANCELLED badge
+      // treatment used in the Schedule Builder Grid, so the public Race
+      // Results view reads the same way: the race is visible but clearly
+      // struck-out, and the medal-awarding round is the previous stage.
+      final isCancelled = raceResult.status == 'CANCELLED';
+      final headerColor = isCancelled
+          ? const Color(0xFF7F1D1D) // deep red — matches Grid
+          : competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1];
+
       return Column(
         children: [
           Container(
-            color: competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1],
+            color: headerColor,
             child: ListTile(
               onTap: crewResults.isEmpty
                   ? () {
@@ -1791,14 +1800,33 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                               fontSize: 16,
                             ),
                       ),
-                      Text(
-                        '${raceResult.stage}',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      Row(mainAxisSize: MainAxisSize.min, children: [
+                        if (isCancelled)
+                          Container(
+                            margin: const EdgeInsets.only(right: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
                               color: Colors.white,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 16,
+                              borderRadius: BorderRadius.circular(4),
                             ),
-                      ),
+                            child: const Text(
+                              'CANCELLED',
+                              style: TextStyle(
+                                color: Color(0xFF7F1D1D),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                        Text(
+                          '${raceResult.stage}',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 16,
+                              ),
+                        ),
+                      ]),
                     ],
                   ),
                   Row(
