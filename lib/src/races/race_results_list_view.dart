@@ -1061,6 +1061,11 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     final crewResults = race.crewResults ?? [];
     final isFinal = _isFinalStage(race);
     final isLastRound = _isLastRound(race);
+    // Mirror the on-screen badges so the printed schedule reads the same:
+    // CANCELLED races get a dark-red header, the medal-awarding race gets
+    // a gold MEDALS chip in the header bar.
+    final isCancelled = race.status == 'CANCELLED';
+    final isMedalRace = !isCancelled && (race.isFinalRound == true);
 
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -1070,7 +1075,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
           width: double.infinity,
           padding: const pw.EdgeInsets.all(12),
           decoration: pw.BoxDecoration(
-            color: PdfColors.blue800,
+            color: isCancelled ? PdfColor.fromInt(0xFF7F1D1D) : PdfColors.blue800,
             borderRadius: pw.BorderRadius.circular(4),
           ),
           child: pw.Column(
@@ -1087,14 +1092,50 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                       fontSize: 14,
                     ),
                   ),
-                  pw.Text(
-                    race.stage ?? '',
-                    style: pw.TextStyle(
-                      color: PdfColors.white,
-                      fontWeight: pw.FontWeight.bold,
-                      fontSize: 14,
+                  pw.Row(mainAxisSize: pw.MainAxisSize.min, children: [
+                    if (isCancelled)
+                      pw.Container(
+                        margin: const pw.EdgeInsets.only(right: 8),
+                        padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: pw.BoxDecoration(
+                          color: PdfColors.white,
+                          borderRadius: pw.BorderRadius.circular(3),
+                        ),
+                        child: pw.Text(
+                          'CANCELLED',
+                          style: pw.TextStyle(
+                            color: PdfColor.fromInt(0xFF7F1D1D),
+                            fontWeight: pw.FontWeight.bold,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                    if (isMedalRace)
+                      pw.Container(
+                        margin: const pw.EdgeInsets.only(right: 8),
+                        padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: pw.BoxDecoration(
+                          color: PdfColors.amber400,
+                          borderRadius: pw.BorderRadius.circular(3),
+                        ),
+                        child: pw.Text(
+                          'MEDALS',
+                          style: pw.TextStyle(
+                            color: PdfColor.fromInt(0xFF5D4037),
+                            fontWeight: pw.FontWeight.bold,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                    pw.Text(
+                      race.stage ?? '',
+                      style: pw.TextStyle(
+                        color: PdfColors.white,
+                        fontWeight: pw.FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
+                  ]),
                 ],
               ),
               pw.SizedBox(height: 4),
@@ -1161,22 +1202,35 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
       padding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: pw.Row(
         children: [
-          // Position circle
+          // Position circle — filled for the medal race (gold/silver/bronze
+          // background, white number), hollow for non-medal races (white
+          // background, coloured border + coloured number, just like the
+          // on-screen Grid / Race Results). Falls back to "-" when no
+          // position is set yet.
           pw.Container(
             width: 36,
             height: 36,
             decoration: pw.BoxDecoration(
-              color: _getPDFPositionColor(crew.position, isFinal),
+              color: isFinal && crew.position != null
+                  ? _getPDFPositionColor(crew.position, false)
+                  : PdfColors.white,
               shape: pw.BoxShape.circle,
-              border: isFinal
-                ? null
-                : pw.Border.all(color: _getPDFPositionColor(crew.position, false), width: 2),
+              border: pw.Border.all(
+                color: crew.position != null
+                    ? _getPDFPositionColor(crew.position, false)
+                    : PdfColors.grey400,
+                width: 2,
+              ),
             ),
             child: pw.Center(
               child: pw.Text(
                 crew.position?.toString() ?? '-',
                 style: pw.TextStyle(
-                  color: isFinal ? PdfColors.white : _getPDFPositionColor(crew.position, false),
+                  color: isFinal && crew.position != null
+                      ? PdfColors.white
+                      : (crew.position != null
+                          ? _getPDFPositionColor(crew.position, false)
+                          : PdfColors.grey600),
                   fontWeight: pw.FontWeight.bold,
                   fontSize: 16,
                 ),
