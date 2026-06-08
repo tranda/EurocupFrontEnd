@@ -40,6 +40,10 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   final List<String> _filterBoatGroups = [];
   final List<int> _filterDistances = [];
   final List<String> _filterStages = [];
+  // Race-row badge filter. Values: 'MEDALS' (race the backend marks as
+  // medal-awarding), 'CANCELLED' (status=CANCELLED). OR-semantics with the
+  // other dimensions, OR-semantics within itself if both chips are picked.
+  final List<String> _filterFlags = [];
   final List<String> _filterCompetitions = [];
   String _filterTeamName = '';
   String _filterCountry = '';
@@ -228,6 +232,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
         if (_filterAgeGroups.isNotEmpty || _filterGenderGroups.isNotEmpty ||
             _filterBoatGroups.isNotEmpty || _filterDistances.isNotEmpty ||
             _filterStages.isNotEmpty || _filterCompetitions.isNotEmpty ||
+            _filterFlags.isNotEmpty ||
             _filterDates.isNotEmpty ||
             _filterTeamName.isNotEmpty || _filterCountry.isNotEmpty) {
           _applyFilters();
@@ -341,7 +346,8 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   Widget _buildActiveFiltersChips() {
     final hasFilters = _filterAgeGroups.isNotEmpty || _filterGenderGroups.isNotEmpty ||
         _filterBoatGroups.isNotEmpty || _filterDistances.isNotEmpty ||
-        _filterStages.isNotEmpty || _filterDates.isNotEmpty ||
+        _filterStages.isNotEmpty || _filterFlags.isNotEmpty ||
+        _filterDates.isNotEmpty ||
         _filterTeamName.isNotEmpty || _filterCountry.isNotEmpty;
 
     if (!hasFilters) return const SizedBox.shrink();
@@ -434,6 +440,24 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
             backgroundColor: Colors.teal.shade50,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           )),
+          // Flag chips — Medals / Cancelled
+          ..._filterFlags.map((flag) => Chip(
+            label: Text(
+              flag == 'MEDALS' ? 'Medals' : 'Cancelled',
+              style: const TextStyle(fontSize: 11),
+            ),
+            deleteIcon: const Icon(Icons.close, size: 16),
+            onDeleted: () {
+              setState(() {
+                _filterFlags.remove(flag);
+                _applyFilters();
+              });
+            },
+            backgroundColor: flag == 'MEDALS'
+                ? Colors.amber.shade100
+                : Colors.red.shade100,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          )),
           // Team name chip
           if (_filterTeamName.isNotEmpty)
             Chip(
@@ -496,6 +520,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     List<String> tempBoatGroups = List.from(_filterBoatGroups);
     List<int> tempDistances = List.from(_filterDistances);
     List<String> tempStages = List.from(_filterStages);
+    List<String> tempFlags = List.from(_filterFlags);
     String tempTeamName = _filterTeamName;
     String tempCountry = _filterCountry;
 
@@ -695,6 +720,50 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                       ],
                     ),
                     const SizedBox(height: 16),
+                    // Flags filter (race-row badges: MEDALS, CANCELLED).
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Flags',
+                            style: TextStyle(fontSize: 12, color: Colors.black54)),
+                        const SizedBox(height: 4),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: [
+                            FilterChip(
+                              label: const Text('Medals'),
+                              selected: tempFlags.contains('MEDALS'),
+                              selectedColor: Colors.amber.shade200,
+                              onSelected: (selected) {
+                                setDialogState(() {
+                                  if (selected) {
+                                    tempFlags.add('MEDALS');
+                                  } else {
+                                    tempFlags.remove('MEDALS');
+                                  }
+                                });
+                              },
+                            ),
+                            FilterChip(
+                              label: const Text('Cancelled'),
+                              selected: tempFlags.contains('CANCELLED'),
+                              selectedColor: Colors.red.shade200,
+                              onSelected: (selected) {
+                                setDialogState(() {
+                                  if (selected) {
+                                    tempFlags.add('CANCELLED');
+                                  } else {
+                                    tempFlags.remove('CANCELLED');
+                                  }
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
                     // Team Name filter
                     TextField(
                       controller: teamNameController,
@@ -741,6 +810,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                       tempBoatGroups.clear();
                       tempDistances.clear();
                       tempStages.clear();
+                      tempFlags.clear();
                       tempTeamName = '';
                       tempCountry = '';
                       teamNameController.clear();
@@ -771,6 +841,8 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                       _filterDistances.addAll(tempDistances);
                       _filterStages.clear();
                       _filterStages.addAll(tempStages);
+                      _filterFlags.clear();
+                      _filterFlags.addAll(tempFlags);
                       _filterTeamName = tempTeamName;
                       _filterCountry = tempCountry;
                       print('After copying - actual values: Ages=$_filterAgeGroups, Genders=$_filterGenderGroups, Boats=$_filterBoatGroups, Distances=$_filterDistances, Stages=$_filterStages, Team=$_filterTeamName, Country=$_filterCountry');
@@ -780,6 +852,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                       final hasActiveFilters = _filterAgeGroups.isNotEmpty || _filterGenderGroups.isNotEmpty ||
                           _filterBoatGroups.isNotEmpty || _filterDistances.isNotEmpty ||
                           _filterStages.isNotEmpty || _filterCompetitions.isNotEmpty ||
+                          _filterFlags.isNotEmpty ||
                           _filterDates.isNotEmpty ||
                           _filterTeamName.isNotEmpty || _filterCountry.isNotEmpty;
                       // Expand all if filters are active, collapse all if no filters
@@ -841,6 +914,17 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
       // Stage filter (OR logic - match any selected stage)
       if (_filterStages.isNotEmpty && !_filterStages.contains(race.stage)) {
         return false;
+      }
+
+      // Flags filter (OR logic — race must match at least one selected flag).
+      // MEDALS = the race the backend currently treats as final round AND
+      // not cancelled; CANCELLED = status flipped to CANCELLED.
+      if (_filterFlags.isNotEmpty) {
+        final isCancelled = race.status == 'CANCELLED';
+        final isMedals = !isCancelled && race.isFinalRound == true;
+        final matches = (_filterFlags.contains('MEDALS') && isMedals)
+            || (_filterFlags.contains('CANCELLED') && isCancelled);
+        if (!matches) return false;
       }
 
       // Competition filter (OR logic - match any selected competition)
