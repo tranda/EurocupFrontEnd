@@ -1818,6 +1818,26 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                               ),
                             ),
                           ),
+                        // MEDALS badge — same gating as the Grid: backend's
+                        // isFinalRound flag, mutually exclusive with cancelled
+                        // (the model returns false for cancelled rows).
+                        if (!isCancelled && raceResult.isFinalRound == true)
+                          Container(
+                            margin: const EdgeInsets.only(right: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.shade400,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'MEDALS',
+                              style: TextStyle(
+                                color: Color(0xFF5D4037),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
                         Text(
                           '${raceResult.stage}',
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(

@@ -1171,6 +1171,31 @@ class _GridTabState extends State<GridTab> {
                     )
                   : const SizedBox.shrink();
 
+              // MEDALS badge — flags the race that the backend currently
+              // treats as the final round for the discipline (where the
+              // medal-awarding standings are computed). Backend's
+              // isFinalRound returns false for CANCELLED, so the two badges
+              // are mutually exclusive in practice.
+              final isMedalRace = !isCancelled && race.isFinalRound == true;
+              final medalsBadge = isMedalRace
+                  ? Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade400,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        'MEDALS',
+                        style: TextStyle(
+                          color: Color(0xFF5D4037),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink();
+
               if (!narrow) {
                 return Row(children: [
                   numCell,
@@ -1178,6 +1203,7 @@ class _GridTabState extends State<GridTab> {
                   Expanded(child: _disciplineBadges(race)),
                   const SizedBox(width: 8),
                   cancelledBadge,
+                  medalsBadge,
                   _stageBadge(race.stage),
                   const SizedBox(width: 8),
                   lanesCell,
