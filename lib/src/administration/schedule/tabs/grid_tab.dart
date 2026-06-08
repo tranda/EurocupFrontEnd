@@ -175,6 +175,10 @@ class _GridTabState extends State<GridTab> {
   Future<void> _editRace(RaceResult race) async {
     final stageController = TextEditingController(text: race.stage ?? '');
     DateTime time = race.raceTime ?? DateTime.now();
+    // Race-level status toggle: SCHEDULED (default) vs CANCELLED. Cancelled
+    // races are excluded from final-standings math on the server so the
+    // discipline can finish based on prior rounds.
+    String status = race.status ?? 'SCHEDULED';
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -221,6 +225,65 @@ class _GridTabState extends State<GridTab> {
                 },
               ),
             ]),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text('Status', style: Theme.of(ctx).textTheme.bodySmall),
+            ),
+            const SizedBox(height: 4),
+            Row(children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () => setLocal(() => status = 'SCHEDULED'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: status == 'SCHEDULED' ? Colors.blue.shade600 : Colors.grey.shade200,
+                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(6)),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Scheduled',
+                        style: TextStyle(
+                          color: status == 'SCHEDULED' ? Colors.white : Colors.black87,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: InkWell(
+                  onTap: () => setLocal(() => status = 'CANCELLED'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: status == 'CANCELLED' ? Colors.red.shade600 : Colors.grey.shade200,
+                      borderRadius: const BorderRadius.horizontal(right: Radius.circular(6)),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Cancelled',
+                        style: TextStyle(
+                          color: status == 'CANCELLED' ? Colors.white : Colors.black87,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ]),
+            if (status == 'CANCELLED') ...[
+              const SizedBox(height: 6),
+              Text(
+                'Cancelled races are skipped in the final-standings calculation. '
+                'In a Rounds plan, this collapses the standings onto the rounds '
+                'that actually ran.',
+                style: TextStyle(fontSize: 11, color: Colors.grey[700]),
+              ),
+            ],
           ]),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
@@ -234,6 +297,7 @@ class _GridTabState extends State<GridTab> {
             race.id!,
             raceTime: time,
             stage: stageController.text.trim().isEmpty ? null : stageController.text.trim(),
+            status: status,
           ));
     }
   }
@@ -989,7 +1053,12 @@ class _GridTabState extends State<GridTab> {
       if (cr.lane != null) crewByLane[cr.lane!] = cr;
     }
     final filledLanes = crewByLane.length;
-    final headerColor = competitionColor[0]; // deep blue, matches Race Results
+    // Cancelled races stay visible in the schedule but get a dark-red header
+    // so they read as struck-out at a glance.
+    final isCancelled = race.status == 'CANCELLED';
+    final headerColor = isCancelled
+        ? const Color(0xFF7F1D1D) // deep red
+        : competitionColor[0];    // default deep blue
 
     return Column(children: [
       Material(
@@ -1083,12 +1152,32 @@ class _GridTabState extends State<GridTab> {
                   ),
               ];
 
+              final cancelledBadge = isCancelled
+                  ? Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        'CANCELLED',
+                        style: TextStyle(
+                          color: Color(0xFF7F1D1D),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink();
+
               if (!narrow) {
                 return Row(children: [
                   numCell,
                   timeCell,
                   Expanded(child: _disciplineBadges(race)),
                   const SizedBox(width: 8),
+                  cancelledBadge,
                   _stageBadge(race.stage),
                   const SizedBox(width: 8),
                   lanesCell,
