@@ -1375,7 +1375,19 @@ class _GridTabState extends State<GridTab> {
 
     final status = crewResult?.status;
     final finalStatus = crewResult?.finalStatus;
-    final isFinalView = _showAccumulated(race);
+    // Two distinct concepts that used to be fused under one flag:
+    //  - isMedalRace: this race awards the medals → fill the position
+    //    circle (gold/silver/bronze) so it reads "ranking matters here".
+    //    True for any final round, including knockout Grand Finals where
+    //    no time accumulation is involved.
+    //  - showsAccumulated: render the per-race + summed two-badge layout
+    //    on the trailing side, only for Rounds plans where the final
+    //    standing is the sum across rounds.
+    final isMedalRace = race.isFinalRound == true;
+    final showsAccumulated = _showAccumulated(race);
+    // Keep one name for the lane-row body callers — circle styling and
+    // hasFinalResult both want "is this the medal race?" semantics.
+    final isFinalView = isMedalRace;
     final hasPerRaceResult = hasContent
         && (crewResult.timeMs != null
             || status == 'FINISHED'
@@ -1440,7 +1452,11 @@ class _GridTabState extends State<GridTab> {
             : _resultTrailing(
                 race: race,
                 crewResult: crewResult,
-                isFinalView: isFinalView,
+                // Trailing badge uses the accumulated flag — only Rounds
+                // plans show the two-badge per-race + summed layout. For a
+                // knockout Grand Final the position circle is still filled
+                // (medal race) but the trailing is a single per-race badge.
+                isFinalView: showsAccumulated,
                 hasPerRaceResult: hasPerRaceResult,
                 hasFinalResult: hasFinalResult,
               ),
