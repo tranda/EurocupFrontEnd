@@ -176,7 +176,7 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
 
   @override
   Widget build(BuildContext context) {
-    final eventLabel = _event?.name ?? 'Schedule Builder';
+    final eventLabel = _event?.getShortName() ?? 'Schedule Builder';
     final base = Theme.of(context);
     const darkText = Color(0xFF1F2937);
     final localTheme = base.copyWith(
