@@ -324,6 +324,7 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
     return Stack(children: [
       Column(children: [
         _generatorBar(),
+        _rulesNote(),
         if (_lastResult != null && _lastResult!.warnings.isNotEmpty) _warningsBanner(),
         const Divider(height: 1),
         Expanded(child: _disciplinesList()),
@@ -336,6 +337,38 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
           ),
         ),
     ]);
+  }
+
+  /// Small info banner explaining the placement rules so operators
+  /// understand why a preview looks the way it does (wave order + boarding
+  /// gap + 2-hour target). Kept above the disciplines list so it's
+  /// visible before hitting Preview / Generate.
+  Widget _rulesNote() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      color: const Color.fromARGB(255, 250, 250, 245),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline, size: 16, color: Colors.blueGrey),
+          SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              'Scheduling rules · Races run in waves (all Round 1 / Heat 1 first, '
+              'then Round 2 / Heat 2, then repechages, then finals). Same-stage '
+              'races (H1 → H2, Rep 1 → Rep 2) can run back-to-back because the '
+              'crews differ. Cross-stage transitions of the SAME discipline '
+              '(Heat → Rep, Rep → Final, Round → next Round) get at least one '
+              'other race between them so crews can re-board. Target: no '
+              'discipline’s consecutive stages more than 2 hours apart '
+              '(soft warning if exceeded).',
+              style: TextStyle(fontSize: 11.5, color: Color(0xFF37474F)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _generatorBar() {
