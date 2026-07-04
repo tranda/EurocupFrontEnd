@@ -1168,14 +1168,34 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text(
-                    '#${race.raceNumber} ${race.raceTimeDisplay}',
-                    style: pw.TextStyle(
-                      color: PdfColors.white,
-                      fontWeight: pw.FontWeight.bold,
-                      fontSize: 14,
+                  pw.Row(mainAxisSize: pw.MainAxisSize.min, children: [
+                    pw.Text(
+                      '#${race.raceNumber} ${race.raceTimeDisplay}',
+                      style: pw.TextStyle(
+                        color: PdfColors.white,
+                        fontWeight: pw.FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
+                    if (race.hull != null && race.hull!.isNotEmpty) ...[
+                      pw.SizedBox(width: 8),
+                      pw.Container(
+                        padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: pw.BoxDecoration(
+                          color: PdfColors.white,
+                          borderRadius: pw.BorderRadius.circular(3),
+                        ),
+                        child: pw.Text(
+                          race.hull!,
+                          style: pw.TextStyle(
+                            color: PdfColor.fromInt(0xFF1F2937),
+                            fontWeight: pw.FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ]),
                   pw.Row(mainAxisSize: pw.MainAxisSize.min, children: [
                     if (isCancelled)
                       pw.Container(
