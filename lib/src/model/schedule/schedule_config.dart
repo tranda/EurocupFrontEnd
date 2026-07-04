@@ -3,6 +3,12 @@ import 'event_day.dart';
 class ScheduleConfig {
   final int eventId;
   final int laneCount;
+  /// Comma list of small-boat hull letters, e.g. "D,E,F". Empty = no
+  /// hull rotation for small boats on this event.
+  final String hullsSmall;
+  /// Comma list of standard-boat hull letters, e.g. "A,B,C". Empty = no
+  /// hull rotation for standard boats on this event.
+  final String hullsStandard;
   final int defaultRounds;
   final int minCrewsPerRace;
   /// Nested: { "boat": { "Standard": "#hex" }, "age": { ... },
@@ -16,6 +22,8 @@ class ScheduleConfig {
   ScheduleConfig({
     required this.eventId,
     required this.laneCount,
+    this.hullsSmall = '',
+    this.hullsStandard = '',
     this.defaultRounds = 3,
     this.minCrewsPerRace = 3,
     this.colorMap = const {},
@@ -29,6 +37,8 @@ class ScheduleConfig {
   factory ScheduleConfig.fromMap(Map<String, dynamic> data) => ScheduleConfig(
         eventId: (data['event_id'] ?? 0) as int,
         laneCount: (data['lane_count'] ?? 6) as int,
+        hullsSmall: (data['hulls_small'] ?? '') as String,
+        hullsStandard: (data['hulls_standard'] ?? '') as String,
         defaultRounds: (data['default_rounds'] ?? 3) as int,
         minCrewsPerRace: (data['min_crews_per_race'] ?? 3) as int,
         colorMap: _parseColorMap(data['color_map']),

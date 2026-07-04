@@ -1490,12 +1490,17 @@ Future<void> updateScheduleConfig(
   int? defaultRounds,
   int? minCrewsPerRace,
   Map<String, Map<String, String>>? colorMap,
+  String? hullsSmall,
+  String? hullsStandard,
 }) async {
   final body = <String, dynamic>{};
   if (laneCount != null) body['lane_count'] = laneCount;
   if (defaultRounds != null) body['default_rounds'] = defaultRounds;
   if (minCrewsPerRace != null) body['min_crews_per_race'] = minCrewsPerRace;
   if (colorMap != null) body['color_map'] = colorMap;
+  // Pass empty strings through so the operator can clear a fleet.
+  if (hullsSmall != null) body['hulls_small'] = hullsSmall;
+  if (hullsStandard != null) body['hulls_standard'] = hullsStandard;
   if (body.isEmpty) return;
   final res = await http.put(
     Uri.parse('$apiURL/events/$eventId/schedule-config'),
@@ -1738,7 +1743,7 @@ Future<void> resetDisciplineCrewSeeds(int disciplineId) async {
 
 class ScheduleSnapshot {
   final int id;
-  final String category; // 'setup' | 'plan_seeds' | 'grid_day'
+  final String category; // 'setup' | 'plan_seeds' | 'grid_day' | 'event_grid'
   final String? day;     // 'YYYY-MM-DD' or null
   final String name;
   final DateTime? createdAt;
@@ -1750,12 +1755,94 @@ class ScheduleSnapshot {
     required this.createdAt,
   });
 
+  /// True when the snapshot was auto-captured by the generator before a
+  /// regenerate / recompute / shift, rather than saved manually by the
+  /// operator. The `auto:` name prefix is the marker; the retention pass
+  /// only prunes rows with this prefix.
+  bool get isAuto => name.startsWith('auto:');
+
   factory ScheduleSnapshot.fromMap(Map<String, dynamic> m) => ScheduleSnapshot(
         id: (m['id'] ?? 0) as int,
         category: (m['category'] ?? '') as String,
         day: m['day'] as String?,
         name: (m['name'] ?? '') as String,
         createdAt: m['created_at'] == null ? null : DateTime.tryParse(m['created_at']),
+      );
+}
+
+/// Dry-run preview payload returned by `previewGenerateSchedule`. Carries
+/// both the summary (race count, warnings) and the full event_grid tree
+/// the frontend renders as a preview panel.
+class SchedulePreview {
+  /// GenerationResult-shaped summary — same fields the real generate
+  /// call returns.
+  final GenerationResult result;
+
+  /// Grouped by day. Each day carries a list of race payloads in the
+  /// order they'd land after the (hypothetical) commit.
+  final List<PreviewDay> days;
+
+  const SchedulePreview({required this.result, required this.days});
+
+  int get totalRaces => days.fold(0, (a, d) => a + d.races.length);
+
+  factory SchedulePreview.fromMap(Map<String, dynamic> m) {
+    final result = GenerationResult.fromMap(
+      (m['result'] as Map<String, dynamic>?) ?? const {},
+    );
+    final preview = m['preview'] as Map<String, dynamic>?;
+    final rawDays = (preview?['days'] as List<dynamic>?) ?? const [];
+    return SchedulePreview(
+      result: result,
+      days: rawDays
+          .map((e) => PreviewDay.fromMap(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+}
+
+class PreviewDay {
+  final String day;
+  final List<PreviewRace> races;
+  const PreviewDay({required this.day, required this.races});
+
+  factory PreviewDay.fromMap(Map<String, dynamic> m) => PreviewDay(
+        day: (m['day'] ?? '') as String,
+        races: ((m['races'] as List<dynamic>?) ?? const [])
+            .map((e) => PreviewRace.fromMap(e as Map<String, dynamic>))
+            .toList(),
+      );
+}
+
+class PreviewRace {
+  final int? raceNumber;
+  final String? raceTime;
+  final String? hull;
+  final String? stage;
+  final String? disciplineKey;
+  final String entryType;
+  final String? label;
+
+  const PreviewRace({
+    required this.raceNumber,
+    required this.raceTime,
+    required this.hull,
+    required this.stage,
+    required this.disciplineKey,
+    required this.entryType,
+    required this.label,
+  });
+
+  bool get isBreak => entryType == 'break';
+
+  factory PreviewRace.fromMap(Map<String, dynamic> m) => PreviewRace(
+        raceNumber: m['race_number'] as int?,
+        raceTime: m['race_time'] as String?,
+        hull: m['hull'] as String?,
+        stage: m['stage'] as String?,
+        disciplineKey: m['discipline_key'] as String?,
+        entryType: (m['entry_type'] as String?) ?? 'race',
+        label: m['label'] as String?,
       );
 }
 
@@ -1838,6 +1925,28 @@ Future<GenerationResult> generateSchedule(
     body: jsonEncode(body),
   );
   return GenerationResult.fromMap(_unwrap(res, action: 'generate schedule') as Map<String, dynamic>);
+}
+
+/// Dry-run generate: the backend runs the same code path inside a
+/// transaction and rolls back, returning both the summary result and an
+/// event_grid preview of what the schedule WOULD look like. Nothing is
+/// written; no snapshot row is created (the auto-snapshot rolls back
+/// with the transaction). Use this to build a "review before commit"
+/// screen before calling generateSchedule().
+Future<SchedulePreview> previewGenerateSchedule(
+  int eventId, {
+  bool clean = false,
+  String? day,
+}) async {
+  final body = <String, dynamic>{'clean': clean, 'dry_run': true};
+  if (day != null) body['day'] = day;
+  final res = await http.post(
+    Uri.parse('$apiURL/events/$eventId/schedule/generate'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode(body),
+  );
+  final data = _unwrap(res, action: 'preview schedule') as Map<String, dynamic>;
+  return SchedulePreview.fromMap(data);
 }
 
 Future<GenerationResult> regenerateDisciplineSchedule(int disciplineId) async {

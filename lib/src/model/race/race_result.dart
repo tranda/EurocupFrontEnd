@@ -8,6 +8,9 @@ class RaceResult {
   int? disciplineId;
   int? eventId;
   DateTime? raceTime;
+  /// Hull letter assigned by the generator (e.g. "D"). Null when the event
+  /// has no fleet configured or the discipline's boat_group isn't mapped.
+  String? hull;
   String? stage; // "Round x", "Heat x", "Semifinal x", "Repechage x", "Minor Final", "Grand Final", "Final"
   String? status; // "SCHEDULED", "IN_PROGRESS", "FINISHED", "CANCELLED"
   bool? isFinalRound; // Indicates if this is the final round
@@ -36,6 +39,7 @@ class RaceResult {
     this.disciplineId,
     this.eventId,
     this.raceTime,
+    this.hull,
     this.stage,
     this.status,
     this.isFinalRound,
@@ -63,6 +67,7 @@ class RaceResult {
         raceTime: data['race_time'] == null
             ? null
             : DateTime.parse(data['race_time'] as String),
+        hull: data['hull'] as String?,
         stage: data['stage'] as String?,
         status: data['status'] as String?,
         isFinalRound: data['is_final_round'] as bool?,
@@ -98,6 +103,7 @@ class RaceResult {
         'discipline_id': disciplineId,
         'event_id': eventId,
         'race_time': raceTime?.toIso8601String(),
+        'hull': hull,
         'stage': stage,
         'status': status,
         'is_final_round': isFinalRound,

@@ -29,6 +29,8 @@ class _SetupTabState extends State<SetupTab> {
   late int _laneCount;
   late int _defaultRounds;
   late int _minCrewsPerRace;
+  late TextEditingController _hullsSmallCtl;
+  late TextEditingController _hullsStandardCtl;
   bool _saving = false;
 
   @override
@@ -37,6 +39,15 @@ class _SetupTabState extends State<SetupTab> {
     _laneCount = widget.config.laneCount;
     _defaultRounds = widget.config.defaultRounds;
     _minCrewsPerRace = widget.config.minCrewsPerRace;
+    _hullsSmallCtl = TextEditingController(text: widget.config.hullsSmall);
+    _hullsStandardCtl = TextEditingController(text: widget.config.hullsStandard);
+  }
+
+  @override
+  void dispose() {
+    _hullsSmallCtl.dispose();
+    _hullsStandardCtl.dispose();
+    super.dispose();
   }
 
   @override
@@ -50,6 +61,12 @@ class _SetupTabState extends State<SetupTab> {
     }
     if (oldWidget.config.minCrewsPerRace != widget.config.minCrewsPerRace) {
       _minCrewsPerRace = widget.config.minCrewsPerRace;
+    }
+    if (oldWidget.config.hullsSmall != widget.config.hullsSmall) {
+      _hullsSmallCtl.text = widget.config.hullsSmall;
+    }
+    if (oldWidget.config.hullsStandard != widget.config.hullsStandard) {
+      _hullsStandardCtl.text = widget.config.hullsStandard;
     }
   }
 
@@ -79,6 +96,16 @@ class _SetupTabState extends State<SetupTab> {
   Future<void> _saveMinCrewsPerRace(int v) async {
     setState(() => _minCrewsPerRace = v);
     await _runWithLoading(() => api.updateScheduleConfig(widget.eventId, minCrewsPerRace: v));
+  }
+
+  Future<void> _saveHullsSmall(String v) async {
+    if (v == widget.config.hullsSmall) return;
+    await _runWithLoading(() => api.updateScheduleConfig(widget.eventId, hullsSmall: v));
+  }
+
+  Future<void> _saveHullsStandard(String v) async {
+    if (v == widget.config.hullsStandard) return;
+    await _runWithLoading(() => api.updateScheduleConfig(widget.eventId, hullsStandard: v));
   }
 
   Future<void> _saveColorMap(Map<String, Map<String, String>> v) async {
@@ -410,6 +437,8 @@ class _SetupTabState extends State<SetupTab> {
         children: [
           _laneCountCard(),
           const SizedBox(height: 12),
+          _fleetCard(),
+          const SizedBox(height: 12),
           _defaultRoundsCard(),
           const SizedBox(height: 12),
           _minCrewsPerRaceCard(),
@@ -464,6 +493,61 @@ class _SetupTabState extends State<SetupTab> {
               if (v != null) _saveLaneCount(v);
             },
           ),
+        ]),
+      ),
+    );
+  }
+
+  Widget _fleetCard() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Row(children: [
+            Icon(Icons.directions_boat, color: Color.fromARGB(255, 0, 80, 150)),
+            SizedBox(width: 12),
+            Text('Fleet (hull letters)', style: TextStyle(fontWeight: FontWeight.bold)),
+          ]),
+          const SizedBox(height: 4),
+          const Text(
+            'Comma list per boat group, e.g. "D,E,F". Empty = no rotation. '
+            'Placement respects turnaround = fleet size × gap.',
+            style: TextStyle(fontSize: 11, color: Colors.grey),
+          ),
+          const SizedBox(height: 12),
+          Row(children: [
+            Expanded(
+              child: TextField(
+                controller: _hullsSmallCtl,
+                enabled: !_saving,
+                decoration: const InputDecoration(
+                  labelText: 'Small hulls',
+                  hintText: 'D,E,F',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
+                textInputAction: TextInputAction.next,
+                onEditingComplete: () => _saveHullsSmall(_hullsSmallCtl.text.trim()),
+                onSubmitted: (v) => _saveHullsSmall(v.trim()),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextField(
+                controller: _hullsStandardCtl,
+                enabled: !_saving,
+                decoration: const InputDecoration(
+                  labelText: 'Standard hulls',
+                  hintText: 'A,B,C',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
+                textInputAction: TextInputAction.done,
+                onEditingComplete: () => _saveHullsStandard(_hullsStandardCtl.text.trim()),
+                onSubmitted: (v) => _saveHullsStandard(v.trim()),
+              ),
+            ),
+          ]),
         ]),
       ),
     );

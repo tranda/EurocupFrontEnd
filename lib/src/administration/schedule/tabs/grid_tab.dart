@@ -1171,6 +1171,29 @@ class _GridTabState extends State<GridTab> {
                     )
                   : const SizedBox.shrink();
 
+              // Hull letter (e.g. "D") — which physical boat set carries
+              // this race. Rendered as a small chip next to the time so the
+              // marshal knows which hull to send out.
+              final hullChip = (race.hull != null && race.hull!.isNotEmpty)
+                  ? Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        race.hull!,
+                        style: const TextStyle(
+                          color: Color(0xFF1F2937),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink();
+
               // MEDALS badge — flags the race that the backend currently
               // treats as the final round for the discipline (where the
               // medal-awarding standings are computed). Backend's
@@ -1200,6 +1223,7 @@ class _GridTabState extends State<GridTab> {
                 return Row(children: [
                   numCell,
                   timeCell,
+                  hullChip,
                   Expanded(child: _disciplineBadges(race)),
                   const SizedBox(width: 8),
                   cancelledBadge,
@@ -1217,6 +1241,7 @@ class _GridTabState extends State<GridTab> {
                 Row(children: [
                   numCell,
                   timeCell,
+                  hullChip,
                   Expanded(child: _stageBadge(race.stage)),
                   const SizedBox(width: 6),
                   lanesCell,

@@ -6,6 +6,7 @@ import '../../../model/schedule/crew_seed.dart';
 import '../../../model/schedule/discipline_progression.dart';
 import '../../../model/schedule/generation_result.dart';
 import '../../../widgets/compact_icon.dart';
+import '../schedule_preview_dialog.dart';
 
 /// Per-discipline race plan override + crew seeds editor.
 class PlanAndSeedsTab extends StatefulWidget {
@@ -68,6 +69,44 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
         _error = e.toString();
         _loading = false;
       });
+    }
+  }
+
+  /// Dry-run the generate on the backend, show the operator a preview
+  /// dialog listing the proposed schedule, and only fire the real
+  /// generate when they hit Apply. Nothing is written by the preview
+  /// call itself — the backend rolls back its transaction, including
+  /// the auto-snapshot row that generate would otherwise insert.
+  Future<void> _preview({bool clean = false, String? day}) async {
+    setState(() => _generating = true);
+    try {
+      final preview = await api.previewGenerateSchedule(
+        widget.eventId,
+        clean: clean,
+        day: day,
+      );
+      if (!mounted) return;
+      final apply = await SchedulePreviewDialog.show(context, preview);
+      if (!apply) return;
+      // Apply — real generate. Backend takes an auto-snapshot before the
+      // write, so the operator can roll back from the Snapshots menu.
+      final result = await api.generateSchedule(
+        widget.eventId,
+        clean: clean,
+        day: day,
+      );
+      setState(() => _lastResult = result);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Applied · ${result.racesCreated} races · '
+            '${result.warnings.length} warning(s)'),
+      ));
+      await _load();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+    } finally {
+      if (mounted) setState(() => _generating = false);
     }
   }
 
@@ -311,6 +350,11 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
         side: BorderSide(color: Colors.red.shade300),
       ),
     );
+    final previewBtn = OutlinedButton.icon(
+      onPressed: _generating ? null : () => _preview(),
+      icon: const Icon(Icons.visibility_outlined),
+      label: const Text('Preview'),
+    );
     final mainBtn = ElevatedButton.icon(
       onPressed: _generating ? null : _generate,
       icon: const Icon(Icons.play_arrow),
@@ -340,7 +384,7 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
               spacing: 8,
               runSpacing: 8,
               alignment: WrapAlignment.end,
-              children: [cleanBtn, mainBtn],
+              children: [cleanBtn, previewBtn, mainBtn],
             ),
           ]);
         }
@@ -354,6 +398,8 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
             ),
           ),
           cleanBtn,
+          const SizedBox(width: 8),
+          previewBtn,
           const SizedBox(width: 8),
           mainBtn,
         ]);

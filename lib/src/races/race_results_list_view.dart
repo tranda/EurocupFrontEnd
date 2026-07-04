@@ -1930,14 +1930,35 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        '#${raceResult.raceNumber} ${raceResult.raceTimeDisplay}',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      Row(mainAxisSize: MainAxisSize.min, children: [
+                        Text(
+                          '#${raceResult.raceNumber} ${raceResult.raceTimeDisplay}',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 16,
+                              ),
+                        ),
+                        if (raceResult.hull != null && raceResult.hull!.isNotEmpty) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
                               color: Colors.white,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 16,
+                              borderRadius: BorderRadius.circular(4),
                             ),
-                      ),
+                            child: Text(
+                              raceResult.hull!,
+                              style: const TextStyle(
+                                color: Color(0xFF1F2937),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ]),
                       Row(mainAxisSize: MainAxisSize.min, children: [
                         if (isCancelled)
                           Container(
