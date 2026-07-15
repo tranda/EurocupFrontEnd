@@ -2,36 +2,20 @@ import 'package:flutter/material.dart';
 import '../common.dart';
 import '../model/medal_standing.dart';
 
-/// Read-only medal standings view. Consumes the map produced by the
-/// `GET /api/public/events/{id}/medals` endpoint. Renders one table per
-/// competition (Club / Corporate / …), stacked vertically, with a chip-row
-/// filter at the top that matches the Races page's competition-badge style.
-class MedalsView extends StatefulWidget {
-  /// competition name → sorted standings.
+/// Read-only medal standings view. Renders one table per competition in the
+/// passed-in [standings] map, stacked vertically. Filtering by competition
+/// is done by the parent (via the shared competition-chip row) — this
+/// widget just draws whatever it receives.
+class MedalsView extends StatelessWidget {
+  /// competition name → sorted standings. If empty, an empty-state message
+  /// renders instead of any tables.
   final Map<String, List<MedalStanding>> standings;
 
   const MedalsView({super.key, required this.standings});
 
   @override
-  State<MedalsView> createState() => _MedalsViewState();
-}
-
-class _MedalsViewState extends State<MedalsView> {
-  /// Chip filter — same multi-select semantics as the Races page:
-  /// empty set = show all competitions; non-empty = show only the selected.
-  final Set<String> _selected = <String>{};
-
-  @override
-  void didUpdateWidget(covariant MedalsView oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Drop selections that no longer exist in the new data set (e.g. after a
-    // refresh removed all Corporate finals). Prevents ghost filters.
-    _selected.removeWhere((c) => !widget.standings.containsKey(c));
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final competitions = widget.standings.keys.toList()..sort();
+    final competitions = standings.keys.toList()..sort();
 
     if (competitions.isEmpty) {
       return const Center(
@@ -45,85 +29,21 @@ class _MedalsViewState extends State<MedalsView> {
       );
     }
 
-    final visible = _selected.isEmpty
-        ? competitions
-        : competitions.where(_selected.contains).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 24),
       children: [
-        // Chip filter row — only when there's more than one competition to
-        // filter between. Otherwise the single table speaks for itself.
-        if (competitions.length > 1)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                for (final comp in competitions)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: _competitionChip(comp),
-                  ),
-              ],
-            ),
-          ),
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.only(bottom: 24),
-            children: [
-              for (final comp in visible) ...[
-                _sectionHeader(comp),
-                _buildTable(widget.standings[comp] ?? const []),
-                const SizedBox(height: 24),
-              ],
-            ],
-          ),
-        ),
+        for (final comp in competitions) ...[
+          _sectionHeader(comp),
+          _buildTable(context, standings[comp] ?? const []),
+          const SizedBox(height: 24),
+        ],
       ],
     );
   }
 
-  /// Multi-select chip toggle matching the Races page's competition-badge
-  /// style. Uses `competitionBadgeColor(comp)` so Club stays blue, Corporate
-  /// orange, etc. — visually consistent with the race list.
-  Widget _competitionChip(String comp) {
-    final isSelected = _selected.contains(comp);
-    final color = competitionBadgeColor(comp);
-    return InkWell(
-      borderRadius: BorderRadius.circular(14),
-      onTap: () {
-        setState(() {
-          if (isSelected) {
-            _selected.remove(comp);
-          } else {
-            _selected.add(comp);
-          }
-        });
-      },
-      child: Container(
-        height: 28,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? color.shade100 : Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color, width: 1),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          comp,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: isSelected ? color.shade900 : color.shade800,
-          ),
-        ),
-      ),
-    );
-  }
-
   /// Section header above each competition's table. Filled with the
-  /// competition's brand color so the section reads at a glance — mirrors the
-  /// race header bar in the race list.
+  /// competition's brand color so the section reads at a glance — mirrors
+  /// the race header bar in the race list.
   Widget _sectionHeader(String comp) {
     final color = competitionBadgeColor(comp);
     return Container(
@@ -142,7 +62,7 @@ class _MedalsViewState extends State<MedalsView> {
     );
   }
 
-  Widget _buildTable(List<MedalStanding> rows) {
+  Widget _buildTable(BuildContext context, List<MedalStanding> rows) {
     if (rows.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(24),
@@ -183,7 +103,7 @@ class _MedalsViewState extends State<MedalsView> {
             TableRow(
               children: [
                 _BodyCell('${i + 1}'),
-                _clubCell(rows[i]),
+                _clubCell(context, rows[i]),
                 _BodyCell(_fmt(rows[i].gold), center: true),
                 _BodyCell(_fmt(rows[i].silver), center: true),
                 _BodyCell(_fmt(rows[i].bronze), center: true),
@@ -199,7 +119,7 @@ class _MedalsViewState extends State<MedalsView> {
   /// rather than emphasising the zero.
   String _fmt(int n) => n == 0 ? '–' : '$n';
 
-  Widget _clubCell(MedalStanding s) {
+  Widget _clubCell(BuildContext context, MedalStanding s) {
     final country = s.country;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),

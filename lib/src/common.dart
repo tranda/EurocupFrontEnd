@@ -160,11 +160,15 @@ void clearToken() {
 /// without this the eventId is lost on reload and no race is shown. Uses
 /// replaceState (no new history entry, no popstate → router is undisturbed).
 /// The read side is App._extractArgumentsFromSettings, which parses ?eventId=.
-void syncRaceResultsUrl(String? eventId, {String? view}) {
+void syncRaceResultsUrl(String? eventId,
+    {String? view, List<String>? competitions}) {
   if (!kIsWeb || eventId == null) return;
   final viewSuffix = (view != null && view.isNotEmpty) ? '&view=$view' : '';
-  html.window.history
-      .replaceState(null, '', '#/race_results_list?eventId=$eventId$viewSuffix');
+  final compSuffix = (competitions != null && competitions.isNotEmpty)
+      ? '&comp=${Uri.encodeQueryComponent(competitions.join(','))}'
+      : '';
+  html.window.history.replaceState(
+      null, '', '#/race_results_list?eventId=$eventId$viewSuffix$compSuffix');
 }
 
 /// Remember the last viewed Race Results event in local storage. The URL
@@ -200,6 +204,25 @@ String? loadRaceResultsView() {
     return html.window.localStorage['race_results_view'];
   }
   return null;
+}
+
+/// Remember which competition chips were selected on Race Results. Applies
+/// to BOTH the race list (filters races) and the Medals view (filters
+/// tables) — one source of truth so the two views stay in sync.
+void saveRaceResultsCompetitions(List<String>? competitions) {
+  if (!kIsWeb) return;
+  if (competitions == null || competitions.isEmpty) {
+    html.window.localStorage.remove('race_results_competitions');
+  } else {
+    html.window.localStorage['race_results_competitions'] = competitions.join(',');
+  }
+}
+
+List<String> loadRaceResultsCompetitions() {
+  if (!kIsWeb) return const [];
+  final raw = html.window.localStorage['race_results_competitions'];
+  if (raw == null || raw.isEmpty) return const [];
+  return raw.split(',').where((s) => s.isNotEmpty).toList();
 }
 
 /// Read a query parameter from the current URL. Works with hash-strategy

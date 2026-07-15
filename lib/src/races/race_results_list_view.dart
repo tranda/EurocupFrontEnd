@@ -187,22 +187,66 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     final storedView = urlView ?? loadRaceResultsView();
     _showMedals = storedView == 'medals';
 
+    // Restore the competition-chip selection (applies to BOTH the race list
+    // and the Medals view — one source of truth).
+    final urlComp = readUrlQueryParam('comp');
+    final compList = urlComp != null && urlComp.isNotEmpty
+        ? urlComp.split(',').where((s) => s.isNotEmpty).toList()
+        : loadRaceResultsCompetitions();
+    _filterCompetitions
+      ..clear()
+      ..addAll(compList);
+
     // Persist the resolved event in both the URL (shareable, per-tab) and local
     // storage (survives a bare-URL refresh) so a reload keeps context.
-    syncRaceResultsUrl(_eventId, view: _showMedals ? 'medals' : null);
+    _syncUrl();
     saveSelectedEventId(_eventId);
     saveRaceResultsView(_showMedals ? 'medals' : null);
+    saveRaceResultsCompetitions(_filterCompetitions);
 
     _hasInitialized = true;
     _loadEventData();
   }
 
+  /// Shared URL sync — carries eventId + current view + current competition
+  /// chip selection. Call whenever any of those change.
+  void _syncUrl() {
+    syncRaceResultsUrl(
+      _eventId,
+      view: _showMedals ? 'medals' : null,
+      competitions: _filterCompetitions.isEmpty ? null : _filterCompetitions,
+    );
+  }
+
   void _setShowMedals(bool value) {
     if (_showMedals == value) return;
     setState(() => _showMedals = value);
-    // Push the new sub-view into the URL + local storage so a refresh keeps it.
-    syncRaceResultsUrl(_eventId, view: value ? 'medals' : null);
+    _syncUrl();
     saveRaceResultsView(value ? 'medals' : null);
+  }
+
+  /// Update the shared competition-chip selection. Persists to URL + local
+  /// storage, then reapplies filters on the race list (Medals view re-reads
+  /// the map on next build automatically).
+  void _setCompetitionsFilter(List<String> selection) {
+    setState(() {
+      _filterCompetitions
+        ..clear()
+        ..addAll(selection);
+      _applyFilters();
+    });
+    _syncUrl();
+    saveRaceResultsCompetitions(_filterCompetitions);
+  }
+
+  /// Standings map filtered to the current chip selection. Empty selection
+  /// means "show all", matching the Races page filter semantics.
+  Map<String, List<MedalStanding>> _visibleMedalStandings() {
+    if (_filterCompetitions.isEmpty) return _medalStandings;
+    return Map.fromEntries(
+      _medalStandings.entries
+          .where((e) => _filterCompetitions.contains(e.key)),
+    );
   }
 
   Future<void> _loadEventData() async {
@@ -307,54 +351,79 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     });
   }
 
-  List<Widget> _buildCompetitionChips() {
-    if (_raceResults == null) return const [];
-    final competitionsSet = <String>{};
-    for (var race in _raceResults!) {
-      final c = race.discipline?.competition;
-      if (c != null && c.isNotEmpty) competitionsSet.add(c);
+  /// Discover competitions from the currently loaded data. Prefer the medal
+  /// standings map (present in both Races and Medals sub-views) with a
+  /// fallback to walking the race list — that way the chip row appears even
+  /// if the medals endpoint returned an empty payload but races have loaded.
+  List<String> _availableCompetitions() {
+    final set = <String>{};
+    for (final c in _medalStandings.keys) {
+      if (c.isNotEmpty) set.add(c);
     }
-    if (competitionsSet.isEmpty) return const [];
-    final available = competitionsSet.toList()..sort();
+    if (set.isEmpty && _raceResults != null) {
+      for (final r in _raceResults!) {
+        final c = r.discipline?.competition;
+        if (c != null && c.isNotEmpty) set.add(c);
+      }
+    }
+    final list = set.toList()..sort();
+    return list;
+  }
 
-    return available.map((comp) {
-      final isSelected = _filterCompetitions.contains(comp);
-      final color = competitionBadgeColor(comp);
-      return Padding(
-        padding: const EdgeInsets.only(left: 8),
-        child: InkWell(
+  /// Common competition chip row — shared between the Races view and the
+  /// Medals view. Tap toggles the selection; empty selection means "show
+  /// all". State is persisted to URL + local storage via
+  /// [_setCompetitionsFilter].
+  Widget _buildCompetitionChipRow() {
+    final available = _availableCompetitions();
+    if (available.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 4,
+        alignment: WrapAlignment.center,
+        children: [
+          for (final comp in available)
+            _competitionChip(comp, _filterCompetitions.contains(comp)),
+        ],
+      ),
+    );
+  }
+
+  Widget _competitionChip(String comp, bool isSelected) {
+    final color = competitionBadgeColor(comp);
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: () {
+        final next = List<String>.from(_filterCompetitions);
+        if (isSelected) {
+          next.remove(comp);
+        } else {
+          next.add(comp);
+        }
+        _setCompetitionsFilter(next);
+      },
+      child: Container(
+        height: 28,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? color.shade100 : Colors.white,
           borderRadius: BorderRadius.circular(14),
-          onTap: () {
-            setState(() {
-              if (isSelected) {
-                _filterCompetitions.remove(comp);
-              } else {
-                _filterCompetitions.add(comp);
-              }
-              _applyFilters();
-            });
-          },
-          child: Container(
-            height: 28,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: isSelected ? color.shade100 : Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: color, width: 1),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              comp,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? color.shade900 : color.shade800,
-              ),
-            ),
+          border: Border.all(color: color, width: 1),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          comp,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: isSelected ? color.shade900 : color.shade800,
           ),
         ),
-      );
-    }).toList();
+      ),
+    );
   }
 
   Widget _competitionBadge(String competition) {
@@ -1658,7 +1727,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
       return Column(
         children: [
           _buildScreenHeader(),
-          Expanded(child: MedalsView(standings: _medalStandings)),
+          Expanded(child: MedalsView(standings: _visibleMedalStandings())),
         ],
       );
     }
@@ -1803,6 +1872,10 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
           // View switcher — Races vs Medals. Sits above the toolbar so it
           // reads as a first-class view choice, not another toolbar button.
           _buildViewSwitcher(),
+          // Competition chip filter — SHARED between Races and Medals sub-
+          // views. Same selection applies to both, persisted to URL +
+          // local storage so refresh keeps it.
+          _buildCompetitionChipRow(),
           // Race-list toolbar + active filter chips are only relevant to the
           // race list. Hide them entirely on the Medals view.
           if (!_showMedals) ...[
@@ -1851,7 +1924,6 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                       ),
                       child: const Text('Filters'),
                     ),
-                    ..._buildCompetitionChips(),
                   ],
                 ),
                 // Right side: Export PDF (races only).
