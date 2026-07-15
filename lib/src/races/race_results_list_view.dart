@@ -2308,6 +2308,23 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   }
 
   Widget _buildCrewResultItem(BuildContext context, CrewResult crewResult, RaceResult raceResult, bool isFinalRound) {
+    // Responsive tuning for phone-width viewports — shrink circle, team-
+    // name font and country badge so the row keeps its shape instead of
+    // wrapping the team name letter-by-letter.
+    final narrow = MediaQuery.of(context).size.width < 500;
+    final circleSize = narrow ? 32.0 : 40.0;
+    final circleFont = narrow ? 14.0 : 20.0;
+    final rowHPad = narrow ? 8.0 : 16.0;
+    final teamNameStyle = narrow
+        ? const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Color.fromARGB(255, 0, 80, 150),
+          )
+        : Theme.of(context).textTheme.displaySmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            );
+
     if (isFinalRound && crewResult.hasFinalTime) {
       // Two-line format for final rounds
       return Container(
@@ -2320,13 +2337,13 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: EdgeInsets.symmetric(horizontal: rowHPad, vertical: 8),
           child: Row(
             children: [
               // Position indicator
               Container(
-                width: 40,
-                height: 40,
+                width: circleSize,
+                height: circleSize,
                 decoration: BoxDecoration(
                   color: _getPositionBackgroundColor(crewResult.position, isFinalRound),
                   border: Border.all(
@@ -2341,12 +2358,12 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                     style: TextStyle(
                       color: _getPositionTextColor(crewResult.position, isFinalRound),
                       fontWeight: FontWeight.bold,
-                      fontSize: 20,
+                      fontSize: circleFont,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: narrow ? 8 : 12),
               // Team name and times
               Expanded(
                 child: Column(
@@ -2357,15 +2374,18 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                       children: [
                         if (crewResult.crew?.team?.club?.country != null)
                           Container(
-                            margin: const EdgeInsets.only(right: 8),
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            margin: EdgeInsets.only(right: narrow ? 4 : 8),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: narrow ? 4 : 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: Colors.blue.shade50,
                               borderRadius: BorderRadius.circular(4),
                               border: Border.all(color: Colors.blue.shade200),
                             ),
                             child: Text(
-                              '${getCountryFlag(crewResult.crew!.team!.club!.country)} ${getCountryCode(crewResult.crew!.team!.club!.country)}',
+                              narrow
+                                  ? getCountryFlag(crewResult.crew!.team!.club!.country)
+                                  : '${getCountryFlag(crewResult.crew!.team!.club!.country)} ${getCountryCode(crewResult.crew!.team!.club!.country)}',
                               style: TextStyle(
                                 color: Colors.blue.shade700,
                                 fontSize: 12,
@@ -2376,9 +2396,9 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                         Expanded(
                           child: Text(
                             crewResult.crew?.team?.name ?? crewResult.team?.name ?? 'Unknown Team',
-                            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: teamNameStyle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -2510,6 +2530,15 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
       );
     } else {
       // Regular single-line format for non-final rounds
+      final regCircle = narrow ? 28.0 : 36.0;
+      final regCircleFont = narrow ? 12.0 : 18.0;
+      final regTeamStyle = narrow
+          ? const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Color.fromARGB(255, 0, 80, 150),
+            )
+          : Theme.of(context).textTheme.displaySmall;
       return Container(
         decoration: const BoxDecoration(
           border: Border(
@@ -2520,9 +2549,12 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
           ),
         ),
         child: ListTile(
+            contentPadding: EdgeInsets.symmetric(
+                horizontal: rowHPad, vertical: narrow ? 0 : 4),
+            horizontalTitleGap: narrow ? 8 : 16,
             leading: Container(
-              width: 36,
-              height: 36,
+              width: regCircle,
+              height: regCircle,
               decoration: BoxDecoration(
                 color: _getPositionBackgroundColor(crewResult.position, isFinalRound),
                 border: Border.all(
@@ -2537,7 +2569,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                   style: TextStyle(
                     color: _getPositionTextColor(crewResult.position, isFinalRound),
                     fontWeight: FontWeight.bold,
-                    fontSize: 18,
+                    fontSize: regCircleFont,
                   ),
                 ),
               ),
@@ -2546,15 +2578,18 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
               children: [
                 if (crewResult.crew?.team?.club?.country != null)
                   Container(
-                    margin: const EdgeInsets.only(right: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    margin: EdgeInsets.only(right: narrow ? 4 : 8),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: narrow ? 4 : 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: Colors.blue.shade50,
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(color: Colors.blue.shade200),
                     ),
                     child: Text(
-                      '${getCountryFlag(crewResult.crew!.team!.club!.country)} ${getCountryCode(crewResult.crew!.team!.club!.country)}',
+                      narrow
+                          ? getCountryFlag(crewResult.crew!.team!.club!.country)
+                          : '${getCountryFlag(crewResult.crew!.team!.club!.country)} ${getCountryCode(crewResult.crew!.team!.club!.country)}',
                       style: TextStyle(
                         color: Colors.blue.shade700,
                         fontSize: 12,
@@ -2565,7 +2600,9 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                 Expanded(
                   child: Text(
                     crewResult.crew?.team?.name ?? crewResult.team?.name ?? 'Unknown Team',
-                    style: Theme.of(context).textTheme.displaySmall,
+                    style: regTeamStyle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
