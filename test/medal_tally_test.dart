@@ -137,4 +137,76 @@ void main() {
       expect(gamma.gold, 0); expect(gamma.silver, 2); expect(gamma.bronze, 2);
     });
   });
+
+  group('MedalTally.compute — exclusions', () {
+    test('skips races that are not FINISHED, not final, or missing competition; ignores DSQ/DNS/DNF crews', () {
+      final races = [
+        // CANCELLED medal race → does not contribute.
+        RaceResult(
+          id: 10,
+          status: 'CANCELLED',
+          isFinalRound: true,
+          discipline: Discipline(id: 100, competition: 'Club'),
+          crewResults: [
+            CrewResult(
+              crewId: 1, lane: 1,
+              finalStatus: 'FINISHED', finalTimeMs: 50000,
+              crew: Crew(id: 1, team: Team(id: 1, name: 'ShouldNotAppear')),
+            ),
+          ],
+        ),
+        // SCHEDULED (not yet finished) medal race → does not contribute.
+        RaceResult(
+          id: 11,
+          status: 'SCHEDULED',
+          isFinalRound: true,
+          discipline: Discipline(id: 100, competition: 'Club'),
+          crewResults: [],
+        ),
+        // Non-final race (e.g. Heat 1) → does not contribute.
+        RaceResult(
+          id: 12,
+          status: 'FINISHED',
+          isFinalRound: false,
+          discipline: Discipline(id: 100, competition: 'Club'),
+          crewResults: [
+            CrewResult(
+              crewId: 1, lane: 1,
+              finalStatus: 'FINISHED', finalTimeMs: 50000,
+              crew: Crew(id: 1, team: Team(id: 1, name: 'ShouldNotAppear')),
+            ),
+          ],
+        ),
+        // Race whose discipline has no competition → skipped.
+        RaceResult(
+          id: 13,
+          status: 'FINISHED',
+          isFinalRound: true,
+          discipline: Discipline(id: 100, competition: null),
+          crewResults: [
+            CrewResult(
+              crewId: 1, lane: 1,
+              finalStatus: 'FINISHED', finalTimeMs: 50000,
+              crew: Crew(id: 1, team: Team(id: 1, name: 'ShouldNotAppear')),
+            ),
+          ],
+        ),
+        // Real medal race with only 2 finishers; other lanes DSQ/DNS.
+        _medalRace(id: 14, competition: 'Club', finishers: [
+          _CrewSpec(1, 'RealAlpha', finalTimeMs: 50000),
+          _CrewSpec(2, 'RealBeta',  finalTimeMs: 52000),
+          _CrewSpec(3, 'DsqCrew',   finalStatus: 'DSQ', finalTimeMs: null),
+          _CrewSpec(4, 'DnsCrew',   finalStatus: 'DNS', finalTimeMs: null),
+        ]),
+      ];
+
+      final standings = MedalTally.compute(races);
+      expect(standings.keys, ['Club']);
+      final club = standings['Club']!;
+      expect(club.map((s) => s.teamName).toList(), ['RealAlpha', 'RealBeta']);
+      expect(club[0].gold, 1);   expect(club[0].silver, 0); expect(club[0].bronze, 0);
+      expect(club[1].gold, 0);   expect(club[1].silver, 1); expect(club[1].bronze, 0);
+      // No bronze awarded — only 2 finishers.
+    });
+  });
 }
