@@ -1,24 +1,33 @@
-import 'race/team.dart';
-
 /// One row in the medal-standings table for a given competition.
 ///
-/// Immutable snapshot produced by [MedalTally.compute]. Holds enough team
-/// metadata (via [team]) for the view to render the country flag alongside
-/// the [teamName] label.
+/// Populated by the backend endpoint `GET /api/public/events/{id}/medals`.
+/// Grouping is by club (fallback to team name if a crew has no club).
 class MedalStanding {
-  final String teamName;
-  final Team team;
+  final int? clubId;
+  final String clubName;
+  final String? country;
   final int gold;
   final int silver;
   final int bronze;
+  final int total;
 
   const MedalStanding({
-    required this.teamName,
-    required this.team,
+    required this.clubId,
+    required this.clubName,
+    required this.country,
     required this.gold,
     required this.silver,
     required this.bronze,
+    required this.total,
   });
 
-  int get total => gold + silver + bronze;
+  factory MedalStanding.fromMap(Map<String, dynamic> data) => MedalStanding(
+        clubId: data['club_id'] as int?,
+        clubName: data['club_name'] as String? ?? '',
+        country: data['country'] as String?,
+        gold: (data['gold'] as num?)?.toInt() ?? 0,
+        silver: (data['silver'] as num?)?.toInt() ?? 0,
+        bronze: (data['bronze'] as num?)?.toInt() ?? 0,
+        total: (data['total'] as num?)?.toInt() ?? 0,
+      );
 }

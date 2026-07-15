@@ -118,7 +118,7 @@ class _MedalsViewState extends State<MedalsView> {
             decoration: BoxDecoration(color: Color(0xFFF5F5F5)),
             children: [
               _HeaderCell('#'),
-              _HeaderCell('Team'),
+              _HeaderCell('Club'),
               _HeaderCell('🥇', center: true),
               _HeaderCell('🥈', center: true),
               _HeaderCell('🥉', center: true),
@@ -129,7 +129,7 @@ class _MedalsViewState extends State<MedalsView> {
             TableRow(
               children: [
                 _BodyCell('${i + 1}'),
-                _teamCell(rows[i]),
+                _clubCell(rows[i]),
                 _BodyCell('${rows[i].gold}', center: true),
                 _BodyCell('${rows[i].silver}', center: true),
                 _BodyCell('${rows[i].bronze}', center: true),
@@ -141,8 +141,8 @@ class _MedalsViewState extends State<MedalsView> {
     );
   }
 
-  Widget _teamCell(MedalStanding s) {
-    final country = s.team.club?.country;
+  Widget _clubCell(MedalStanding s) {
+    final country = s.country;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       child: Row(
@@ -156,7 +156,7 @@ class _MedalsViewState extends State<MedalsView> {
           ],
           Expanded(
             child: Text(
-              s.teamName,
+              s.clubName,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ),

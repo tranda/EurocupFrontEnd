@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
+import 'package:eurocup_frontend/src/model/medal_standing.dart';
 import 'package:eurocup_frontend/src/model/race/discipline_crew.dart';
 import 'package:eurocup_frontend/src/model/race/race.dart';
 import 'package:eurocup_frontend/src/model/race/race_result.dart';
@@ -1296,6 +1297,47 @@ Future<List<RaceResult>> getPublicRaceResults({int? eventId}) async {
   }
   
   return raceResults;
+}
+
+/// Fetch per-club medal standings for an event. Returns a map keyed by
+/// competition name ('Club', 'Corporate', …) with the standings for that
+/// competition already sorted by the backend (G→S→B DESC, then club name ASC).
+///
+/// Endpoint: `GET /api/public/events/{eventId}/medals`. Same visibility rule
+/// as public race-results: published events are visible to anyone, drafts to
+/// admin Bearer-token callers.
+Future<Map<String, List<MedalStanding>>> getMedalStandings(int eventId) async {
+  var timestamp = DateTime.now().millisecondsSinceEpoch;
+  var request = http.Request(
+      'GET', Uri.parse('$apiURL/public/events/$eventId/medals?t=$timestamp'));
+  request.headers.addAll({'Cache-Control': 'no-cache'});
+  if (token != null && token!.isNotEmpty) {
+    request.headers['Authorization'] = 'Bearer $token';
+  }
+
+  http.StreamedResponse response = await request.send();
+  final result = <String, List<MedalStanding>>{};
+
+  if (response.statusCode != 200) return result;
+
+  var responseString = await response.stream.bytesToString();
+  Map<String, dynamic> responseJson = jsonDecode(responseString);
+  if (responseJson['success'] != true) return result;
+
+  final data = responseJson['data'] as Map<String, dynamic>?;
+  final competitions = data?['competitions'] as List<dynamic>?;
+  if (competitions == null) return result;
+
+  for (final c in competitions) {
+    final entry = c as Map<String, dynamic>;
+    final name = entry['name'] as String?;
+    final standings = entry['standings'] as List<dynamic>?;
+    if (name == null || standings == null) continue;
+    result[name] = standings
+        .map((s) => MedalStanding.fromMap(s as Map<String, dynamic>))
+        .toList();
+  }
+  return result;
 }
 
 Future<RaceResult?> getPublicRaceResult(int raceResultId) async {

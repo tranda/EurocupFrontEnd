@@ -1,6 +1,5 @@
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/model/medal_standing.dart';
-import 'package:eurocup_frontend/src/model/medal_tally.dart';
 import 'package:eurocup_frontend/src/model/race/race_result.dart';
 import 'package:eurocup_frontend/src/model/race/crew_result.dart';
 import 'package:eurocup_frontend/src/races/medals_view.dart';
@@ -55,8 +54,10 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   // instead of the day-grouped race list. Local state only — no routing.
   bool _showMedals = false;
 
-  // Cached medal standings, keyed by competition. Recomputed whenever
-  // `_raceResults` changes (see _recomputeMedals below).
+  // Medal standings by competition. Fetched server-side alongside race
+  // results (see _loadRaceResults). Backend endpoint:
+  // `GET /api/public/events/{id}/medals` — same rule as public/race-results
+  // (published events public, drafts admin-only).
   Map<String, List<MedalStanding>> _medalStandings = const {};
 
   // Day-section fold state. Membership = expanded (mirrors _expandedRaces).
@@ -223,8 +224,13 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
       });
 
       final eventIdInt = int.tryParse(_eventId ?? '0') ?? 0;
-      // Always use public API since it works correctly for both authenticated and non-authenticated users
-      final results = await api.getPublicRaceResults(eventId: eventIdInt);
+      // Fetch race results and medal standings in parallel. Both are public
+      // endpoints; medal standings are computed server-side so nothing runs
+      // client-side.
+      final fetchResults = api.getPublicRaceResults(eventId: eventIdInt);
+      final fetchMedals = api.getMedalStandings(eventIdInt);
+      final results = await fetchResults;
+      final medalStandings = await fetchMedals;
 
       // Exclude non-race entries (ceremonies, breaks, team-manager meetings,
       // etc. — they come back from the API with a null race_number).
@@ -232,7 +238,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
 
       setState(() {
         _raceResults = actualRaces;
-        _recomputeMedals();
+        _medalStandings = medalStandings;
         // Default every day section to expanded so the page looks like the
         // current flat list on first load and after refreshes. Additive: an
         // existing fold state on a day is preserved across refreshes.
@@ -1675,10 +1681,6 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
         },
       ),
     );
-  }
-
-  void _recomputeMedals() {
-    _medalStandings = MedalTally.compute(_raceResults ?? const []);
   }
 
   /// Builds the flat render-item list consumed by ListView.builder.
