@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import '../common.dart';
 import '../model/medal_standing.dart';
 
-/// Read-only medal standings view. Consumes the map produced by
-/// `MedalTally.compute` and lets the user pick which competition to display.
+/// Read-only medal standings view. Consumes the map produced by the
+/// `GET /api/public/events/{id}/medals` endpoint. Renders one table per
+/// competition (Club / Corporate / …), stacked vertically, with a chip-row
+/// filter at the top that matches the Races page's competition-badge style.
 class MedalsView extends StatefulWidget {
   /// competition name → sorted standings.
   final Map<String, List<MedalStanding>> standings;
@@ -15,28 +17,16 @@ class MedalsView extends StatefulWidget {
 }
 
 class _MedalsViewState extends State<MedalsView> {
-  String? _selectedCompetition;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedCompetition = _defaultCompetition();
-  }
+  /// Chip filter — same multi-select semantics as the Races page:
+  /// empty set = show all competitions; non-empty = show only the selected.
+  final Set<String> _selected = <String>{};
 
   @override
   void didUpdateWidget(covariant MedalsView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // If the selected competition disappeared from the data (e.g. after a
-    // refresh that removed all Corporate finals), fall back to the default.
-    if (_selectedCompetition != null &&
-        !widget.standings.containsKey(_selectedCompetition)) {
-      _selectedCompetition = _defaultCompetition();
-    }
-  }
-
-  String? _defaultCompetition() {
-    final keys = widget.standings.keys.toList()..sort();
-    return keys.isEmpty ? null : keys.first;
+    // Drop selections that no longer exist in the new data set (e.g. after a
+    // refresh removed all Corporate finals). Prevents ghost filters.
+    _selected.removeWhere((c) => !widget.standings.containsKey(c));
   }
 
   @override
@@ -55,86 +45,120 @@ class _MedalsViewState extends State<MedalsView> {
       );
     }
 
-    final selected = _selectedCompetition ?? competitions.first;
-    final rows = widget.standings[selected] ?? const <MedalStanding>[];
+    final visible = _selected.isEmpty
+        ? competitions
+        : competitions.where(_selected.contains).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
+        // Chip filter row — only when there's more than one competition to
+        // filter between. Otherwise the single table speaks for itself.
+        if (competitions.length > 1)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                for (final comp in competitions)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: _competitionChip(comp),
+                  ),
+              ],
+            ),
+          ),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.only(bottom: 24),
             children: [
-              // Pill-shaped competition selector — echoes the Races/Medals
-              // view switcher style so the two controls feel like siblings.
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.orange.shade200),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Competition:',
-                      style: TextStyle(
-                        color: Colors.orange.shade900,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selected,
-                        isDense: true,
-                        style: TextStyle(
-                          color: Colors.orange.shade900,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        iconEnabledColor: Colors.orange.shade900,
-                        items: competitions
-                            .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                            .toList(),
-                        onChanged: (v) {
-                          if (v == null) return;
-                          setState(() => _selectedCompetition = v);
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              for (final comp in visible) ...[
+                _sectionHeader(comp),
+                _buildTable(widget.standings[comp] ?? const []),
+                const SizedBox(height: 24),
+              ],
             ],
           ),
         ),
-        Expanded(child: _buildTable(rows, selected)),
       ],
     );
   }
 
-  Widget _buildTable(List<MedalStanding> rows, String competition) {
-    if (rows.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Text(
-            'No medals awarded yet in $competition',
-            style: const TextStyle(fontSize: 16, color: Colors.black54),
+  /// Multi-select chip toggle matching the Races page's competition-badge
+  /// style. Uses `competitionBadgeColor(comp)` so Club stays blue, Corporate
+  /// orange, etc. — visually consistent with the race list.
+  Widget _competitionChip(String comp) {
+    final isSelected = _selected.contains(comp);
+    final color = competitionBadgeColor(comp);
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: () {
+        setState(() {
+          if (isSelected) {
+            _selected.remove(comp);
+          } else {
+            _selected.add(comp);
+          }
+        });
+      },
+      child: Container(
+        height: 28,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? color.shade100 : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color, width: 1),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          comp,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: isSelected ? color.shade900 : color.shade800,
           ),
+        ),
+      ),
+    );
+  }
+
+  /// Section header above each competition's table. Filled with the
+  /// competition's brand color so the section reads at a glance — mirrors the
+  /// race header bar in the race list.
+  Widget _sectionHeader(String comp) {
+    final color = competitionBadgeColor(comp);
+    return Container(
+      width: double.infinity,
+      color: color,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Text(
+        comp,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.3,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTable(List<MedalStanding> rows) {
+    if (rows.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(24),
+        child: Text(
+          'No entries yet',
+          style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
       );
     }
 
-    return SingleChildScrollView(
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Table(
         columnWidths: const {
           0: FixedColumnWidth(48),   // rank
-          1: FlexColumnWidth(),      // team
+          1: FlexColumnWidth(),      // club
           2: FixedColumnWidth(64),   // gold
           3: FixedColumnWidth(64),   // silver
           4: FixedColumnWidth(64),   // bronze
