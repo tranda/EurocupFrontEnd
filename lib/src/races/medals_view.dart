@@ -73,41 +73,50 @@ class MedalsView extends StatelessWidget {
       );
     }
 
+    // Responsive column widths — on narrow (phone) screens shrink the fixed
+    // columns so the flexible Club column gets enough width to keep names on
+    // one or two lines instead of wrapping letter-by-letter.
+    final narrow = MediaQuery.of(context).size.width < 500;
+    final rankW = narrow ? 32.0 : 48.0;
+    final medalW = narrow ? 40.0 : 64.0;
+    final hPad = narrow ? 8.0 : 16.0;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: hPad),
       child: Table(
-        columnWidths: const {
-          0: FixedColumnWidth(48),   // rank
-          1: FlexColumnWidth(),      // club
-          2: FixedColumnWidth(64),   // gold
-          3: FixedColumnWidth(64),   // silver
-          4: FixedColumnWidth(64),   // bronze
-          5: FixedColumnWidth(64),   // total
+        columnWidths: {
+          0: FixedColumnWidth(rankW),   // rank
+          1: const FlexColumnWidth(),   // club
+          2: FixedColumnWidth(medalW),  // gold
+          3: FixedColumnWidth(medalW),  // silver
+          4: FixedColumnWidth(medalW),  // bronze
+          5: FixedColumnWidth(medalW),  // total
         },
         border: TableBorder(
           horizontalInside: BorderSide(color: Colors.grey.shade300),
         ),
         children: [
-          const TableRow(
-            decoration: BoxDecoration(color: Color(0xFFF5F5F5)),
+          TableRow(
+            decoration: const BoxDecoration(color: Color(0xFFF5F5F5)),
             children: [
-              _HeaderCell('#'),
-              _HeaderCell('Club'),
-              _HeaderCell('🥇', center: true),
-              _HeaderCell('🥈', center: true),
-              _HeaderCell('🥉', center: true),
-              _HeaderCell('Σ', center: true),
+              _HeaderCell('#', narrow: narrow),
+              _HeaderCell('Club', narrow: narrow),
+              _HeaderCell('🥇', center: true, narrow: narrow),
+              _HeaderCell('🥈', center: true, narrow: narrow),
+              _HeaderCell('🥉', center: true, narrow: narrow),
+              _HeaderCell('Σ', center: true, narrow: narrow),
             ],
           ),
           for (int i = 0; i < rows.length; i++)
             TableRow(
               children: [
-                _BodyCell('${i + 1}'),
-                _clubCell(context, rows[i]),
-                _BodyCell(_fmt(rows[i].gold), center: true),
-                _BodyCell(_fmt(rows[i].silver), center: true),
-                _BodyCell(_fmt(rows[i].bronze), center: true),
-                _BodyCell(_fmt(rows[i].total), center: true, bold: true),
+                _BodyCell('${i + 1}', narrow: narrow),
+                _clubCell(context, rows[i], narrow: narrow),
+                _BodyCell(_fmt(rows[i].gold), center: true, narrow: narrow),
+                _BodyCell(_fmt(rows[i].silver), center: true, narrow: narrow),
+                _BodyCell(_fmt(rows[i].bronze), center: true, narrow: narrow),
+                _BodyCell(_fmt(rows[i].total),
+                    center: true, bold: true, narrow: narrow),
               ],
             ),
         ],
@@ -119,26 +128,41 @@ class MedalsView extends StatelessWidget {
   /// rather than emphasising the zero.
   String _fmt(int n) => n == 0 ? '–' : '$n';
 
-  Widget _clubCell(BuildContext context, MedalStanding s) {
+  Widget _clubCell(BuildContext context, MedalStanding s,
+      {required bool narrow}) {
     final country = s.country;
+    // On narrow screens: drop the country-code text (flag alone is enough)
+    // and use a smaller name font so we keep names to one line where possible.
+    final nameStyle = narrow
+        ? const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Color.fromARGB(255, 0, 80, 150),
+          )
+        : Theme.of(context).textTheme.displaySmall;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      padding:
+          EdgeInsets.symmetric(horizontal: narrow ? 4 : 8, vertical: 12),
       child: Row(
         children: [
           if (country != null) ...[
-            Text(getCountryFlag(country), style: const TextStyle(fontSize: 18)),
-            const SizedBox(width: 6),
-            Text(getCountryCode(country),
-                style: const TextStyle(fontSize: 12, color: Colors.black54)),
-            const SizedBox(width: 8),
+            Text(getCountryFlag(country),
+                style: TextStyle(fontSize: narrow ? 16 : 18)),
+            if (!narrow) ...[
+              const SizedBox(width: 6),
+              Text(getCountryCode(country),
+                  style:
+                      const TextStyle(fontSize: 12, color: Colors.black54)),
+            ],
+            SizedBox(width: narrow ? 6 : 8),
           ],
           Expanded(
             child: Text(
               s.clubName,
-              // Match the Races view team-name style (Theme.displaySmall:
-              // 19pt bold, brand blue) so the two views read as the same
-              // information density and visual weight.
-              style: Theme.of(context).textTheme.displaySmall,
+              style: nameStyle,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              softWrap: true,
             ),
           ),
         ],
@@ -150,15 +174,17 @@ class MedalsView extends StatelessWidget {
 class _HeaderCell extends StatelessWidget {
   final String text;
   final bool center;
-  const _HeaderCell(this.text, {this.center = false});
+  final bool narrow;
+  const _HeaderCell(this.text, {this.center = false, this.narrow = false});
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+        padding: EdgeInsets.symmetric(horizontal: narrow ? 4 : 8, vertical: 10),
         child: Text(
           text,
           textAlign: center ? TextAlign.center : TextAlign.start,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          style: TextStyle(
+              fontWeight: FontWeight.bold, fontSize: narrow ? 13 : 14),
         ),
       );
 }
@@ -167,16 +193,18 @@ class _BodyCell extends StatelessWidget {
   final String text;
   final bool center;
   final bool bold;
-  const _BodyCell(this.text, {this.center = false, this.bold = false});
+  final bool narrow;
+  const _BodyCell(this.text,
+      {this.center = false, this.bold = false, this.narrow = false});
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: narrow ? 4 : 8, vertical: 12),
         child: Text(
           text,
           textAlign: center ? TextAlign.center : TextAlign.start,
           style: TextStyle(
-            fontSize: 16,
+            fontSize: narrow ? 14 : 16,
             fontWeight: bold ? FontWeight.bold : FontWeight.normal,
           ),
         ),
