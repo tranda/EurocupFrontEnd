@@ -1784,104 +1784,139 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Left side: Expand/Collapse/Filter buttons
-              Row(
-                children: [
-                  ElevatedButton(
-                    onPressed: _expandAll,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1],
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(80, 28),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      textStyle: const TextStyle(fontSize: 12),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          // View switcher — Races vs Medals. Sits above the toolbar so it
+          // reads as a first-class view choice, not another toolbar button.
+          _buildViewSwitcher(),
+          // Race-list toolbar + active filter chips are only relevant to the
+          // race list. Hide them entirely on the Medals view.
+          if (!_showMedals) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Left side: Expand / Collapse / Filters + competition chips.
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: _expandAll,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1],
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(80, 28),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        textStyle: const TextStyle(fontSize: 12),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text('Expand All'),
                     ),
-                    child: const Text('Expand All'),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: _collapseAll,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1],
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(80, 28),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        textStyle: const TextStyle(fontSize: 12),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text('Collapse All'),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: _showFilters,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1],
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(70, 28),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        textStyle: const TextStyle(fontSize: 12),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text('Filters'),
+                    ),
+                    ..._buildCompetitionChips(),
+                  ],
+                ),
+                // Right side: Export PDF (races only).
+                ElevatedButton(
+                  onPressed: _exportToPDF,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(80, 28),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    textStyle: const TextStyle(fontSize: 12),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: _collapseAll,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1],
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(80, 28),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      textStyle: const TextStyle(fontSize: 12),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: const Text('Collapse All'),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: _showFilters,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: competitionColor[(int.tryParse(_eventId ?? '1') ?? 1) - 1],
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(70, 28),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      textStyle: const TextStyle(fontSize: 12),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: const Text('Filters'),
-                  ),
-                  ..._buildCompetitionChips(),
-                ],
-              ),
-              // Right side: Medals toggle + Export PDF button
-              Row(
-                children: [
-                  // Toggle button — label swaps to reflect where the click
-                  // will take you. When showing races it says "🏅 Medals"
-                  // (click → go to medals). When showing medals it says
-                  // "← Races" (click → go back).
-                  ElevatedButton.icon(
-                    onPressed: () => setState(() => _showMedals = !_showMedals),
-                    icon: Text(
-                      _showMedals ? '←' : '🏅',
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                    label: Text(
-                      _showMedals ? 'Races' : 'Medals',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _showMedals
-                          ? Colors.orange.shade800
-                          : Colors.orange.shade50,
-                      foregroundColor: _showMedals
-                          ? Colors.white
-                          : Colors.orange.shade900,
-                      minimumSize: const Size(80, 28),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      textStyle: const TextStyle(fontSize: 12),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: _exportToPDF,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(80, 28),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      textStyle: const TextStyle(fontSize: 12),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: const Text('Export PDF'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          // Active filters chips display
-          _buildActiveFiltersChips(),
+                  child: const Text('Export PDF'),
+                ),
+              ],
+            ),
+            _buildActiveFiltersChips(),
+          ],
         ],
       ),
+    );
+  }
+
+  /// View switcher pair: [ Races | 🏅 Medals ]. The active view is filled,
+  /// the inactive one outlined. Centered, tight — reads as a segmented
+  /// choice rather than yet another toolbar button.
+  Widget _buildViewSwitcher() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _viewSwitcherButton(
+          label: 'Races',
+          icon: null,
+          active: !_showMedals,
+          onPressed: () {
+            if (_showMedals) setState(() => _showMedals = false);
+          },
+        ),
+        const SizedBox(width: 8),
+        _viewSwitcherButton(
+          label: 'Medals',
+          icon: '🏅',
+          active: _showMedals,
+          onPressed: () {
+            if (!_showMedals) setState(() => _showMedals = true);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _viewSwitcherButton({
+    required String label,
+    required String? icon,
+    required bool active,
+    required VoidCallback onPressed,
+  }) {
+    final bg = active ? Colors.orange.shade800 : Colors.orange.shade50;
+    final fg = active ? Colors.white : Colors.orange.shade900;
+    final child = icon == null
+        ? Text(label, style: const TextStyle(fontSize: 13))
+        : Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(icon, style: const TextStyle(fontSize: 14)),
+              const SizedBox(width: 6),
+              Text(label, style: const TextStyle(fontSize: 13)),
+            ],
+          );
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: bg,
+        foregroundColor: fg,
+        minimumSize: const Size(88, 32),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
+      child: child,
     );
   }
 
