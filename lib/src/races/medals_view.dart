@@ -157,7 +157,10 @@ class _MedalsViewState extends State<MedalsView> {
           Expanded(
             child: Text(
               s.clubName,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              // Match the Races view team-name style (Theme.displaySmall:
+              // 19pt bold, brand blue) so the two views read as the same
+              // information density and visual weight.
+              style: Theme.of(context).textTheme.displaySmall,
             ),
           ),
         ],
