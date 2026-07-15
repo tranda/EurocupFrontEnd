@@ -91,4 +91,50 @@ void main() {
       expect(delta, isEmpty, reason: '4th-place team should not appear');
     });
   });
+
+  group('MedalTally.compute — sort order', () {
+    test('sorts gold DESC → silver DESC → bronze DESC → name ASC', () {
+      // Construct 4 races so that after tally:
+      //   Alpha:  2G 0S 0B
+      //   Beta:   2G 0S 0B  (tied with Alpha on all counts)
+      //   Gamma:  0G 2S 2B
+      //   Delta:  0G 2S 2B  (tied with Gamma on all counts)
+      // Expected order: Alpha, Beta (gold breaks vs Gamma/Delta),
+      //                 Delta, Gamma (alphabetical tie-break within pairs).
+      final races = [
+        _medalRace(id: 1, competition: 'Club', finishers: [
+          _CrewSpec(1, 'Alpha', finalTimeMs: 50000),  // gold
+          _CrewSpec(4, 'Delta', finalTimeMs: 51000),  // silver
+          _CrewSpec(3, 'Gamma', finalTimeMs: 52000),  // bronze
+        ]),
+        _medalRace(id: 2, competition: 'Club', finishers: [
+          _CrewSpec(2, 'Beta',  finalTimeMs: 50000),  // gold
+          _CrewSpec(3, 'Gamma', finalTimeMs: 51000),  // silver
+          _CrewSpec(4, 'Delta', finalTimeMs: 52000),  // bronze
+        ]),
+        _medalRace(id: 3, competition: 'Club', finishers: [
+          _CrewSpec(1, 'Alpha', finalTimeMs: 50000),  // gold
+          _CrewSpec(3, 'Gamma', finalTimeMs: 51000),  // silver
+          _CrewSpec(4, 'Delta', finalTimeMs: 52000),  // bronze
+        ]),
+        _medalRace(id: 4, competition: 'Club', finishers: [
+          _CrewSpec(2, 'Beta',  finalTimeMs: 50000),  // gold
+          _CrewSpec(4, 'Delta', finalTimeMs: 51000),  // silver
+          _CrewSpec(3, 'Gamma', finalTimeMs: 52000),  // bronze
+        ]),
+      ];
+
+      final club = MedalTally.compute(races)['Club']!;
+      expect(club.map((s) => s.teamName).toList(),
+             ['Alpha', 'Beta', 'Delta', 'Gamma']);
+      // Alpha before Beta and Delta before Gamma: both are alphabetical
+      // tie-breaks (identical G/S/B counts within each pair).
+
+      final alpha = club[0], beta = club[1], delta = club[2], gamma = club[3];
+      expect(alpha.gold, 2); expect(alpha.silver, 0); expect(alpha.bronze, 0);
+      expect(beta.gold,  2); expect(beta.silver,  0); expect(beta.bronze,  0);
+      expect(delta.gold, 0); expect(delta.silver, 2); expect(delta.bronze, 2);
+      expect(gamma.gold, 0); expect(gamma.silver, 2); expect(gamma.bronze, 2);
+    });
+  });
 }
