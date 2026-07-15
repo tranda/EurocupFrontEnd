@@ -1842,7 +1842,10 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                       _showMedals ? '←' : '🏅',
                       style: const TextStyle(fontSize: 14),
                     ),
-                    label: Text(_showMedals ? 'Races' : 'Medals'),
+                    label: Text(
+                      _showMedals ? 'Races' : 'Medals',
+                      style: const TextStyle(fontSize: 12),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _showMedals
                           ? Colors.orange.shade800

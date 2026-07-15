@@ -144,19 +144,21 @@ class _MedalsViewState extends State<MedalsView> {
   Widget _teamCell(MedalStanding s) {
     final country = s.team.club?.country;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       child: Row(
         children: [
           if (country != null) ...[
-            Text(getCountryFlag(country), style: const TextStyle(fontSize: 16)),
+            Text(getCountryFlag(country), style: const TextStyle(fontSize: 18)),
             const SizedBox(width: 6),
             Text(getCountryCode(country),
                 style: const TextStyle(fontSize: 12, color: Colors.black54)),
             const SizedBox(width: 8),
           ],
           Expanded(
-            child: Text(s.teamName,
-                style: const TextStyle(fontWeight: FontWeight.w600)),
+            child: Text(
+              s.teamName,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -175,7 +177,7 @@ class _HeaderCell extends StatelessWidget {
         child: Text(
           text,
           textAlign: center ? TextAlign.center : TextAlign.start,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
         ),
       );
 }
@@ -188,12 +190,12 @@ class _BodyCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
         child: Text(
           text,
           textAlign: center ? TextAlign.center : TextAlign.start,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: 16,
             fontWeight: bold ? FontWeight.bold : FontWeight.normal,
           ),
         ),
