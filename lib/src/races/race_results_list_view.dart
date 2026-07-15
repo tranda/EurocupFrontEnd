@@ -180,13 +180,29 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
       _eventId = (active.isNotEmpty ? active.first.id : competitions.first.id).toString();
     }
 
+    // Restore the sub-view (Races / Medals) chosen before the refresh. The
+    // URL query param is source of truth (deep-linkable); local storage is the
+    // bare-URL fallback.
+    final urlView = readUrlQueryParam('view');
+    final storedView = urlView ?? loadRaceResultsView();
+    _showMedals = storedView == 'medals';
+
     // Persist the resolved event in both the URL (shareable, per-tab) and local
     // storage (survives a bare-URL refresh) so a reload keeps context.
-    syncRaceResultsUrl(_eventId);
+    syncRaceResultsUrl(_eventId, view: _showMedals ? 'medals' : null);
     saveSelectedEventId(_eventId);
+    saveRaceResultsView(_showMedals ? 'medals' : null);
 
     _hasInitialized = true;
     _loadEventData();
+  }
+
+  void _setShowMedals(bool value) {
+    if (_showMedals == value) return;
+    setState(() => _showMedals = value);
+    // Push the new sub-view into the URL + local storage so a refresh keeps it.
+    syncRaceResultsUrl(_eventId, view: value ? 'medals' : null);
+    saveRaceResultsView(value ? 'medals' : null);
   }
 
   Future<void> _loadEventData() async {
@@ -1871,18 +1887,14 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
           label: 'Races',
           icon: null,
           active: !_showMedals,
-          onPressed: () {
-            if (_showMedals) setState(() => _showMedals = false);
-          },
+          onPressed: () => _setShowMedals(false),
         ),
         const SizedBox(width: 8),
         _viewSwitcherButton(
           label: 'Medals',
           icon: '🏅',
           active: _showMedals,
-          onPressed: () {
-            if (!_showMedals) setState(() => _showMedals = true);
-          },
+          onPressed: () => _setShowMedals(true),
         ),
       ],
     );

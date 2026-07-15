@@ -160,10 +160,11 @@ void clearToken() {
 /// without this the eventId is lost on reload and no race is shown. Uses
 /// replaceState (no new history entry, no popstate → router is undisturbed).
 /// The read side is App._extractArgumentsFromSettings, which parses ?eventId=.
-void syncRaceResultsUrl(String? eventId) {
+void syncRaceResultsUrl(String? eventId, {String? view}) {
   if (!kIsWeb || eventId == null) return;
+  final viewSuffix = (view != null && view.isNotEmpty) ? '&view=$view' : '';
   html.window.history
-      .replaceState(null, '', '#/race_results_list?eventId=$eventId');
+      .replaceState(null, '', '#/race_results_list?eventId=$eventId$viewSuffix');
 }
 
 /// Remember the last viewed Race Results event in local storage. The URL
@@ -180,6 +181,36 @@ String? loadSelectedEventId() {
     return html.window.localStorage['race_results_event_id'];
   }
   return null;
+}
+
+/// Remember whether the user was on the Races or Medals sub-view of Race
+/// Results. Same pattern as the event id: URL (?view=) is source of truth,
+/// this is the bare-URL fallback.
+void saveRaceResultsView(String? view) {
+  if (!kIsWeb) return;
+  if (view == null || view.isEmpty) {
+    html.window.localStorage.remove('race_results_view');
+  } else {
+    html.window.localStorage['race_results_view'] = view;
+  }
+}
+
+String? loadRaceResultsView() {
+  if (kIsWeb) {
+    return html.window.localStorage['race_results_view'];
+  }
+  return null;
+}
+
+/// Read a query parameter from the current URL. Works with hash-strategy
+/// routes (`#/route?key=value`); returns null when not present or not on web.
+String? readUrlQueryParam(String key) {
+  if (!kIsWeb) return null;
+  final fragment = Uri.base.fragment; // e.g. '/race_results_list?eventId=12&view=medals'
+  final qIdx = fragment.indexOf('?');
+  if (qIdx < 0) return null;
+  final query = Uri.splitQueryString(fragment.substring(qIdx + 1));
+  return query[key];
 }
 
 /// Stamp the Schedule Builder event into the URL so a refresh can recover it.

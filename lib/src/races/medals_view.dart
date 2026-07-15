@@ -64,19 +64,49 @@ class _MedalsViewState extends State<MedalsView> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              const Text('Competition:', style: TextStyle(color: Colors.black54)),
-              const SizedBox(width: 8),
-              DropdownButton<String>(
-                value: selected,
-                items: competitions
-                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                    .toList(),
-                onChanged: (v) {
-                  if (v == null) return;
-                  setState(() => _selectedCompetition = v);
-                },
+              // Pill-shaped competition selector — echoes the Races/Medals
+              // view switcher style so the two controls feel like siblings.
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.orange.shade200),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Competition:',
+                      style: TextStyle(
+                        color: Colors.orange.shade900,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: selected,
+                        isDense: true,
+                        style: TextStyle(
+                          color: Colors.orange.shade900,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        iconEnabledColor: Colors.orange.shade900,
+                        items: competitions
+                            .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                            .toList(),
+                        onChanged: (v) {
+                          if (v == null) return;
+                          setState(() => _selectedCompetition = v);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -130,16 +160,20 @@ class _MedalsViewState extends State<MedalsView> {
               children: [
                 _BodyCell('${i + 1}'),
                 _clubCell(rows[i]),
-                _BodyCell('${rows[i].gold}', center: true),
-                _BodyCell('${rows[i].silver}', center: true),
-                _BodyCell('${rows[i].bronze}', center: true),
-                _BodyCell('${rows[i].total}', center: true, bold: true),
+                _BodyCell(_fmt(rows[i].gold), center: true),
+                _BodyCell(_fmt(rows[i].silver), center: true),
+                _BodyCell(_fmt(rows[i].bronze), center: true),
+                _BodyCell(_fmt(rows[i].total), center: true, bold: true),
               ],
             ),
         ],
       ),
     );
   }
+
+  /// Display 0 as an en-dash so zero-medal rows read as "not yet ranked"
+  /// rather than emphasising the zero.
+  String _fmt(int n) => n == 0 ? '–' : '$n';
 
   Widget _clubCell(MedalStanding s) {
     final country = s.country;
