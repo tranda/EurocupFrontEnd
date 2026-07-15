@@ -380,14 +380,16 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
 
     return Padding(
       padding: const EdgeInsets.only(top: 8),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 4,
-        alignment: WrapAlignment.center,
-        children: [
-          for (final comp in available)
-            _competitionChip(comp, _filterCompetitions.contains(comp)),
-        ],
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          children: [
+            for (final comp in available)
+              _competitionChip(comp, _filterCompetitions.contains(comp)),
+          ],
+        ),
       ),
     );
   }
