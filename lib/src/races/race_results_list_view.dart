@@ -407,15 +407,17 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
         }
         _setCompetitionsFilter(next);
       },
+      // No height / no alignment on the Container — those force it to fill
+      // the loose constraints Wrap hands to its children, which was making
+      // chips stretch across the full row width. Padding alone lets the
+      // Container size to the Text child.
       child: Container(
-        height: 28,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected ? color.shade100 : Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: color, width: 1),
         ),
-        alignment: Alignment.center,
         child: Text(
           comp,
           style: TextStyle(
