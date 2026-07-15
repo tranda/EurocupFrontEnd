@@ -1832,12 +1832,17 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
               // Right side: Medals toggle + Export PDF button
               Row(
                 children: [
-                  // 🏅 Medals toggle — swaps main content between the race
-                  // list and MedalsView. Local state only.
+                  // Toggle button — label swaps to reflect where the click
+                  // will take you. When showing races it says "🏅 Medals"
+                  // (click → go to medals). When showing medals it says
+                  // "← Races" (click → go back).
                   ElevatedButton.icon(
                     onPressed: () => setState(() => _showMedals = !_showMedals),
-                    icon: const Text('🏅', style: TextStyle(fontSize: 14)),
-                    label: const Text('Medals'),
+                    icon: Text(
+                      _showMedals ? '←' : '🏅',
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    label: Text(_showMedals ? 'Races' : 'Medals'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _showMedals
                           ? Colors.orange.shade800
