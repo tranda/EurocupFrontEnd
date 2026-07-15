@@ -376,7 +376,10 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   /// [_setCompetitionsFilter].
   Widget _buildCompetitionChipRow() {
     final available = _availableCompetitions();
-    if (available.isEmpty) return const SizedBox.shrink();
+    // No chip row when there's nothing to filter between. A single
+    // "Overall" chip (the older-event fallback) or a single Nihao-style
+    // competition adds noise without any interactive value.
+    if (available.length <= 1) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.only(top: 8),
@@ -1034,10 +1037,14 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
         if (!matches) return false;
       }
 
-      // Competition filter (OR logic - match any selected competition)
-      if (_filterCompetitions.isNotEmpty &&
-          !_filterCompetitions.contains(discipline.competition)) {
-        return false;
+      // Competition filter (OR logic - match any selected competition).
+      // "Overall" is a display-only bucket the medals endpoint invents for
+      // older events that never set discipline.competition — treat it as
+      // matching every race in those events instead of filtering to nothing.
+      if (_filterCompetitions.isNotEmpty) {
+        final compMatches = _filterCompetitions.contains(discipline.competition)
+            || (_filterCompetitions.contains('Overall') && (discipline.competition == null || discipline.competition!.isEmpty));
+        if (!compMatches) return false;
       }
 
       // Team name filter
