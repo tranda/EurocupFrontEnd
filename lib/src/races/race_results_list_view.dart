@@ -1,6 +1,9 @@
 import 'package:eurocup_frontend/src/common.dart';
+import 'package:eurocup_frontend/src/model/medal_standing.dart';
+import 'package:eurocup_frontend/src/model/medal_tally.dart';
 import 'package:eurocup_frontend/src/model/race/race_result.dart';
 import 'package:eurocup_frontend/src/model/race/crew_result.dart';
+import 'package:eurocup_frontend/src/races/medals_view.dart';
 import 'package:eurocup_frontend/src/races/race_result_detail_view.dart';
 import 'package:eurocup_frontend/src/races/race_results_grouping.dart';
 import 'package:intl/intl.dart' show DateFormat;
@@ -47,6 +50,14 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
   final List<String> _filterCompetitions = [];
   String _filterTeamName = '';
   String _filterCountry = '';
+
+  // Medals view toggle. When true, the main content area renders MedalsView
+  // instead of the day-grouped race list. Local state only — no routing.
+  bool _showMedals = false;
+
+  // Cached medal standings, keyed by competition. Recomputed whenever
+  // `_raceResults` changes (see _recomputeMedals below).
+  Map<String, List<MedalStanding>> _medalStandings = const {};
 
   // Day-section fold state. Membership = expanded (mirrors _expandedRaces).
   final Set<DateTime> _expandedDays = <DateTime>{};
@@ -221,6 +232,7 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
 
       setState(() {
         _raceResults = actualRaces;
+        _recomputeMedals();
         // Default every day section to expanded so the page looks like the
         // current flat list on first load and after refreshes. Additive: an
         // existing fold state on a day is preserved across refreshes.
@@ -1620,6 +1632,15 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
     final items = _buildRenderItems();
     print('Building UI - using ${_filteredRaceResults != null ? "FILTERED" : "UNFILTERED"} results: ${items.whereType<_RaceItem>().length} race rows in ${items.whereType<_DayHeaderItem>().length} day sections');
 
+    if (_showMedals) {
+      return Column(
+        children: [
+          _buildScreenHeader(),
+          Expanded(child: MedalsView(standings: _medalStandings)),
+        ],
+      );
+    }
+
     return RefreshIndicator(
       onRefresh: _refreshResults,
       child: ListView.builder(
@@ -1654,6 +1675,10 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
         },
       ),
     );
+  }
+
+  void _recomputeMedals() {
+    _medalStandings = MedalTally.compute(_raceResults ?? const []);
   }
 
   /// Builds the flat render-item list consumed by ListView.builder.
@@ -1804,18 +1829,42 @@ class _RaceResultsListViewState extends State<RaceResultsListView> {
                   ..._buildCompetitionChips(),
                 ],
               ),
-              // Right side: Export PDF button in green
-              ElevatedButton(
-                onPressed: _exportToPDF,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(80, 28),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  textStyle: const TextStyle(fontSize: 12),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: const Text('Export PDF'),
+              // Right side: Medals toggle + Export PDF button
+              Row(
+                children: [
+                  // 🏅 Medals toggle — swaps main content between the race
+                  // list and MedalsView. Local state only.
+                  ElevatedButton.icon(
+                    onPressed: () => setState(() => _showMedals = !_showMedals),
+                    icon: const Text('🏅', style: TextStyle(fontSize: 14)),
+                    label: const Text('Medals'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _showMedals
+                          ? Colors.orange.shade800
+                          : Colors.orange.shade50,
+                      foregroundColor: _showMedals
+                          ? Colors.white
+                          : Colors.orange.shade900,
+                      minimumSize: const Size(80, 28),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      textStyle: const TextStyle(fontSize: 12),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: _exportToPDF,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(80, 28),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      textStyle: const TextStyle(fontSize: 12),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: const Text('Export PDF'),
+                  ),
+                ],
               ),
             ],
           ),
