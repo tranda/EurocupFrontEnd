@@ -18,6 +18,11 @@ class _DisciplineListViewState extends State<DisciplineListView> {
   List<int> registeredDisciplines = [];
   bool changes = false;
 
+  int? _teamId;
+  late Future<List<Race>> _disciplinesFuture;
+  final Set<int> _registeredIds = {};
+  final Set<int> _loadingIds = {};
+
   @override
   void initState() {
     super.initState();
@@ -40,6 +45,58 @@ class _DisciplineListViewState extends State<DisciplineListView> {
       }
     } catch (e) {
       locked = true; // Default to locked on error
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Build the disciplines future ONCE so that later setState() calls
+    // (e.g. toggling a single row) don't recreate it and force a full reload.
+    if (_teamId == null) {
+      final args = ModalRoute.of(context)!.settings.arguments as Map;
+      _teamId = args['teamId'];
+      _disciplinesFuture = _loadDisciplines(_teamId!);
+    }
+  }
+
+  Future<List<Race>> _loadDisciplines(int teamId) async {
+    final races = await _getTeamDisciplinesForActiveEvents(teamId);
+    _registeredIds
+      ..clear()
+      ..addAll(races
+          .where((r) => r.discipline?.id != null)
+          .map((r) => r.discipline!.id!));
+    return races;
+  }
+
+  Future<void> _toggleDiscipline(int teamId, int id) async {
+    if (_loadingIds.contains(id)) return;
+    final wasRegistered = _registeredIds.contains(id);
+    // Show a small spinner on this row only.
+    setState(() => _loadingIds.add(id));
+    try {
+      if (wasRegistered) {
+        await api.unregisterCrew(teamId, id);
+      } else {
+        await api.registerCrew(teamId, id);
+      }
+      // Update just this row's state locally — no full re-fetch.
+      setState(() {
+        if (wasRegistered) {
+          _registeredIds.remove(id);
+        } else {
+          _registeredIds.add(id);
+        }
+        _loadingIds.remove(id);
+      });
+    } catch (e) {
+      setState(() => _loadingIds.remove(id));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not update. Please try again.')),
+        );
+      }
     }
   }
 
@@ -136,13 +193,12 @@ class _DisciplineListViewState extends State<DisciplineListView> {
           //     image: DecorationImage(
           //         image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
           child: FutureBuilder(
-            future: _getTeamDisciplinesForActiveEvents(teamId),
+            future: _disciplinesFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
               if (snapshot.hasData) {
-                final teamDisciplines = snapshot.data!;
                 // Filter disciplines to only show those from active events
                 final activeEventIds = competitions.where((c) => c.isActive).map((c) => c.id).toSet();
                 final activeDisciplines = disciplines.where((d) => activeEventIds.contains(d.eventId)).toList();
@@ -159,13 +215,8 @@ class _DisciplineListViewState extends State<DisciplineListView> {
                     var eventColor = competitionColor.isNotEmpty && discipline.eventId! <= competitionColor.length 
                         ? competitionColor[discipline.eventId! - 1] 
                         : Colors.transparent;
-                    var registered = false;
-                    for (var element in teamDisciplines) {
-                      if (element.discipline!.id == discipline.id) {
-                        registered = true;
-                        registeredDisciplines.add(discipline.id!);
-                      }
-                    }
+                    final registered = _registeredIds.contains(discipline.id);
+                    final isLoading = _loadingIds.contains(discipline.id);
                     return Column(
                       children: [
                         ListTile(
@@ -188,53 +239,51 @@ class _DisciplineListViewState extends State<DisciplineListView> {
                                 ],
                               ],
                             ),
-                            trailing: locked
-                                // When locked, show check marks for registered disciplines
-                                ? (registered
-                                    ? Icon(
-                                        Icons.check_circle_outline,
-                                        color: Colors.green.shade200,
-                                        size: 28,
-                                      )
-                                    : const Icon(
-                                        Icons.radio_button_unchecked,
-                                        color: Colors.grey,
-                                        size: 28,
-                                      ))
-                                // When not locked, show interactive check mark icons
-                                : GestureDetector(
-                                    onTap: () {
-                                      if (registered) {
-                                        // Debug: unregister discipline
-                                        api
-                                            .unregisterCrew(
-                                                teamId, discipline.id!)
-                                            .then((value) {
-                                          setState(() {});
-                                        });
-                                      } else {
-                                        // Debug: register discipline
-                                        api
-                                            .registerCrew(
-                                                teamId, discipline.id!)
-                                            .then((value) {
-                                          setState(() {});
-                                        });
-                                      }
-                                      setState(() {});
-                                    },
-                                    child: registered
-                                        ? Icon(
-                                            Icons.check_circle_outline,
-                                            color: Colors.green.shade200,
-                                            size: 28,
-                                          )
-                                        : const Icon(
-                                            Icons.radio_button_unchecked,
-                                            color: Colors.grey,
-                                            size: 28,
-                                          ),
-                                  )),
+                            trailing: SizedBox(
+                              width: 28,
+                              height: 28,
+                              child: isLoading
+                                  // Only this row shows a loader while its
+                                  // register/unregister request is in flight.
+                                  ? const Center(
+                                      child: SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                    )
+                                  : locked
+                                      // When locked, show status only.
+                                      ? (registered
+                                          ? Icon(
+                                              Icons.check_circle_outline,
+                                              color: Colors.green.shade200,
+                                              size: 28,
+                                            )
+                                          : const Icon(
+                                              Icons.radio_button_unchecked,
+                                              color: Colors.grey,
+                                              size: 28,
+                                            ))
+                                      // When not locked, tapping toggles it.
+                                      : GestureDetector(
+                                          onTap: () => _toggleDiscipline(
+                                              teamId, discipline.id!),
+                                          child: registered
+                                              ? Icon(
+                                                  Icons.check_circle_outline,
+                                                  color: Colors.green.shade200,
+                                                  size: 28,
+                                                )
+                                              : const Icon(
+                                                  Icons.radio_button_unchecked,
+                                                  color: Colors.grey,
+                                                  size: 28,
+                                                ),
+                                        ),
+                            )),
                         const Divider(
                           height: 4,
                         ),
