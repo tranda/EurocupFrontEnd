@@ -43,16 +43,16 @@ class _CrewListViewState extends State<DisciplineRaceListView> {
 
       // Load competitions first
       final competitions = await api.getCompetitions();
+      // Current Entries only ever shows active events.
+      final activeEvents =
+          competitions.where((event) => event.isActive).toList();
       // Sort events by year (newest first)
-      competitions.sort((a, b) => (b.year ?? 0).compareTo(a.year ?? 0));
-      _events = competitions;
+      activeEvents.sort((a, b) => (b.year ?? 0).compareTo(a.year ?? 0));
+      _events = activeEvents;
 
       // Set initial selectedEvent to first active event if not already set
       if (!_initialEventSet && _events.isNotEmpty) {
-        _selectedEvent = _events.firstWhere(
-          (event) => event.isActive,
-          orElse: () => _events.first,
-        );
+        _selectedEvent = _events.first;
         _initialEventSet = true;
       }
 
