@@ -5,16 +5,21 @@ class Team {
   int? id;
   int? clubId;
   String? name;
+  bool? active;
   Club? club;
   DateTime? createdAt;
   DateTime? updatedAt;
 
-  Team({this.id, this.clubId, this.name, this.club, this.createdAt, this.updatedAt});
+  Team({this.id, this.clubId, this.name, this.active, this.club, this.createdAt, this.updatedAt});
 
   factory Team.fromMap(Map<String, dynamic> data) => Team(
         id: data['id'] as int?,
         clubId: data['club_id'] as int?,
         name: data['name'] as String?,
+        // Default to active when the field is absent (rows predating the column).
+        active: data['active'] == null
+            ? true
+            : (data['active'] == 1 || data['active'] == true),
         club: data['club'] == null
             ? null
             : Club.fromMap(data['club'] as Map<String, dynamic>),
@@ -30,6 +35,7 @@ class Team {
         'id': id,
         'club_id': clubId,
         'name': name,
+        'active': active,
         'club': club?.toMap(),
         'created_at': createdAt?.toIso8601String(),
         'updated_at': updatedAt?.toIso8601String(),

@@ -529,7 +529,7 @@ class _UnmatchedTeamsSectionState extends State<_UnmatchedTeamsSection> {
     try {
       final results = await Future.wait([
         api.getClubs(),
-        api.getTeams(1), // accessLevel > 0 → all teams (with club info)
+        api.getTeams(1, activeOnly: true), // accessLevel > 0 → active teams only (with club info)
       ]);
       final clubs = (results[0] as List<Club>)
         ..sort((a, b) =>

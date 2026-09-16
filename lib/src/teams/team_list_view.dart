@@ -32,11 +32,10 @@ class ListViewState extends State<TeamListView> {
     controller = TextEditingController();
     // Allow team creation for club managers (0) and higher access levels (1+)
     locked = false;
-    // Show all teams for admins (access level >= 2), only active club teams for others
-    dataFuture = api.getTeams(
-      currentUser.accessLevel!,
-      activeOnly: currentUser.accessLevel != null && currentUser.accessLevel! >= 2 ? false : true
-    );
+    // This is the team management page (also reached via Club -> Teams), so it
+    // loads inactive teams too, allowing them to be reactivated. Other views
+    // pass activeOnly: true to hide inactive teams and reduce noise.
+    dataFuture = _loadTeams();
 
     // Load clubs if user has access level > 0 (referee, event manager, admin)
     if (currentUser.accessLevel! > 0) {
@@ -52,6 +51,77 @@ class ListViewState extends State<TeamListView> {
   void dispose() {
     controller.dispose();
     super.dispose();
+  }
+
+  /// Loads teams for the management page, including inactive ones so they can
+  /// be reactivated here.
+  Future<List<Team>> _loadTeams() {
+    return api.getTeams(currentUser.accessLevel!, activeOnly: false);
+  }
+
+  /// Admins may manage any team; club managers may manage their own club's teams.
+  bool _canManage(Team team) {
+    final level = currentUser.accessLevel ?? 0;
+    if (level >= 2) return true;
+    return currentUser.clubId != null && currentUser.clubId == team.clubId;
+  }
+
+  Future<void> _toggleActive(BuildContext context, Team team, bool active) async {
+    try {
+      await api.setTeamActive(team.id!, active);
+      setState(() {
+        dataFuture = _loadTeams();
+      });
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(active
+                ? 'Team "${team.name}" reactivated'
+                : 'Team "${team.name}" marked inactive'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update team status: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _confirmDeactivate(BuildContext context, Team team) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Mark Team Inactive'),
+          content: Text(
+            'Mark "${team.name}" as inactive?\n\n'
+            'It will be hidden from team listings and registration, but kept '
+            'for historical records. You can reactivate it here at any time.',
+            style: const TextStyle(color: Colors.black87),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                _toggleActive(context, team, false);
+              },
+              child: const Text('Mark Inactive'),
+            ),
+          ],
+          actionsAlignment: MainAxisAlignment.spaceBetween,
+        );
+      },
+    );
   }
 
   @override
@@ -72,10 +142,7 @@ class ListViewState extends State<TeamListView> {
                       api.createTeam(value['name'], clubId: value['clubId']).then((v) {
                         setState(() {
                           teamName = value['name'];
-                          dataFuture = api.getTeams(
-                            currentUser.accessLevel!,
-                            activeOnly: currentUser.accessLevel != null && currentUser.accessLevel! >= 2 ? false : true
-                          );
+                          dataFuture = _loadTeams();
                         });
                       }).catchError((error) {
                         // Error: team creation failed
@@ -99,20 +166,22 @@ class ListViewState extends State<TeamListView> {
               final teams = filterClubId != null
                   ? snapshot.data!.where((t) => t.clubId == filterClubId).toList()
                   : snapshot.data!;
-              // Sort teams: teams from active clubs first, then inactive clubs
+              // Sort teams: active teams from active clubs first, inactive last.
               teams.sort((a, b) {
-                final aClubActive = a.club?.active ?? false;
-                final bClubActive = b.club?.active ?? false;
-                if (aClubActive == bClubActive) return 0;
-                return aClubActive ? -1 : 1;
+                final aActive = (a.active ?? true) && (a.club?.active ?? false);
+                final bActive = (b.active ?? true) && (b.club?.active ?? false);
+                if (aActive == bActive) return 0;
+                return aActive ? -1 : 1;
               });
               // Debug: teams list
               return ListView.builder(
                 itemCount: teams.length,
                 itemBuilder: (BuildContext context, int index) {
-                  final isInactiveClub = teams[index].club?.active == false;
+                  final team = teams[index];
+                  final isTeamInactive = team.active == false;
+                  final isInactiveClub = team.club?.active == false;
                   return Opacity(
-                    opacity: isInactiveClub ? 0.5 : 1.0,
+                    opacity: (isInactiveClub || isTeamInactive) ? 0.5 : 1.0,
                     child: Column(
                     children: [
                       ListTile(
@@ -143,6 +212,24 @@ class ListViewState extends State<TeamListView> {
                                   style: Theme.of(context).textTheme.displaySmall,
                                 ),
                               ),
+                              if (isTeamInactive)
+                                Container(
+                                  margin: const EdgeInsets.only(left: 8),
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.shade50,
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: Colors.orange.shade200),
+                                  ),
+                                  child: Text(
+                                    'Inactive',
+                                    style: TextStyle(
+                                      color: Colors.orange.shade800,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
                           subtitle: (teams[index].club?.name != null && teams[index].club!.name!.isNotEmpty)
@@ -170,6 +257,24 @@ class ListViewState extends State<TeamListView> {
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
+                              if (_canManage(team)) ...[
+                                if (isTeamInactive)
+                                  TextButton.icon(
+                                    icon: const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                                    label: const Text('Reactivate', style: TextStyle(color: Colors.green)),
+                                    onPressed: () {
+                                      _toggleActive(context, team, true);
+                                    },
+                                  )
+                                else
+                                  IconButton(
+                                    icon: const Icon(Icons.visibility_off, color: Colors.orange),
+                                    tooltip: 'Mark inactive',
+                                    onPressed: () {
+                                      _confirmDeactivate(context, team);
+                                    },
+                                  ),
+                              ],
                               if (currentUser.accessLevel != null && currentUser.accessLevel! >= 2) ...[
                                 IconButton(
                                   icon: const Icon(Icons.edit, color: Colors.blue),
@@ -302,10 +407,7 @@ class ListViewState extends State<TeamListView> {
                 try {
                   await api.updateTeam(team.id!, newName);
                   setState(() {
-                    dataFuture = api.getTeams(
-                      currentUser.accessLevel!,
-                      activeOnly: currentUser.accessLevel != null && currentUser.accessLevel! >= 2 ? false : true
-                    );
+                    dataFuture = _loadTeams();
                   });
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -354,10 +456,7 @@ class ListViewState extends State<TeamListView> {
                   await api.deleteTeam(team.id!);
                   // Refresh the list
                   setState(() {
-                    dataFuture = api.getTeams(
-                      currentUser.accessLevel!,
-                      activeOnly: currentUser.accessLevel != null && currentUser.accessLevel! >= 2 ? false : true
-                    );
+                    dataFuture = _loadTeams();
                   });
                   // Show success message
                   if (context.mounted) {

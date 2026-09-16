@@ -329,6 +329,25 @@ Future<void> updateTeam(int teamId, String name) async {
   }
 }
 
+Future<void> setTeamActive(int teamId, bool active) async {
+  var headers = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Authorization': 'Bearer $token',
+  };
+  var request = http.Request('PATCH', Uri.parse('$apiURL/teams/$teamId/active'));
+  // Assign bodyFields once — the setter encodes at assignment time and later
+  // getter-map mutations are silently dropped (see Dart http.Request docs).
+  request.bodyFields = <String, String>{'active': active ? '1' : '0'};
+  request.headers.addAll(headers);
+
+  http.StreamedResponse response = await request.send();
+
+  if (response.statusCode != 200) {
+    String errorMessage = await response.stream.bytesToString();
+    throw Exception('Failed to update team status: $errorMessage');
+  }
+}
+
 Future<List<Discipline>> getDisciplinesAll({int? eventId}) async {
   var headers = {'Authorization': 'Bearer $token'};
   String url = '$apiURL/disciplinesAll';
