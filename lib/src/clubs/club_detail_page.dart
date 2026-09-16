@@ -58,242 +58,58 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
     super.dispose();
   }
 
-  String _initial(String? name) {
-    if (name == null || name.isEmpty) return '?';
-    return name.trim().substring(0, 1).toUpperCase();
-  }
-
-  Widget _statusBadge(bool active) {
-    final color = active ? Colors.green : Colors.grey;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.shade100,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color, width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            active ? 'Active' : 'Inactive',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: color.shade800,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _heroCard() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            primaryBlue,
-            primaryBlue.withOpacity(0.85),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: primaryBlue.withOpacity(0.2),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+  Widget _countryChip() {
+    if (club!.country == null || club!.country!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: Row(
         children: [
           Container(
-            width: 72,
-            height: 72,
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: Colors.blue.shade200),
             ),
-            child: Center(
-              child: Text(
-                _initial(club!.name),
-                style: const TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  color: primaryBlue,
-                ),
+            child: Text(
+              '${getCountryFlag(club!.country)} ${getCountryCode(club!.country)}',
+              style: TextStyle(
+                color: Colors.blue.shade700,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  club!.name ?? 'Unknown',
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  club!.country ?? 'No country',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white.withOpacity(0.85),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                _statusBadge(_isActive),
-              ],
-            ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _editForm() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'EDIT CLUB',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.5,
-              color: primaryBlue,
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            validator: (value) =>
-                (value == null || value.isEmpty) ? 'Required' : null,
-            textCapitalization: TextCapitalization.words,
-            decoration: buildStandardInputDecorationWithLabel('Club Name'),
-            controller: nameController,
-            style: Theme.of(context).textTheme.displaySmall,
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            textCapitalization: TextCapitalization.words,
-            decoration: buildStandardInputDecorationWithLabel('Country'),
-            controller: countryController,
-            style: Theme.of(context).textTheme.displaySmall,
-          ),
-          const SizedBox(height: 8),
-          SwitchListTile(
-            title: const Text('Active',
-                style: TextStyle(fontWeight: FontWeight.w600)),
-            subtitle:
-                Text(_isActive ? 'Club is active' : 'Club is inactive'),
-            value: _isActive,
-            activeColor: primaryBlue,
-            contentPadding: EdgeInsets.zero,
-            onChanged: (bool value) {
-              setState(() {
-                _isActive = value;
-              });
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _actionCard({
+  Widget _actionTile({
     required IconData icon,
-    required Color iconColor,
     required String title,
     required String subtitle,
     required VoidCallback onTap,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: iconColor, size: 22),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: primaryBlue,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.arrow_forward,
-                  color: Colors.grey.shade400, size: 20),
-            ],
+    return Column(
+      children: [
+        ListTile(
+          leading: Icon(icon, color: primaryBlue),
+          title: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(title, style: Theme.of(context).textTheme.displaySmall),
           ),
+          subtitle: Padding(
+            padding: const EdgeInsetsDirectional.symmetric(horizontal: 8.0),
+            child: Text(subtitle),
+          ),
+          trailing: const Icon(Icons.arrow_forward),
+          onTap: onTap,
         ),
-      ),
+        const Divider(height: 4),
+      ],
     );
   }
 
@@ -328,93 +144,85 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
       body: Container(
         decoration: bckDecoration(),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 100),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _heroCard(),
-                const SizedBox(height: 24),
-                if (editable) ...[
-                  _editForm(),
-                  const SizedBox(height: 24),
-                ],
+                if (!editable) _countryChip(),
+                TextFormField(
+                  validator: (value) =>
+                      (value == null || value.isEmpty) ? 'Required' : null,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: buildStandardInputDecorationWithLabel('Club Name'),
+                  controller: nameController,
+                  enabled: editable,
+                  style: Theme.of(context).textTheme.displaySmall,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  textCapitalization: TextCapitalization.words,
+                  decoration: buildStandardInputDecorationWithLabel('Country'),
+                  controller: countryController,
+                  enabled: editable,
+                  style: Theme.of(context).textTheme.displaySmall,
+                ),
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  title: const Text('Active',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle:
+                      Text(_isActive ? 'Club is active' : 'Club is inactive'),
+                  value: _isActive,
+                  activeColor: primaryBlue,
+                  contentPadding: EdgeInsets.zero,
+                  onChanged: editable
+                      ? (bool value) {
+                          setState(() {
+                            _isActive = value;
+                          });
+                        }
+                      : null,
+                ),
                 if (!editable) ...[
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        _actionCard(
-                          icon: Icons.people,
-                          iconColor: primaryBlue,
-                          title: 'Club Members',
-                          subtitle: 'View all athletes in this club',
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              ClubAthleteListView.routeName,
-                              arguments: {
-                                'clubId': club!.id,
-                                'title': club!.name!
-                              },
-                            );
-                          },
-                        ),
-                        Divider(
-                            height: 1,
-                            color: Colors.grey.shade200,
-                            indent: 16,
-                            endIndent: 16),
-                        _actionCard(
-                          icon: Icons.groups,
-                          iconColor: Colors.deepPurple,
-                          title: 'Club Teams',
-                          subtitle: 'View and manage teams of this club',
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              TeamListView.routeName,
-                              arguments: {
-                                'clubId': club!.id,
-                                'title': club!.name!
-                              },
-                            );
-                          },
-                        ),
-                        Divider(
-                            height: 1,
-                            color: Colors.grey.shade200,
-                            indent: 16,
-                            endIndent: 16),
-                        _actionCard(
-                          icon: Icons.analytics,
-                          iconColor: Colors.teal,
-                          title: 'Club Statistics',
-                          subtitle: 'View club statistics and breakdown',
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              ClubDetailView.routeName,
-                              arguments: {
-                                'clubId': club!.id,
-                                'title': club!.name!
-                              },
-                            );
-                          },
-                        ),
-                      ],
-                    ),
+                  const SizedBox(height: 16),
+                  const Divider(height: 4),
+                  _actionTile(
+                    icon: Icons.people,
+                    title: 'Club Members',
+                    subtitle: 'View all athletes in this club',
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        ClubAthleteListView.routeName,
+                        arguments: {'clubId': club!.id, 'title': club!.name!},
+                      );
+                    },
+                  ),
+                  _actionTile(
+                    icon: Icons.groups,
+                    title: 'Club Teams',
+                    subtitle: 'View and manage teams of this club',
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        TeamListView.routeName,
+                        arguments: {'clubId': club!.id, 'title': club!.name!},
+                      );
+                    },
+                  ),
+                  _actionTile(
+                    icon: Icons.analytics,
+                    title: 'Club Statistics',
+                    subtitle: 'View club statistics and breakdown',
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        ClubDetailView.routeName,
+                        arguments: {'clubId': club!.id, 'title': club!.name!},
+                      );
+                    },
                   ),
                 ],
               ],
@@ -432,8 +240,8 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
               heroTag: "saveClubBtn",
               backgroundColor: primaryBlue,
               icon: const Icon(Icons.save, color: Colors.white),
-              label: const Text('Save',
-                  style: TextStyle(color: Colors.white)),
+              label:
+                  const Text('Save', style: TextStyle(color: Colors.white)),
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
                   try {
@@ -475,8 +283,8 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
               heroTag: "deleteClubBtn",
               backgroundColor: Colors.red,
               icon: const Icon(Icons.delete, color: Colors.white),
-              label: const Text('Delete',
-                  style: TextStyle(color: Colors.white)),
+              label:
+                  const Text('Delete', style: TextStyle(color: Colors.white)),
               onPressed: () {
                 showDialog(
                   context: context,
@@ -499,8 +307,8 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
                                 Navigator.pop(context);
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                      content: Text(
-                                          'Club deleted successfully')),
+                                      content:
+                                          Text('Club deleted successfully')),
                                 );
                               }
                             } catch (e) {
@@ -508,8 +316,8 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
                                 Navigator.pop(context);
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                      content: Text(
-                                          'Failed to delete club: $e')),
+                                      content:
+                                          Text('Failed to delete club: $e')),
                                 );
                               }
                             }
