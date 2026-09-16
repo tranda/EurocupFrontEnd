@@ -257,24 +257,23 @@ class ListViewState extends State<TeamListView> {
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              if (_canManage(team)) ...[
-                                if (isTeamInactive)
-                                  TextButton.icon(
-                                    icon: const Icon(Icons.check_circle, color: Colors.green, size: 20),
-                                    label: const Text('Reactivate', style: TextStyle(color: Colors.green)),
-                                    onPressed: () {
-                                      _toggleActive(context, team, true);
-                                    },
-                                  )
-                                else
-                                  IconButton(
-                                    icon: const Icon(Icons.visibility_off, color: Colors.orange),
-                                    tooltip: 'Mark inactive',
-                                    onPressed: () {
-                                      _confirmDeactivate(context, team);
-                                    },
+                              if (_canManage(team))
+                                IconButton(
+                                  icon: Icon(
+                                    isTeamInactive ? Icons.visibility_off : Icons.visibility,
+                                    color: isTeamInactive ? Colors.orange : Colors.green,
                                   ),
-                              ],
+                                  tooltip: isTeamInactive
+                                      ? 'Inactive — tap to reactivate'
+                                      : 'Active — tap to mark inactive',
+                                  onPressed: () {
+                                    if (isTeamInactive) {
+                                      _toggleActive(context, team, true);
+                                    } else {
+                                      _confirmDeactivate(context, team);
+                                    }
+                                  },
+                                ),
                               if (currentUser.accessLevel != null && currentUser.accessLevel! >= 2) ...[
                                 IconButton(
                                   icon: const Icon(Icons.edit, color: Colors.blue),
