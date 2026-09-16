@@ -212,24 +212,6 @@ class ListViewState extends State<TeamListView> {
                                   style: Theme.of(context).textTheme.displaySmall,
                                 ),
                               ),
-                              if (isTeamInactive)
-                                Container(
-                                  margin: const EdgeInsets.only(left: 8),
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.orange.shade50,
-                                    borderRadius: BorderRadius.circular(4),
-                                    border: Border.all(color: Colors.orange.shade200),
-                                  ),
-                                  child: Text(
-                                    'Inactive',
-                                    style: TextStyle(
-                                      color: Colors.orange.shade800,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
                             ],
                           ),
                           subtitle: (teams[index].club?.name != null && teams[index].club!.name!.isNotEmpty)
