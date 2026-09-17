@@ -211,16 +211,12 @@ class _AdminDisciplineListViewState extends State<AdminDisciplineListView> {
             style: const TextStyle(color: Colors.black87, fontSize: 16),
             dropdownColor: Colors.white,
             value: selectedEvent,
-            items: [
-              const DropdownMenuItem<Competition?>(
-                value: null,
-                child: Text('All Events'),
-              ),
-              ...events.map((event) => DropdownMenuItem<Competition?>(
-                value: event,
-                child: Text('${event.name} ${event.year}'),
-              )),
-            ],
+            items: events
+                .map((event) => DropdownMenuItem<Competition?>(
+                      value: event,
+                      child: Text('${event.name} ${event.year}'),
+                    ))
+                .toList(),
             onChanged: (Competition? event) {
               setState(() {
                 selectedEvent = event;
