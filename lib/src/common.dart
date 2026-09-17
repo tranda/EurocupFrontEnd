@@ -273,6 +273,27 @@ int? loadSelectedClubId() {
   return int.tryParse(html.window.localStorage['club_detail_club_id'] ?? '');
 }
 
+/// Navigation breadcrumb persistence. A live NavigatorObserver mirrors the
+/// current page stack here (route names, query included) so a browser refresh
+/// can rebuild the EXACT stack the user walked — so Back goes to the page they
+/// actually came from, not a statically-guessed parent. Names never contain a
+/// newline, so '\n' is a safe separator.
+void saveNavStack(List<String> routeNames) {
+  if (!kIsWeb) return;
+  if (routeNames.isEmpty) {
+    html.window.localStorage.remove('nav_stack');
+  } else {
+    html.window.localStorage['nav_stack'] = routeNames.join('\n');
+  }
+}
+
+List<String> loadNavStack() {
+  if (!kIsWeb) return const [];
+  final raw = html.window.localStorage['nav_stack'];
+  if (raw == null || raw.isEmpty) return const [];
+  return raw.split('\n').where((s) => s.isNotEmpty).toList();
+}
+
 /// Read a query parameter from the current URL. Works with hash-strategy
 /// routes (`#/route?key=value`); returns null when not present or not on web.
 String? readUrlQueryParam(String key) {

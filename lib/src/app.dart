@@ -47,6 +47,64 @@ import 'teams/discipline_list_view.dart';
 import 'common.dart';
 import 'widgets/startup_wrapper.dart';
 
+/// Observes the Navigator and mirrors the live page stack into localStorage so
+/// a browser refresh can rebuild the *actual* stack the user walked (see
+/// `onGenerateInitialRoutes`). Only named page routes are tracked; dialogs and
+/// other popup routes are ignored.
+class _NavStackObserver extends NavigatorObserver {
+  final List<String> _stack = [];
+
+  /// Clear the in-memory stack so the ensuing didPush calls for a freshly
+  /// (re)built initial route set rebuild it from scratch instead of appending.
+  void resetTracking() => _stack.clear();
+
+  bool _track(Route<dynamic>? route) =>
+      route is PageRoute &&
+      route.settings.name != null &&
+      route.settings.name!.isNotEmpty;
+
+  void _persist() => saveNavStack(List<String>.of(_stack));
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (_track(route)) {
+      _stack.add(route.settings.name!);
+      _persist();
+    }
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (_track(route)) {
+      if (_stack.isNotEmpty && _stack.last == route.settings.name) {
+        _stack.removeLast();
+      } else {
+        _stack.remove(route.settings.name);
+      }
+      _persist();
+    }
+  }
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (_track(route)) {
+      _stack.remove(route.settings.name);
+      _persist();
+    }
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    if (oldRoute != null && _track(oldRoute)) {
+      _stack.remove(oldRoute.settings.name);
+    }
+    if (_track(newRoute)) {
+      _stack.add(newRoute!.settings.name!);
+    }
+    _persist();
+  }
+}
+
 /// The Widget that configures your application.
 class MyApp extends StatelessWidget {
   const MyApp({
@@ -55,6 +113,9 @@ class MyApp extends StatelessWidget {
   });
 
   final SettingsController settingsController;
+
+  /// Single observer instance so the tracked stack survives widget rebuilds.
+  static final _NavStackObserver _navObserver = _NavStackObserver();
 
   /// Map of route → its logical parent. Used by `onGenerateInitialRoutes` to
   /// reconstruct a navigation stack on cold load (e.g. after a refresh) so
@@ -103,10 +164,12 @@ class MyApp extends StatelessWidget {
     // Direct children of home
     AdministrationPage.routeName: HomePage.routeName,
     CrewListView.routeName: HomePage.routeName,
-    DisciplineListView.routeName: HomePage.routeName,
+    DisciplineListView.routeName: TeamListView.routeName,
     DisciplineRaceListView.routeName: HomePage.routeName,
     AthleteListView.routeName: HomePage.routeName,
     BarCodeScannerController.routeName: HomePage.routeName,
+    // NOTE: the live NavStackObserver breadcrumb is the primary source for
+    // back-after-refresh; this static map is only the fresh-deep-link fallback.
     AiBarcodeScanner.routeName: HomePage.routeName,
     SettingsView.routeName: HomePage.routeName,
   };
@@ -267,8 +330,28 @@ class MyApp extends StatelessWidget {
           ),
           darkTheme: ThemeData.dark(),
           themeMode: ThemeMode.light,
+          navigatorObservers: [_navObserver],
           onGenerateRoute: _buildRoute,
           onGenerateInitialRoutes: (String initialRouteName) {
+            // The didPush callbacks for the routes we return below rebuild the
+            // observer's stack; clear it first so a remount can't double-count.
+            _navObserver.resetTracking();
+            // Prefer the remembered stack: on refresh, rebuild the EXACT pages
+            // the user walked so Back returns to where they actually came from
+            // (a team's disciplines → that team, not home). Only trust it when
+            // its top matches the route we're loading; otherwise fall back to
+            // the static parent chain (fresh deep-link with no breadcrumb).
+            final crumbs = loadNavStack();
+            if (crumbs.isNotEmpty &&
+                _stripRouteQuery(crumbs.last) ==
+                    _stripRouteQuery(initialRouteName)) {
+              final routes = crumbs
+                  .map((name) => _buildRoute(RouteSettings(name: name)))
+                  .whereType<Route<dynamic>>()
+                  .toList();
+              if (routes.isNotEmpty) return routes;
+            }
+
             // Walk the parent chain so a deep-link or refresh restores a
             // navigation stack, not just one route. Browser back then walks
             // up the hierarchy instead of dropping to home.

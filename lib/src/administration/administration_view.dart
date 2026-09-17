@@ -38,7 +38,7 @@ class _AdministrationPageState extends State<AdministrationPage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Visibility(
-              visible: currentUser.accessLevel! >= 3,
+              visible: (currentUser.accessLevel ?? 0) >= 3,
               child: ListTile(
                 title: Text('Users',
                     style: Theme.of(context).textTheme.displayMedium,
@@ -53,7 +53,7 @@ class _AdministrationPageState extends State<AdministrationPage> {
               ),
             ),
             Visibility(
-              visible: currentUser.accessLevel! >= 3,
+              visible: (currentUser.accessLevel ?? 0) >= 3,
               child: ListTile(
                 title: Text('Events',
                     style: Theme.of(context).textTheme.displayMedium,
@@ -68,7 +68,7 @@ class _AdministrationPageState extends State<AdministrationPage> {
               ),
             ),
             Visibility(
-              visible: currentUser.accessLevel! >= 3,
+              visible: (currentUser.accessLevel ?? 0) >= 3,
               child: ListTile(
                 title: Text('Disciplines',
                     style: Theme.of(context).textTheme.displayMedium,
@@ -83,7 +83,7 @@ class _AdministrationPageState extends State<AdministrationPage> {
               ),
             ),
             Visibility(
-              visible: currentUser.accessLevel! >= 3,
+              visible: (currentUser.accessLevel ?? 0) >= 3,
               child: ListTile(
                 title: Text('Race Schedule Builder',
                     style: Theme.of(context).textTheme.displayMedium,
@@ -98,7 +98,7 @@ class _AdministrationPageState extends State<AdministrationPage> {
               ),
             ),
             Visibility(
-              visible: currentUser.accessLevel! >= 2,
+              visible: (currentUser.accessLevel ?? 0) >= 2,
               child: ListTile(
                 title: Text('Clubs',
                     style: Theme.of(context).textTheme.displayMedium,
@@ -113,7 +113,7 @@ class _AdministrationPageState extends State<AdministrationPage> {
               ),
             ),
             Visibility(
-              visible: currentUser.accessLevel! >= 3,
+              visible: (currentUser.accessLevel ?? 0) >= 3,
               child: ListTile(
                 title: Text('Teams',
                     style: Theme.of(context).textTheme.displayMedium,
@@ -128,7 +128,7 @@ class _AdministrationPageState extends State<AdministrationPage> {
               ),
             ),
             Visibility(
-              visible: currentUser.accessLevel! >= 3,
+              visible: (currentUser.accessLevel ?? 0) >= 3,
               child: ListTile(
                 title: Text('Database Backups',
                     style: Theme.of(context).textTheme.displayMedium,
@@ -143,7 +143,7 @@ class _AdministrationPageState extends State<AdministrationPage> {
               ),
             ),
             Visibility(
-              visible: false, // currentUser.accessLevel! >= 2,
+              visible: false, // (currentUser.accessLevel ?? 0) >= 2,
               child: ListTile(
                 title: Text('Clubs req ADEL',
                     style: Theme.of(context).textTheme.displayMedium,
