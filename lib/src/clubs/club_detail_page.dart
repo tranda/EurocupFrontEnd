@@ -108,6 +108,86 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
     );
   }
 
+  Widget _infoDisplay() {
+    final textTheme = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          club!.name ?? 'Unknown',
+          style: textTheme.displaySmall,
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            _countryChip(),
+            if (club!.country != null && club!.country!.isNotEmpty)
+              const SizedBox(width: 8),
+            Text(
+              club!.country ?? 'No country',
+              style: textTheme.headlineMedium,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Icon(
+              _isActive ? Icons.check_circle : Icons.cancel,
+              size: 18,
+              color: _isActive ? Colors.green.shade600 : Colors.grey,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              _isActive ? 'Active' : 'Inactive',
+              style: textTheme.bodyLarge?.copyWith(
+                color: _isActive ? Colors.green.shade700 : Colors.grey.shade700,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+      ],
+    );
+  }
+
+  Widget _infoForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextFormField(
+          validator: (value) =>
+              (value == null || value.isEmpty) ? 'Required' : null,
+          textCapitalization: TextCapitalization.words,
+          decoration: buildStandardInputDecorationWithLabel('Club Name'),
+          controller: nameController,
+          style: Theme.of(context).textTheme.displaySmall,
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          textCapitalization: TextCapitalization.words,
+          decoration: buildStandardInputDecorationWithLabel('Country'),
+          controller: countryController,
+          style: Theme.of(context).textTheme.displaySmall,
+        ),
+        SwitchListTile(
+          title: Text('Active',
+              style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: Text(_isActive ? 'Club is active' : 'Club is inactive',
+              style: Theme.of(context).textTheme.bodyMedium),
+          value: _isActive,
+          activeColor: primaryBlue,
+          contentPadding: EdgeInsets.zero,
+          onChanged: (bool value) {
+            setState(() {
+              _isActive = value;
+            });
+          },
+        ),
+      ],
+    );
+  }
+
   Widget _actionTile({
     required IconData icon,
     required String title,
@@ -117,7 +197,8 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
     return ListTile(
       leading: Icon(icon, color: primaryBlue),
       title: Text(title, style: Theme.of(context).textTheme.displaySmall),
-      subtitle: Text(subtitle),
+      subtitle:
+          Text(subtitle, style: Theme.of(context).textTheme.headlineMedium),
       trailing: const Icon(Icons.arrow_forward),
       onTap: onTap,
     );
@@ -162,53 +243,8 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
               children: [
                 _sectionLabel('CLUB INFO'),
                 _card(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (!editable) ...[
-                        const SizedBox(height: 8),
-                        _countryChip(),
-                      ],
-                      TextFormField(
-                        validator: (value) =>
-                            (value == null || value.isEmpty)
-                                ? 'Required'
-                                : null,
-                        textCapitalization: TextCapitalization.words,
-                        decoration:
-                            buildStandardInputDecorationWithLabel('Club Name'),
-                        controller: nameController,
-                        enabled: editable,
-                        style: Theme.of(context).textTheme.displaySmall,
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        textCapitalization: TextCapitalization.words,
-                        decoration:
-                            buildStandardInputDecorationWithLabel('Country'),
-                        controller: countryController,
-                        enabled: editable,
-                        style: Theme.of(context).textTheme.displaySmall,
-                      ),
-                      SwitchListTile(
-                        title: const Text('Active',
-                            style: TextStyle(fontWeight: FontWeight.w600)),
-                        subtitle: Text(
-                            _isActive ? 'Club is active' : 'Club is inactive'),
-                        value: _isActive,
-                        activeColor: primaryBlue,
-                        contentPadding: EdgeInsets.zero,
-                        onChanged: editable
-                            ? (bool value) {
-                                setState(() {
-                                  _isActive = value;
-                                });
-                              }
-                            : null,
-                      ),
-                    ],
-                  ),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: editable ? _infoForm() : _infoDisplay(),
                 ),
                 if (!editable) ...[
                   const SizedBox(height: 24),
