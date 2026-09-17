@@ -180,6 +180,11 @@ class ListViewState extends State<TeamListView> {
                   final team = teams[index];
                   final isTeamInactive = team.active == false;
                   final isInactiveClub = team.club?.active == false;
+                  // Inactive teams/clubs are not clickable for non-admins;
+                  // admins (accessLevel >= 3) can still open and modify.
+                  final isAdmin = (currentUser.accessLevel ?? 0) >= 3;
+                  final blockOpen =
+                      (isTeamInactive || isInactiveClub) && !isAdmin;
                   return Opacity(
                     opacity: (isInactiveClub || isTeamInactive) ? 0.5 : 1.0,
                     child: Column(
@@ -226,7 +231,9 @@ class ListViewState extends State<TeamListView> {
                                   ),
                                 )
                               : null,
-                          onTap: () {
+                          onTap: blockOpen
+                              ? null
+                              : () {
                             Navigator.pushNamed(
                                 context, DisciplineListView.routeName,
                                 arguments: {
