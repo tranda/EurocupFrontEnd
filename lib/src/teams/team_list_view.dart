@@ -231,7 +231,10 @@ class ListViewState extends State<TeamListView> {
                                 context, DisciplineListView.routeName,
                                 arguments: {
                                   'teamId': teams[index].id,
-                                  'teamName': teams[index].name
+                                  'teamName': teams[index].name,
+                                  // A team is "inactive" for registration if the
+                                  // team itself or its club is marked inactive.
+                                  'teamInactive': isTeamInactive || isInactiveClub,
                                 }).then((value) {
                               setState(() {});
                             });

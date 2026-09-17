@@ -56,6 +56,13 @@ class _DisciplineListViewState extends State<DisciplineListView> {
     if (_teamId == null) {
       final args = ModalRoute.of(context)!.settings.arguments as Map;
       _teamId = args['teamId'];
+      // Inactive teams (or teams of an inactive club) cannot apply for races.
+      // Admins (accessLevel >= 3) can still open and modify.
+      final bool teamInactive = args['teamInactive'] == true;
+      final bool isAdmin = (currentUser.accessLevel ?? 0) >= 3;
+      if (teamInactive && !isAdmin) {
+        locked = true;
+      }
       _disciplinesFuture = _loadDisciplines(_teamId!);
     }
   }
