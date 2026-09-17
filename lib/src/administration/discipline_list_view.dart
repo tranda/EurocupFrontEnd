@@ -7,6 +7,7 @@ import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import '../model/race/discipline.dart';
 import '../model/event/event.dart';
 import 'discipline_detail_view.dart';
+import 'discipline_wizard_view.dart';
 
 class AdminDisciplineListView extends StatefulWidget {
   const AdminDisciplineListView({super.key});
@@ -276,6 +277,26 @@ class _AdminDisciplineListViewState extends State<AdminDisciplineListView> {
         title: const Center(child: Text('Administration')),
         actions: currentUser.accessLevel! >= 3 ? [
           IconButton(
+            tooltip: 'Combination wizard',
+            onPressed: () {
+              Navigator.pushNamed(
+                context,
+                DisciplineWizardView.routeName,
+                arguments: {
+                  'events': events,
+                  'selectedEvent': selectedEvent,
+                  'disciplines': allDisciplines,
+                },
+              ).then((value) {
+                if (value == true) {
+                  _loadData(isRefresh: true);
+                }
+              });
+            },
+            icon: const Icon(Icons.auto_awesome_motion),
+          ),
+          IconButton(
+            tooltip: 'Add discipline',
             onPressed: () {
               Navigator.pushNamed(
                 context,

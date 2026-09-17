@@ -5,6 +5,7 @@ import 'package:eurocup_frontend/src/administration/event_list_view.dart';
 import 'package:eurocup_frontend/src/administration/event_detail_view.dart';
 import 'package:eurocup_frontend/src/administration/discipline_list_view.dart' as admin;
 import 'package:eurocup_frontend/src/administration/discipline_detail_view.dart';
+import 'package:eurocup_frontend/src/administration/discipline_wizard_view.dart';
 import 'package:eurocup_frontend/src/administration/schedule/schedule_builder_page.dart';
 import 'package:eurocup_frontend/src/administration/schedule/schedule_event_picker.dart';
 import 'package:eurocup_frontend/src/athletes/athlete_detail_view.dart';
@@ -77,6 +78,7 @@ class MyApp extends StatelessWidget {
     UserDetailView.routeName: UserListView.routeName,
     EventDetailView.routeName: EventListView.routeName,
     DisciplineDetailView.routeName: admin.AdminDisciplineListView.routeName,
+    DisciplineWizardView.routeName: admin.AdminDisciplineListView.routeName,
     ClubDetailPage.routeName: ClubListView.routeName,
     ClubDetailView.routeName: ClubDetailPage.routeName,
     ClubAthleteListView.routeName: ClubDetailPage.routeName,
@@ -383,6 +385,11 @@ class MyApp extends StatelessWidget {
             return const StartupWrapper(
               targetRoute: DisciplineDetailView.routeName,
               child: DisciplineDetailView(),
+            );
+          case DisciplineWizardView.routeName:
+            return const StartupWrapper(
+              targetRoute: DisciplineWizardView.routeName,
+              child: DisciplineWizardView(),
             );
           case DisciplineListView.routeName:
             return const StartupWrapper(
