@@ -258,6 +258,21 @@ bool loadSelectedTeamInactive() {
   return html.window.localStorage['discipline_list_team_inactive'] == '1';
 }
 
+/// Club Detail page (/club_detail_page) refresh persistence. The clubId is
+/// carried in the URL (?clubId=) as the source of truth; localStorage is the
+/// bare-URL fallback so a browser refresh recovers the club (details are
+/// re-fetched by id).
+void saveSelectedClubId(int? clubId) {
+  if (kIsWeb && clubId != null) {
+    html.window.localStorage['club_detail_club_id'] = clubId.toString();
+  }
+}
+
+int? loadSelectedClubId() {
+  if (!kIsWeb) return null;
+  return int.tryParse(html.window.localStorage['club_detail_club_id'] ?? '');
+}
+
 /// Read a query parameter from the current URL. Works with hash-strategy
 /// routes (`#/route?key=value`); returns null when not present or not on web.
 String? readUrlQueryParam(String key) {

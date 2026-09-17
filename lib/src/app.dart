@@ -566,6 +566,7 @@ class MyApp extends StatelessWidget {
         EventListView.routeName,
         admin.AdminDisciplineListView.routeName,
         DisciplineListView.routeName,
+        ClubDetailPage.routeName,
         UserListView.routeName,
         ScheduleEventPicker.routeName,
         ScheduleBuilderPage.routeName,
@@ -645,6 +646,16 @@ class MyApp extends StatelessWidget {
             }
             if (queryParams.containsKey('tab')) {
               arguments['tab'] = queryParams['tab'];
+            }
+            break;
+          case ClubDetailPage.routeName:
+            // On refresh the in-memory args are gone. Recover clubId from the
+            // URL (?clubId=) or the localStorage fallback; the page re-fetches
+            // the club by id. Parent chain (ClubListView) drives back nav.
+            final clubId = int.tryParse(queryParams['clubId'] ?? '') ??
+                loadSelectedClubId();
+            if (clubId != null) {
+              arguments['clubId'] = clubId;
             }
             break;
           case DisciplineListView.routeName:

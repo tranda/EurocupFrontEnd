@@ -33,8 +33,19 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
     super.didChangeDependencies();
 
     if (_isLoading) {
-      final args = ModalRoute.of(context)!.settings.arguments as Map;
-      final int clubId = args['clubId'];
+      // On a browser refresh the in-memory route arguments are gone; recover
+      // clubId from the URL/localStorage (App._extractArgumentsFromSettings
+      // repopulates it) and fall back to localStorage directly if needed.
+      final args = ModalRoute.of(context)?.settings.arguments as Map?;
+      final int? clubId = args?['clubId'] as int? ?? loadSelectedClubId();
+      if (clubId == null) {
+        // No club context at all — stop the spinner and show an empty page
+        // instead of crashing grey.
+        setState(() => _isLoading = false);
+        return;
+      }
+      // Keep the fallback fresh so a subsequent refresh still recovers context.
+      saveSelectedClubId(clubId);
 
       api.getClubs(activeOnly: false).then((clubs) {
         final foundClub = clubs.firstWhere((c) => c.id == clubId,
@@ -206,10 +217,18 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading || club == null) {
+    if (_isLoading) {
       return Scaffold(
         appBar: AppBar(title: const Text('Club Details')),
         body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (club == null) {
+      // No club context (e.g. refreshed a bare URL). Offer a way back instead
+      // of spinning or crashing grey.
+      return Scaffold(
+        appBar: AppBar(title: const Text('Club Details')),
+        body: const Center(child: Text('Club not found.')),
       );
     }
 

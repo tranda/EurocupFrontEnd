@@ -112,8 +112,13 @@ class ListViewState extends State<ClubListView> {
                             ],
                           ),
                           onTap: () {
+                            // Persist for refresh recovery: clubId rides in the
+                            // URL, plus localStorage fallback. Without this the
+                            // page's args are lost on reload and it crashes grey.
+                            saveSelectedClubId(clubs[index].id);
                             Navigator.pushNamed(
-                                context, ClubDetailPage.routeName,
+                                context,
+                                '${ClubDetailPage.routeName}?clubId=${clubs[index].id}',
                                 arguments: {
                                   'clubId': clubs[index].id,
                                 }).then((value) {
