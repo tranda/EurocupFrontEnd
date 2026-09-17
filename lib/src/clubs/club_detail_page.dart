@@ -58,31 +58,52 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
     super.dispose();
   }
 
+  Widget _sectionLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.2,
+          color: primaryBlue,
+        ),
+      ),
+    );
+  }
+
+  Widget _card({required Widget child, EdgeInsets? padding}) {
+    return Container(
+      padding: padding,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: child,
+    );
+  }
+
   Widget _countryChip() {
     if (club!.country == null || club!.country!.isEmpty) {
       return const SizedBox.shrink();
     }
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: Colors.blue.shade200),
-            ),
-            child: Text(
-              '${getCountryFlag(club!.country)} ${getCountryCode(club!.country)}',
-              style: TextStyle(
-                color: Colors.blue.shade700,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: Colors.blue.shade200),
+      ),
+      child: Text(
+        '${getCountryFlag(club!.country)} ${getCountryCode(club!.country)}',
+        style: TextStyle(
+          color: Colors.blue.shade700,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -93,23 +114,12 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
     required String subtitle,
     required VoidCallback onTap,
   }) {
-    return Column(
-      children: [
-        ListTile(
-          leading: Icon(icon, color: primaryBlue),
-          title: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(title, style: Theme.of(context).textTheme.displaySmall),
-          ),
-          subtitle: Padding(
-            padding: const EdgeInsetsDirectional.symmetric(horizontal: 8.0),
-            child: Text(subtitle),
-          ),
-          trailing: const Icon(Icons.arrow_forward),
-          onTap: onTap,
-        ),
-        const Divider(height: 4),
-      ],
+    return ListTile(
+      leading: Icon(icon, color: primaryBlue),
+      title: Text(title, style: Theme.of(context).textTheme.displaySmall),
+      subtitle: Text(subtitle),
+      trailing: const Icon(Icons.arrow_forward),
+      onTap: onTap,
     );
   }
 
@@ -144,85 +154,125 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
       body: Container(
         decoration: bckDecoration(),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(8, 8, 8, 100),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (!editable) _countryChip(),
-                TextFormField(
-                  validator: (value) =>
-                      (value == null || value.isEmpty) ? 'Required' : null,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: buildStandardInputDecorationWithLabel('Club Name'),
-                  controller: nameController,
-                  enabled: editable,
-                  style: Theme.of(context).textTheme.displaySmall,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  textCapitalization: TextCapitalization.words,
-                  decoration: buildStandardInputDecorationWithLabel('Country'),
-                  controller: countryController,
-                  enabled: editable,
-                  style: Theme.of(context).textTheme.displaySmall,
-                ),
-                const SizedBox(height: 8),
-                SwitchListTile(
-                  title: const Text('Active',
-                      style: TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle:
-                      Text(_isActive ? 'Club is active' : 'Club is inactive'),
-                  value: _isActive,
-                  activeColor: primaryBlue,
-                  contentPadding: EdgeInsets.zero,
-                  onChanged: editable
-                      ? (bool value) {
-                          setState(() {
-                            _isActive = value;
-                          });
-                        }
-                      : null,
+                _sectionLabel('CLUB INFO'),
+                _card(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (!editable) ...[
+                        const SizedBox(height: 8),
+                        _countryChip(),
+                      ],
+                      TextFormField(
+                        validator: (value) =>
+                            (value == null || value.isEmpty)
+                                ? 'Required'
+                                : null,
+                        textCapitalization: TextCapitalization.words,
+                        decoration:
+                            buildStandardInputDecorationWithLabel('Club Name'),
+                        controller: nameController,
+                        enabled: editable,
+                        style: Theme.of(context).textTheme.displaySmall,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        textCapitalization: TextCapitalization.words,
+                        decoration:
+                            buildStandardInputDecorationWithLabel('Country'),
+                        controller: countryController,
+                        enabled: editable,
+                        style: Theme.of(context).textTheme.displaySmall,
+                      ),
+                      SwitchListTile(
+                        title: const Text('Active',
+                            style: TextStyle(fontWeight: FontWeight.w600)),
+                        subtitle: Text(
+                            _isActive ? 'Club is active' : 'Club is inactive'),
+                        value: _isActive,
+                        activeColor: primaryBlue,
+                        contentPadding: EdgeInsets.zero,
+                        onChanged: editable
+                            ? (bool value) {
+                                setState(() {
+                                  _isActive = value;
+                                });
+                              }
+                            : null,
+                      ),
+                    ],
+                  ),
                 ),
                 if (!editable) ...[
-                  const SizedBox(height: 16),
-                  const Divider(height: 4),
-                  _actionTile(
-                    icon: Icons.people,
-                    title: 'Club Members',
-                    subtitle: 'View all athletes in this club',
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        ClubAthleteListView.routeName,
-                        arguments: {'clubId': club!.id, 'title': club!.name!},
-                      );
-                    },
-                  ),
-                  _actionTile(
-                    icon: Icons.groups,
-                    title: 'Club Teams',
-                    subtitle: 'View and manage teams of this club',
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        TeamListView.routeName,
-                        arguments: {'clubId': club!.id, 'title': club!.name!},
-                      );
-                    },
-                  ),
-                  _actionTile(
-                    icon: Icons.analytics,
-                    title: 'Club Statistics',
-                    subtitle: 'View club statistics and breakdown',
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        ClubDetailView.routeName,
-                        arguments: {'clubId': club!.id, 'title': club!.name!},
-                      );
-                    },
+                  const SizedBox(height: 24),
+                  _sectionLabel('MANAGE'),
+                  _card(
+                    child: Column(
+                      children: [
+                        _actionTile(
+                          icon: Icons.people,
+                          title: 'Club Members',
+                          subtitle: 'View all athletes in this club',
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              ClubAthleteListView.routeName,
+                              arguments: {
+                                'clubId': club!.id,
+                                'title': club!.name!
+                              },
+                            );
+                          },
+                        ),
+                        Divider(
+                            height: 1,
+                            color: Colors.grey.shade200,
+                            indent: 16,
+                            endIndent: 16),
+                        _actionTile(
+                          icon: Icons.groups,
+                          title: 'Club Teams',
+                          subtitle: 'View and manage teams of this club',
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              TeamListView.routeName,
+                              arguments: {
+                                'clubId': club!.id,
+                                'title': club!.name!
+                              },
+                            );
+                          },
+                        ),
+                        Divider(
+                            height: 1,
+                            color: Colors.grey.shade200,
+                            indent: 16,
+                            endIndent: 16),
+                        _actionTile(
+                          icon: Icons.analytics,
+                          title: 'Club Statistics',
+                          subtitle: 'View club statistics and breakdown',
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              ClubDetailView.routeName,
+                              arguments: {
+                                'clubId': club!.id,
+                                'title': club!.name!
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ],
