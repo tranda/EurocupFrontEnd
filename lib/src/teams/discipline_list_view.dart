@@ -64,6 +64,11 @@ class _DisciplineListViewState extends State<DisciplineListView> {
         locked = true;
       }
       _disciplinesFuture = _loadDisciplines(_teamId!);
+      // Refresh the app bar once disciplines load so the applied-count
+      // badge (which lives outside the FutureBuilder) reflects the data.
+      _disciplinesFuture.whenComplete(() {
+        if (mounted) setState(() {});
+      });
     }
   }
 
@@ -115,6 +120,26 @@ class _DisciplineListViewState extends State<DisciplineListView> {
       allRaces.addAll(races);
     }
     return allRaces;
+  }
+
+  // Small pill in the app bar showing how many races the team has applied for.
+  Widget _appliedBadge(int count) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.white24,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white70, width: 1),
+      ),
+      child: Text(
+        '$count applied',
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+      ),
+    );
   }
 
   Widget _competitionBadge(String competition) {
@@ -172,7 +197,22 @@ class _DisciplineListViewState extends State<DisciplineListView> {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        appBar: appBar(title: teamName),
+        appBar: appBarWithWidget(
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(teamName ?? ''),
+                ),
+              ),
+              const SizedBox(width: 10),
+              _appliedBadge(_registeredIds.length),
+            ],
+          ),
+        ),
         // appBar: appBarWithAction(
         //     locked
         //         ? () {}
