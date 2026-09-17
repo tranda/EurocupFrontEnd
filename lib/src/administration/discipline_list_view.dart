@@ -45,11 +45,13 @@ class _AdminDisciplineListViewState extends State<AdminDisciplineListView> {
         _errorMessage = null;
       });
 
-      // Load competitions first
+      // Load competitions first, keeping only active events
       final competitions = await api.getCompetitions();
+      final activeCompetitions =
+          competitions.where((c) => c.isActive).toList();
       // Sort events by year (newest first)
-      competitions.sort((a, b) => (b.year ?? 0).compareTo(a.year ?? 0));
-      events = competitions;
+      activeCompetitions.sort((a, b) => (b.year ?? 0).compareTo(a.year ?? 0));
+      events = activeCompetitions;
 
       // Set initial selectedEvent to the first item (newest year) if not already set
       if (!_initialEventSet && events.isNotEmpty) {
@@ -81,7 +83,11 @@ class _AdminDisciplineListViewState extends State<AdminDisciplineListView> {
 
   List<Discipline> _getFilteredDisciplines() {
     if (selectedEvent == null) {
-      return List.from(allDisciplines);
+      // "All Events" – restrict to disciplines of active events only
+      final activeEventIds = events.map((e) => e.id).toSet();
+      return allDisciplines
+          .where((d) => activeEventIds.contains(d.eventId))
+          .toList();
     } else {
       return allDisciplines
           .where((d) => d.eventId == selectedEvent!.id)
