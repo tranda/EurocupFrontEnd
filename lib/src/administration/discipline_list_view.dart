@@ -295,7 +295,7 @@ class _AdminDisciplineListViewState extends State<AdminDisciplineListView> {
                 }
               });
             },
-            icon: const Icon(Icons.auto_awesome_motion),
+            icon: const Icon(Icons.grid_on),
           ),
           IconButton(
             tooltip: 'Add discipline',
