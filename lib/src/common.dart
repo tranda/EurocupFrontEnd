@@ -225,6 +225,39 @@ List<String> loadRaceResultsCompetitions() {
   return raw.split(',').where((s) => s.isNotEmpty).toList();
 }
 
+/// Team Disciplines page (/discipline_list) refresh persistence. The teamId is
+/// carried in the URL (?teamId=) as the source of truth; teamName and the
+/// inactive flag are UI-only and live in localStorage as the bare-URL fallback,
+/// so a browser refresh can rebuild the app bar and lock state.
+void saveSelectedTeam({int? teamId, String? teamName, bool? teamInactive}) {
+  if (!kIsWeb) return;
+  if (teamId != null) {
+    html.window.localStorage['discipline_list_team_id'] = teamId.toString();
+  }
+  if (teamName != null) {
+    html.window.localStorage['discipline_list_team_name'] = teamName;
+  }
+  if (teamInactive != null) {
+    html.window.localStorage['discipline_list_team_inactive'] =
+        teamInactive ? '1' : '0';
+  }
+}
+
+int? loadSelectedTeamId() {
+  if (!kIsWeb) return null;
+  return int.tryParse(html.window.localStorage['discipline_list_team_id'] ?? '');
+}
+
+String? loadSelectedTeamName() {
+  if (!kIsWeb) return null;
+  return html.window.localStorage['discipline_list_team_name'];
+}
+
+bool loadSelectedTeamInactive() {
+  if (!kIsWeb) return false;
+  return html.window.localStorage['discipline_list_team_inactive'] == '1';
+}
+
 /// Read a query parameter from the current URL. Works with hash-strategy
 /// routes (`#/route?key=value`); returns null when not present or not on web.
 String? readUrlQueryParam(String key) {

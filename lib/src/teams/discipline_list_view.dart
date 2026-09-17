@@ -19,6 +19,7 @@ class _DisciplineListViewState extends State<DisciplineListView> {
   bool changes = false;
 
   int? _teamId;
+  String? _teamName;
   late Future<List<Race>> _disciplinesFuture;
   final Set<int> _registeredIds = {};
   final Set<int> _loadingIds = {};
@@ -54,15 +55,28 @@ class _DisciplineListViewState extends State<DisciplineListView> {
     // Build the disciplines future ONCE so that later setState() calls
     // (e.g. toggling a single row) don't recreate it and force a full reload.
     if (_teamId == null) {
-      final args = ModalRoute.of(context)!.settings.arguments as Map;
-      _teamId = args['teamId'];
+      // On a browser refresh the in-memory route arguments are gone; recover
+      // teamId from the URL/localStorage (App._extractArgumentsFromSettings
+      // repopulates it) and fall back to localStorage directly if needed.
+      final args = ModalRoute.of(context)?.settings.arguments as Map?;
+      _teamId = args?['teamId'] as int? ?? loadSelectedTeamId();
+      if (_teamId == null) {
+        // No team context at all — render an empty future instead of crashing.
+        _disciplinesFuture = Future.value(<Race>[]);
+        return;
+      }
+      _teamName = args?['teamName'] as String? ?? loadSelectedTeamName();
       // Inactive teams (or teams of an inactive club) cannot apply for races.
       // Admins (accessLevel >= 3) can still open and modify.
-      final bool teamInactive = args['teamInactive'] == true;
+      final bool teamInactive =
+          args?['teamInactive'] == true || loadSelectedTeamInactive();
       final bool isAdmin = (currentUser.accessLevel ?? 0) >= 3;
       if (teamInactive && !isAdmin) {
         locked = true;
       }
+      // Keep the fallback fresh so a subsequent refresh still recovers context.
+      saveSelectedTeam(
+          teamId: _teamId, teamName: _teamName, teamInactive: teamInactive);
       _disciplinesFuture = _loadDisciplines(_teamId!);
       // Refresh the app bar once disciplines load so the applied-count
       // badge (which lives outside the FutureBuilder) reflects the data.
@@ -190,9 +204,10 @@ class _DisciplineListViewState extends State<DisciplineListView> {
 
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)!.settings.arguments as Map;
-    final teamId = args['teamId'];
-    final teamName = args['teamName'];
+    // Use the resolved fields (which survive refresh) rather than re-reading
+    // route arguments, which are null on a browser reload.
+    final teamId = _teamId;
+    final teamName = _teamName;
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
@@ -316,7 +331,7 @@ class _DisciplineListViewState extends State<DisciplineListView> {
                                       // When not locked, tapping toggles it.
                                       : GestureDetector(
                                           onTap: () => _toggleDiscipline(
-                                              teamId, discipline.id!),
+                                              teamId!, discipline.id!),
                                           child: registered
                                               ? Icon(
                                                   Icons.check_circle_outline,

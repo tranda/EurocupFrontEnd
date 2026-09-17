@@ -647,6 +647,19 @@ class MyApp extends StatelessWidget {
               arguments['tab'] = queryParams['tab'];
             }
             break;
+          case DisciplineListView.routeName:
+            // On refresh the in-memory args are gone. Recover teamId from the
+            // URL (?teamId=) and the display name / inactive flag from the
+            // localStorage fallback stamped when the row was tapped.
+            final teamId = int.tryParse(queryParams['teamId'] ?? '') ??
+                loadSelectedTeamId();
+            if (teamId != null) {
+              arguments['teamId'] = teamId;
+              arguments['teamName'] =
+                  queryParams['teamName'] ?? loadSelectedTeamName();
+              arguments['teamInactive'] = loadSelectedTeamInactive();
+            }
+            break;
           case AthleteDetailView.routeName:
             if (queryParams.containsKey('athleteId')) {
               final athleteId = int.tryParse(queryParams['athleteId']!);

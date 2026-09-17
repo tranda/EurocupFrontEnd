@@ -234,14 +234,25 @@ class ListViewState extends State<TeamListView> {
                           onTap: blockOpen
                               ? null
                               : () {
+                            // A team is "inactive" for registration if the
+                            // team itself or its club is marked inactive.
+                            final teamInactive =
+                                isTeamInactive || isInactiveClub;
+                            // Persist for refresh recovery: teamId rides in the
+                            // URL, name/flag in localStorage. Without this the
+                            // page's args are lost on reload and it crashes grey.
+                            saveSelectedTeam(
+                              teamId: teams[index].id,
+                              teamName: teams[index].name,
+                              teamInactive: teamInactive,
+                            );
                             Navigator.pushNamed(
-                                context, DisciplineListView.routeName,
+                                context,
+                                '${DisciplineListView.routeName}?teamId=${teams[index].id}',
                                 arguments: {
                                   'teamId': teams[index].id,
                                   'teamName': teams[index].name,
-                                  // A team is "inactive" for registration if the
-                                  // team itself or its club is marked inactive.
-                                  'teamInactive': isTeamInactive || isInactiveClub,
+                                  'teamInactive': teamInactive,
                                 }).then((value) {
                               setState(() {});
                             });
