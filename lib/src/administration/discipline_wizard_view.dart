@@ -21,7 +21,6 @@ class _DisciplineWizardViewState extends State<DisciplineWizardView> {
   final _competitionController = TextEditingController();
 
   Competition? _selectedEvent;
-  List<Competition> _events = [];
   List<Discipline> _allDisciplines = [];
 
   final Set<String> _selectedBoatGroups = {};
@@ -46,9 +45,6 @@ class _DisciplineWizardViewState extends State<DisciplineWizardView> {
     final arguments =
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     if (arguments != null) {
-      if (arguments.containsKey('events')) {
-        _events = arguments['events'] as List<Competition>;
-      }
       if (arguments.containsKey('disciplines')) {
         _allDisciplines = arguments['disciplines'] as List<Discipline>;
       }
@@ -276,23 +272,31 @@ class _DisciplineWizardViewState extends State<DisciplineWizardView> {
       );
 
   Widget _eventSelector() => _sectionContainer(
-        child: DropdownButtonFormField<Competition>(
-          value: _selectedEvent,
-          decoration: _inputDecoration('Event'),
-          style: const TextStyle(color: Colors.black87, fontSize: 16),
-          dropdownColor: Colors.white,
-          isExpanded: true,
-          items: _events
-              .map((e) => DropdownMenuItem<Competition>(
-                    value: e,
-                    child: Text('${e.name} ${e.year}'),
-                  ))
-              .toList(),
-          onChanged: (e) => setState(() {
-            _selectedEvent = e;
-            _deselectedKeys.clear();
-          }),
-          validator: (v) => v == null ? 'Please select an event' : null,
+        child: Row(
+          children: [
+            const Text(
+              'Event',
+              style: TextStyle(
+                color: _headerColor,
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                _selectedEvent != null
+                    ? '${_selectedEvent!.name} ${_selectedEvent!.year}'
+                    : 'No event selected — pick one on the previous screen',
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  color: _selectedEvent != null ? Colors.black87 : Colors.red,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
         ),
       );
 
