@@ -18,6 +18,34 @@ class _ClubDetailViewState extends State<ClubDetailView> {
     super.initState();
   }
 
+  Widget _sectionLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.2,
+          color: Color.fromARGB(255, 0, 80, 150),
+        ),
+      ),
+    );
+  }
+
+  Widget _statRow(String label, String value) {
+    final style = Theme.of(context).textTheme.displaySmall;
+    return Column(
+      children: [
+        ListTile(
+          title: Text(label, style: style),
+          trailing: Text(value, style: style),
+        ),
+        const Divider(height: 4),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments as Map;
@@ -38,92 +66,32 @@ class _ClubDetailViewState extends State<ClubDetailView> {
             }
             if (snapshot.hasData) {
               final details = snapshot.data!;
-              return Container(
-                child: ListView(
-                  children: [
-                    ListTile(
-                      title: Text('Total: ${details.total}',
-                          style: Theme.of(context).textTheme.displayLarge,
-                          textAlign: TextAlign.left),
-                    ),
-                    ListTile(
-                      title: Text(
-                          'with AD certificate: ${details.withCertificate}',
-                          style: Theme.of(context).textTheme.displayLarge,
-                          textAlign: TextAlign.left),
-                    ),
-                    const Divider(
-                      height: 4,
-                    ),
-                    ListTile(
-                      title: Text('Eurocup: ${details.eurocup}',
-                          style: Theme.of(context).textTheme.displayLarge,
-                          textAlign: TextAlign.left),
-                    ),
-                    ListTile(
-                      title: Text(
-                          'Festival: ${details.pfestival! - details.eurocup!}',
-                          style: Theme.of(context).textTheme.displayLarge,
-                          textAlign: TextAlign.left),
-                    ),
-                    const Divider(
-                      height: 4,
-                    ),
-                    Text('Eurocup / Festival',
-                        style: Theme.of(context).textTheme.displaySmall,
-                        textAlign: TextAlign.left),
-                    ListTile(
-                      title: Text(
-                          'Junior: ${details.juniorEC} / ${details.junior! - details.juniorEC!}',
-                          style: Theme.of(context).textTheme.displayLarge,
-                          textAlign: TextAlign.left),
-                    ),
-                    ListTile(
-                      title: Text(
-                          'U24: ${details.u24EC} / ${details.u24! - details.u24EC!}',
-                          style: Theme.of(context).textTheme.displayLarge,
-                          textAlign: TextAlign.left),
-                    ),
-                    ListTile(
-                      title: Text(
-                          'Premier: ${details.premierEC} / ${details.premier! - details.premierEC!}',
-                          style: Theme.of(context).textTheme.displayLarge,
-                          textAlign: TextAlign.left),
-                    ),
-                    ListTile(
-                      title: Text(
-                          'Senior A: ${details.seniorAEC} / ${details.seniorA! - details.seniorAEC!}',
-                          style: Theme.of(context).textTheme.displayLarge,
-                          textAlign: TextAlign.left),
-                    ),
-                    ListTile(
-                      title: Text(
-                          'Senior B: ${details.seniorBEC} / ${details.seniorB! - details.seniorBEC!}',
-                          style: Theme.of(context).textTheme.displayLarge,
-                          textAlign: TextAlign.left),
-                    ),
-                    ListTile(
-                      title: Text(
-                          'Senior C: ${details.seniorCEC} / ${details.seniorC! - details.seniorCEC!}',
-                          style: Theme.of(context).textTheme.displayLarge,
-                          textAlign: TextAlign.left),
-                    ),
-                    ListTile(
-                      title: Text(
-                          'Senior D: ${details.seniorDEC} / ${details.seniorD! - details.seniorDEC!}',
-                          style: Theme.of(context).textTheme.displayLarge,
-                          textAlign: TextAlign.left),
-                    ),
-                    ListTile(
-                      title: Text('BCP: ${details.bcp}',
-                          style: Theme.of(context).textTheme.displayLarge,
-                          textAlign: TextAlign.left),
-                    ),
-                    const Divider(
-                      height: 4,
-                    ),
-                  ],
-                ),
+              return ListView(
+                padding: const EdgeInsets.only(top: 8, bottom: 24),
+                children: [
+                  _sectionLabel('ATHLETES'),
+                  _statRow('Total', '${details.total}'),
+                  _statRow('With AD certificate', '${details.withCertificate}'),
+                  _statRow('Eurocup', '${details.eurocup}'),
+                  _statRow('Festival',
+                      '${details.pfestival! - details.eurocup!}'),
+                  _sectionLabel('BY CATEGORY  ·  EUROCUP / FESTIVAL'),
+                  _statRow('Junior',
+                      '${details.juniorEC} / ${details.junior! - details.juniorEC!}'),
+                  _statRow('U24',
+                      '${details.u24EC} / ${details.u24! - details.u24EC!}'),
+                  _statRow('Premier',
+                      '${details.premierEC} / ${details.premier! - details.premierEC!}'),
+                  _statRow('Senior A',
+                      '${details.seniorAEC} / ${details.seniorA! - details.seniorAEC!}'),
+                  _statRow('Senior B',
+                      '${details.seniorBEC} / ${details.seniorB! - details.seniorBEC!}'),
+                  _statRow('Senior C',
+                      '${details.seniorCEC} / ${details.seniorC! - details.seniorCEC!}'),
+                  _statRow('Senior D',
+                      '${details.seniorDEC} / ${details.seniorD! - details.seniorDEC!}'),
+                  _statRow('BCP', '${details.bcp}'),
+                ],
               );
             } else {
               return (const Text('No data'));
