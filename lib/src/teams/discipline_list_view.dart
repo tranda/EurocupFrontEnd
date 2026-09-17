@@ -127,9 +127,8 @@ class _DisciplineListViewState extends State<DisciplineListView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
       decoration: BoxDecoration(
-        color: Colors.white24,
+        color: Colors.blue.shade600,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white70, width: 1),
       ),
       child: Text(
         '$count applied',
