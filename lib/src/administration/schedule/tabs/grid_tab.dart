@@ -1053,6 +1053,13 @@ class _GridTabState extends State<GridTab> {
       if (cr.lane != null) crewByLane[cr.lane!] = cr;
     }
     final filledLanes = crewByLane.length;
+    // Long-distance finals can seat more crews than the course lane_count
+    // (mass start). Render every lane actually assigned, not just 1..laneCount,
+    // so no crew is hidden from the expanded view.
+    var laneRowCount = _laneCount;
+    for (final l in crewByLane.keys) {
+      if (l > laneRowCount) laneRowCount = l;
+    }
     // Cancelled races stay visible in the schedule but get a dark-red header
     // so they read as struck-out at a glance.
     final isCancelled = race.status == 'CANCELLED';
@@ -1102,7 +1109,7 @@ class _GridTabState extends State<GridTab> {
               final lanesCell = SizedBox(
                 width: 36,
                 child: Text(
-                  '$filledLanes/$_laneCount',
+                  '$filledLanes/$laneRowCount',
                   textAlign: TextAlign.right,
                   style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
@@ -1256,7 +1263,7 @@ class _GridTabState extends State<GridTab> {
       ),
       const Divider(height: 1),
       if (isExpanded) ...[
-        for (var lane = 1; lane <= _laneCount; lane++)
+        for (var lane = 1; lane <= laneRowCount; lane++)
           _laneRow(race, lane, crewByLane[lane]),
         _progressionRow(race),
       ],

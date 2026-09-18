@@ -9,6 +9,12 @@ class ScheduleConfig {
   /// Comma list of standard-boat hull letters, e.g. "A,B,C". Empty = no
   /// hull rotation for standard boats on this event.
   final String hullsStandard;
+  /// Max teams per long-distance (>1000m) race for small boats. Null/0 =
+  /// unlimited (one Final with all crews). Above the limit the generator
+  /// splits the field into balanced flights.
+  final int? longRaceMaxSmall;
+  /// Max teams per long-distance (>1000m) race for standard boats. See above.
+  final int? longRaceMaxStandard;
   final int defaultRounds;
   final int minCrewsPerRace;
   /// Nested: { "boat": { "Standard": "#hex" }, "age": { ... },
@@ -24,6 +30,8 @@ class ScheduleConfig {
     required this.laneCount,
     this.hullsSmall = '',
     this.hullsStandard = '',
+    this.longRaceMaxSmall,
+    this.longRaceMaxStandard,
     this.defaultRounds = 3,
     this.minCrewsPerRace = 3,
     this.colorMap = const {},
@@ -39,6 +47,8 @@ class ScheduleConfig {
         laneCount: (data['lane_count'] ?? 6) as int,
         hullsSmall: (data['hulls_small'] ?? '') as String,
         hullsStandard: (data['hulls_standard'] ?? '') as String,
+        longRaceMaxSmall: (data['long_race_max_small'] as num?)?.toInt(),
+        longRaceMaxStandard: (data['long_race_max_standard'] as num?)?.toInt(),
         defaultRounds: (data['default_rounds'] ?? 3) as int,
         minCrewsPerRace: (data['min_crews_per_race'] ?? 3) as int,
         colorMap: _parseColorMap(data['color_map']),

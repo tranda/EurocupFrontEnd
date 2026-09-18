@@ -31,7 +31,12 @@ class _SetupTabState extends State<SetupTab> {
   late int _minCrewsPerRace;
   late TextEditingController _hullsSmallCtl;
   late TextEditingController _hullsStandardCtl;
+  late TextEditingController _longMaxSmallCtl;
+  late TextEditingController _longMaxStandardCtl;
   bool _saving = false;
+
+  /// Text for a nullable limit: empty when unset/0 (unlimited).
+  static String _limitText(int? v) => (v == null || v == 0) ? '' : v.toString();
 
   @override
   void initState() {
@@ -41,12 +46,16 @@ class _SetupTabState extends State<SetupTab> {
     _minCrewsPerRace = widget.config.minCrewsPerRace;
     _hullsSmallCtl = TextEditingController(text: widget.config.hullsSmall);
     _hullsStandardCtl = TextEditingController(text: widget.config.hullsStandard);
+    _longMaxSmallCtl = TextEditingController(text: _limitText(widget.config.longRaceMaxSmall));
+    _longMaxStandardCtl = TextEditingController(text: _limitText(widget.config.longRaceMaxStandard));
   }
 
   @override
   void dispose() {
     _hullsSmallCtl.dispose();
     _hullsStandardCtl.dispose();
+    _longMaxSmallCtl.dispose();
+    _longMaxStandardCtl.dispose();
     super.dispose();
   }
 
@@ -67,6 +76,12 @@ class _SetupTabState extends State<SetupTab> {
     }
     if (oldWidget.config.hullsStandard != widget.config.hullsStandard) {
       _hullsStandardCtl.text = widget.config.hullsStandard;
+    }
+    if (oldWidget.config.longRaceMaxSmall != widget.config.longRaceMaxSmall) {
+      _longMaxSmallCtl.text = _limitText(widget.config.longRaceMaxSmall);
+    }
+    if (oldWidget.config.longRaceMaxStandard != widget.config.longRaceMaxStandard) {
+      _longMaxStandardCtl.text = _limitText(widget.config.longRaceMaxStandard);
     }
   }
 
@@ -106,6 +121,21 @@ class _SetupTabState extends State<SetupTab> {
   Future<void> _saveHullsStandard(String v) async {
     if (v == widget.config.hullsStandard) return;
     await _runWithLoading(() => api.updateScheduleConfig(widget.eventId, hullsStandard: v));
+  }
+
+  /// Parse a limit field: blank / non-numeric / negative → 0 (unlimited).
+  int _parseLimit(String v) => int.tryParse(v.trim())?.clamp(0, 255) ?? 0;
+
+  Future<void> _saveLongMaxSmall(String v) async {
+    final parsed = _parseLimit(v);
+    if (parsed == (widget.config.longRaceMaxSmall ?? 0)) return;
+    await _runWithLoading(() => api.updateScheduleConfig(widget.eventId, longRaceMaxSmall: parsed));
+  }
+
+  Future<void> _saveLongMaxStandard(String v) async {
+    final parsed = _parseLimit(v);
+    if (parsed == (widget.config.longRaceMaxStandard ?? 0)) return;
+    await _runWithLoading(() => api.updateScheduleConfig(widget.eventId, longRaceMaxStandard: parsed));
   }
 
   Future<void> _saveColorMap(Map<String, Map<String, String>> v) async {
@@ -545,6 +575,51 @@ class _SetupTabState extends State<SetupTab> {
                 textInputAction: TextInputAction.done,
                 onEditingComplete: () => _saveHullsStandard(_hullsStandardCtl.text.trim()),
                 onSubmitted: (v) => _saveHullsStandard(v.trim()),
+              ),
+            ),
+          ]),
+          const SizedBox(height: 16),
+          const Text('Long-distance team limit (>1000m)', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          const Text(
+            'Max teams (boats) per long-distance race, per boat group. Blank or 0 '
+            '= unlimited (one Final). Above the limit the field splits into '
+            'balanced flights ("Final 1", "Final 2", …).',
+            style: TextStyle(fontSize: 11, color: Colors.grey),
+          ),
+          const SizedBox(height: 12),
+          Row(children: [
+            Expanded(
+              child: TextField(
+                controller: _longMaxSmallCtl,
+                enabled: !_saving,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Small max teams',
+                  hintText: 'unlimited',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
+                textInputAction: TextInputAction.next,
+                onEditingComplete: () => _saveLongMaxSmall(_longMaxSmallCtl.text),
+                onSubmitted: (v) => _saveLongMaxSmall(v),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextField(
+                controller: _longMaxStandardCtl,
+                enabled: !_saving,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Standard max teams',
+                  hintText: 'unlimited',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
+                textInputAction: TextInputAction.done,
+                onEditingComplete: () => _saveLongMaxStandard(_longMaxStandardCtl.text),
+                onSubmitted: (v) => _saveLongMaxStandard(v),
               ),
             ),
           ]),

@@ -1553,6 +1553,8 @@ Future<void> updateScheduleConfig(
   Map<String, Map<String, String>>? colorMap,
   String? hullsSmall,
   String? hullsStandard,
+  int? longRaceMaxSmall,
+  int? longRaceMaxStandard,
 }) async {
   final body = <String, dynamic>{};
   if (laneCount != null) body['lane_count'] = laneCount;
@@ -1562,6 +1564,9 @@ Future<void> updateScheduleConfig(
   // Pass empty strings through so the operator can clear a fleet.
   if (hullsSmall != null) body['hulls_small'] = hullsSmall;
   if (hullsStandard != null) body['hulls_standard'] = hullsStandard;
+  // 0 clears the limit (unlimited / one Final with all crews).
+  if (longRaceMaxSmall != null) body['long_race_max_small'] = longRaceMaxSmall;
+  if (longRaceMaxStandard != null) body['long_race_max_standard'] = longRaceMaxStandard;
   if (body.isEmpty) return;
   final res = await http.put(
     Uri.parse('$apiURL/events/$eventId/schedule-config'),
