@@ -1,6 +1,7 @@
 import 'package:eurocup_frontend/config/app_version.dart';
 import 'package:eurocup_frontend/src/administration/administration_view.dart';
 import 'package:eurocup_frontend/src/administration/database_backup_view.dart';
+import 'package:eurocup_frontend/src/administration/api_keys_list_view.dart';
 import 'package:eurocup_frontend/src/administration/event_list_view.dart';
 import 'package:eurocup_frontend/src/administration/event_detail_view.dart';
 import 'package:eurocup_frontend/src/administration/discipline_list_view.dart' as admin;
@@ -131,6 +132,7 @@ class MyApp extends StatelessWidget {
     TeamListView.routeName: AdministrationPage.routeName,
     ClubListView.routeName: AdministrationPage.routeName,
     DatabaseBackupView.routeName: AdministrationPage.routeName,
+    ApiKeysListView.routeName: AdministrationPage.routeName,
     ClubAdelListView.routeName: AdministrationPage.routeName,
     ScheduleEventPicker.routeName: AdministrationPage.routeName,
     ScheduleBuilderPage.routeName: ScheduleEventPicker.routeName,
@@ -448,6 +450,11 @@ class MyApp extends StatelessWidget {
             return const StartupWrapper(
               targetRoute: DatabaseBackupView.routeName,
               child: DatabaseBackupView(),
+            );
+          case ApiKeysListView.routeName:
+            return const StartupWrapper(
+              targetRoute: ApiKeysListView.routeName,
+              child: ApiKeysListView(),
             );
           case EventListView.routeName:
             return const StartupWrapper(

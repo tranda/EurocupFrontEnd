@@ -8,6 +8,7 @@ import '../common.dart';
 import '../model/user.dart';
 import '../teams/team_list_view.dart';
 import 'database_backup_view.dart';
+import 'api_keys_list_view.dart';
 import 'event_list_view.dart';
 import 'discipline_list_view.dart';
 import 'schedule/schedule_event_picker.dart';
@@ -138,6 +139,21 @@ class _AdministrationPageState extends State<AdministrationPage> {
                 },
                 leading: const Icon(
                   Icons.backup,
+                  color: Color.fromARGB(255, 0, 80, 150),
+                ),
+              ),
+            ),
+            Visibility(
+              visible: (currentUser.accessLevel ?? 0) >= 3,
+              child: ListTile(
+                title: Text('API Keys',
+                    style: Theme.of(context).textTheme.displayMedium,
+                    textAlign: TextAlign.left),
+                onTap: () {
+                  Navigator.pushNamed(context, ApiKeysListView.routeName);
+                },
+                leading: const Icon(
+                  Icons.vpn_key,
                   color: Color.fromARGB(255, 0, 80, 150),
                 ),
               ),

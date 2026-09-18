@@ -11,6 +11,7 @@ import 'package:eurocup_frontend/src/model/schedule/discipline_progression.dart'
 import 'package:eurocup_frontend/src/model/schedule/generation_result.dart';
 import 'package:eurocup_frontend/src/model/schedule/schedule_config.dart';
 import 'package:eurocup_frontend/src/model/user.dart';
+import 'package:eurocup_frontend/src/model/api_key.dart';
 import 'package:http/http.dart' as http;
 import 'common.dart';
 import 'model/club/club.dart';
@@ -1535,6 +1536,55 @@ dynamic _unwrap(http.Response response, {String action = 'request'}) {
   final body = jsonDecode(response.body);
   if (body is Map<String, dynamic> && body.containsKey('data')) return body['data'];
   return body;
+}
+
+// =============================================================================
+// API Key management (admin only) — backed by /api-keys CRUD on the server.
+// =============================================================================
+
+Future<List<ApiKey>> getApiKeys() async {
+  final res = await http.get(
+    Uri.parse('$apiURL/api-keys'),
+    headers: _jsonAuthHeaders(),
+  );
+  final data = _unwrap(res, action: 'load API keys');
+  if (data is! List) return [];
+  return data
+      .whereType<Map<String, dynamic>>()
+      .map((m) => ApiKey.fromMap(m))
+      .toList();
+}
+
+/// Create a new API key. Returns the one-time plaintext secret (`ak_…`) — the
+/// server never exposes it again — alongside the stored [ApiKey] metadata.
+Future<NewApiKey> createApiKey(
+  String name,
+  List<String> permissions, {
+  int? expiresInDays,
+}) async {
+  final body = <String, dynamic>{
+    'name': name,
+    'permissions': permissions,
+    if (expiresInDays != null) 'expires_in_days': expiresInDays,
+  };
+  final res = await http.post(
+    Uri.parse('$apiURL/api-keys'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode(body),
+  );
+  final data = _unwrap(res, action: 'create API key') as Map<String, dynamic>;
+  return NewApiKey(
+    plaintextKey: data['api_key']?.toString() ?? '',
+    model: ApiKey.fromMap((data['model'] as Map).cast<String, dynamic>()),
+  );
+}
+
+Future<void> deleteApiKey(int id) async {
+  final res = await http.delete(
+    Uri.parse('$apiURL/api-keys/$id'),
+    headers: _jsonAuthHeaders(),
+  );
+  _unwrap(res, action: 'delete API key');
 }
 
 Future<ScheduleConfig> getScheduleConfig(int eventId) async {
