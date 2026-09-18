@@ -33,6 +33,13 @@ class _SetupTabState extends State<SetupTab> {
   late TextEditingController _hullsStandardCtl;
   late TextEditingController _longMaxSmallCtl;
   late TextEditingController _longMaxStandardCtl;
+  // Blur-save: onEditingComplete/onSubmitted only fire on Enter (esp. on web),
+  // so clicking away or switching tabs would otherwise drop an unsaved edit.
+  // These nodes commit the field the moment it loses focus.
+  late FocusNode _hullsSmallFocus;
+  late FocusNode _hullsStandardFocus;
+  late FocusNode _longMaxSmallFocus;
+  late FocusNode _longMaxStandardFocus;
   bool _saving = false;
 
   /// Text for a nullable limit: empty when unset/0 (unlimited).
@@ -48,6 +55,24 @@ class _SetupTabState extends State<SetupTab> {
     _hullsStandardCtl = TextEditingController(text: widget.config.hullsStandard);
     _longMaxSmallCtl = TextEditingController(text: _limitText(widget.config.longRaceMaxSmall));
     _longMaxStandardCtl = TextEditingController(text: _limitText(widget.config.longRaceMaxStandard));
+
+    // Commit each field on blur (focus loss), not just on Enter.
+    _hullsSmallFocus = FocusNode()
+      ..addListener(() {
+        if (!_hullsSmallFocus.hasFocus) _saveHullsSmall(_hullsSmallCtl.text.trim());
+      });
+    _hullsStandardFocus = FocusNode()
+      ..addListener(() {
+        if (!_hullsStandardFocus.hasFocus) _saveHullsStandard(_hullsStandardCtl.text.trim());
+      });
+    _longMaxSmallFocus = FocusNode()
+      ..addListener(() {
+        if (!_longMaxSmallFocus.hasFocus) _saveLongMaxSmall(_longMaxSmallCtl.text);
+      });
+    _longMaxStandardFocus = FocusNode()
+      ..addListener(() {
+        if (!_longMaxStandardFocus.hasFocus) _saveLongMaxStandard(_longMaxStandardCtl.text);
+      });
   }
 
   @override
@@ -56,6 +81,10 @@ class _SetupTabState extends State<SetupTab> {
     _hullsStandardCtl.dispose();
     _longMaxSmallCtl.dispose();
     _longMaxStandardCtl.dispose();
+    _hullsSmallFocus.dispose();
+    _hullsStandardFocus.dispose();
+    _longMaxSmallFocus.dispose();
+    _longMaxStandardFocus.dispose();
     super.dispose();
   }
 
@@ -549,6 +578,7 @@ class _SetupTabState extends State<SetupTab> {
             Expanded(
               child: TextField(
                 controller: _hullsSmallCtl,
+                focusNode: _hullsSmallFocus,
                 enabled: !_saving,
                 decoration: const InputDecoration(
                   labelText: 'Small hulls',
@@ -565,6 +595,7 @@ class _SetupTabState extends State<SetupTab> {
             Expanded(
               child: TextField(
                 controller: _hullsStandardCtl,
+                focusNode: _hullsStandardFocus,
                 enabled: !_saving,
                 decoration: const InputDecoration(
                   labelText: 'Standard hulls',
@@ -592,6 +623,7 @@ class _SetupTabState extends State<SetupTab> {
             Expanded(
               child: TextField(
                 controller: _longMaxSmallCtl,
+                focusNode: _longMaxSmallFocus,
                 enabled: !_saving,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
@@ -609,6 +641,7 @@ class _SetupTabState extends State<SetupTab> {
             Expanded(
               child: TextField(
                 controller: _longMaxStandardCtl,
+                focusNode: _longMaxStandardFocus,
                 enabled: !_saving,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
