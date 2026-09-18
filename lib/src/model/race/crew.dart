@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'team.dart';
+import 'discipline.dart';
 
 class Crew {
   int? id;
@@ -9,6 +10,7 @@ class Crew {
   DateTime? updatedAt;
   int? capacity;
   Team? team;
+  Discipline? discipline; // this crew's own category (used for combined races)
 
   Crew(
       {this.id,
@@ -17,7 +19,8 @@ class Crew {
       this.createdAt,
       this.updatedAt,
       this.capacity,
-      this.team});
+      this.team,
+      this.discipline});
 
   factory Crew.fromMap(Map<String, dynamic> data) => Crew(
         id: data['id'] as int?,
@@ -27,6 +30,9 @@ class Crew {
         team: data['team'] == null
             ? null
             : Team.fromMap(data['team'] as Map<String, dynamic>),
+        discipline: data['discipline'] == null
+            ? null
+            : Discipline.fromMap(data['discipline'] as Map<String, dynamic>),
         createdAt: data['created_at'] == null
             ? null
             : DateTime.parse(data['created_at'] as String),
@@ -41,6 +47,7 @@ class Crew {
         'discipline_id': disciplineId,
         'capacity': capacity,
         'team': team?.toMap(),
+        'discipline': discipline?.toMap(),
         'created_at': createdAt?.toIso8601String(),
         'updated_at': updatedAt?.toIso8601String(),
       };

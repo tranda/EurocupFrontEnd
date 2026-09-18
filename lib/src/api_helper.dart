@@ -1718,6 +1718,18 @@ Future<void> updateDisciplineProgression(
   _unwrap(res, action: 'update progression');
 }
 
+/// Pair this discipline (the secondary) to race combined with [hostDisciplineId],
+/// or pass null to clear the pairing. Backend validates same event/boat/distance
+/// and that the merged field fits one race.
+Future<void> combineDiscipline(int disciplineId, int? hostDisciplineId) async {
+  final res = await http.put(
+    Uri.parse('$apiURL/disciplines/$disciplineId/combine'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode({'combined_with_discipline_id': hostDisciplineId}),
+  );
+  _unwrap(res, action: 'combine discipline');
+}
+
 Future<List<String>> getDisciplineRacePlanOptions(int disciplineId) async {
   final res = await http.get(
     Uri.parse('$apiURL/disciplines/$disciplineId/race-plan-options'),
@@ -1736,11 +1748,14 @@ class PlanAndSeedsRow {
   /// 'YYYY-MM-DD' of the day this discipline's races land on (predicted by
   /// the backend via first-matching-block). Null when no block matches.
   final String? predictedDay;
+  /// Host discipline id this one is combined with (races together), or null.
+  final int? combinedWithDisciplineId;
   const PlanAndSeedsRow({
     required this.discipline,
     required this.progression,
     required this.options,
     this.predictedDay,
+    this.combinedWithDisciplineId,
   });
 }
 
@@ -1775,6 +1790,7 @@ Future<List<PlanAndSeedsRow>> getPlanAndSeedsBulk(int eventId) async {
           .map((e) => e.toString())
           .toList(),
       predictedDay: m['predicted_day'] as String?,
+      combinedWithDisciplineId: m['combined_with_discipline_id'] as int?,
     );
   }).toList();
 }

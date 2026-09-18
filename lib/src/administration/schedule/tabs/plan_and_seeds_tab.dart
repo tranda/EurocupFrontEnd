@@ -28,6 +28,8 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
   /// disciplineId → 'YYYY-MM-DD' the discipline's races land on (predicted
   /// from block filter matches). Null = no matching block.
   final Map<int, String?> _dayByDiscipline = {};
+  /// disciplineId → host discipline id it's combined with (races together), or null.
+  final Map<int, int?> _combinedByDiscipline = {};
   GenerationResult? _lastResult;
 
   @override
@@ -49,6 +51,7 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
       _progressionByDiscipline.clear();
       _optionsByDiscipline.clear();
       _dayByDiscipline.clear();
+      _combinedByDiscipline.clear();
       final disciplines = <Discipline>[];
       for (final row in rows) {
         disciplines.add(row.discipline);
@@ -56,6 +59,7 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
         if (id == null) continue;
         _progressionByDiscipline[id] = row.progression;
         _dayByDiscipline[id] = row.predictedDay;
+        _combinedByDiscipline[id] = row.combinedWithDisciplineId;
         if (row.options.isNotEmpty) {
           _optionsByDiscipline[id] = row.options;
         }
@@ -471,6 +475,135 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
     );
   }
 
+  String _disciplineNameFor(int? id) {
+    final d = _disciplines.firstWhere(
+      (x) => x.id == id,
+      orElse: () => Discipline(),
+    );
+    return d.id == null ? 'category #$id' : d.getDisplayName();
+  }
+
+  /// Per-row "Combine with…" control. A small category can be paired to race
+  /// together with a standalone host of the same boat size + distance; both
+  /// are still scored separately.
+  Widget _combineControl(Discipline d) {
+    if (d.id == null) return const SizedBox.shrink();
+    final hostId = _combinedByDiscipline[d.id];
+    final isSecondary = hostId != null;
+    final isHost = _combinedByDiscipline.entries.any((e) => e.value == d.id);
+
+    if (isHost) {
+      final partners = _disciplines
+          .where((x) => _combinedByDiscipline[x.id] == d.id)
+          .map((x) => x.getDisplayName())
+          .join(', ');
+      return Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: Row(children: [
+          const Icon(Icons.group_work, size: 14, color: Colors.teal),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text('Hosts combined race with: $partners',
+                style: const TextStyle(fontSize: 11, color: Colors.teal)),
+          ),
+        ]),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Row(children: [
+        Icon(Icons.group_work,
+            size: 14, color: isSecondary ? Colors.teal : Colors.grey),
+        const SizedBox(width: 6),
+        if (isSecondary) ...[
+          Expanded(
+            child: Text('Racing with ${_disciplineNameFor(hostId)}',
+                style: const TextStyle(
+                    fontSize: 11,
+                    color: Colors.teal,
+                    fontWeight: FontWeight.w600)),
+          ),
+          TextButton(
+            onPressed: () => _saveCombine(d, null),
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.zero,
+              minimumSize: const Size(0, 24),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text('Clear', style: TextStyle(fontSize: 11)),
+          ),
+        ] else
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => _pickCombineHost(d),
+                icon: const Icon(Icons.add_link, size: 14),
+                label: const Text('Combine with…', style: TextStyle(fontSize: 11)),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(0, 24),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ),
+          ),
+      ]),
+    );
+  }
+
+  Future<void> _saveCombine(Discipline d, int? hostId) async {
+    if (d.id == null) return;
+    try {
+      await api.combineDiscipline(d.id!, hostId);
+      await _load();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Combine failed: $e')));
+    }
+  }
+
+  Future<void> _pickCombineHost(Discipline d) async {
+    // Eligible hosts: same event, same boat size + distance, not itself, and
+    // standalone (not already a secondary nor a host of others).
+    final eligible = _disciplines
+        .where((x) =>
+            x.id != null &&
+            x.id != d.id &&
+            (x.boatGroup ?? '') == (d.boatGroup ?? '') &&
+            x.distance == d.distance &&
+            _combinedByDiscipline[x.id] == null &&
+            !_combinedByDiscipline.entries.any((e) => e.value == x.id))
+        .toList();
+
+    if (eligible.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(
+            'No eligible partner (need same boat size + distance, standalone).'),
+      ));
+      return;
+    }
+
+    final chosen = await showDialog<int>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text('Combine ${d.getDisplayName()} with…'),
+        children: eligible
+            .map((x) => SimpleDialogOption(
+                  onPressed: () => Navigator.pop(ctx, x.id),
+                  child: Text(x.getDisplayName()),
+                ))
+            .toList(),
+      ),
+    );
+    if (chosen != null) {
+      await _saveCombine(d, chosen);
+    }
+  }
+
   Widget _disciplinesList() {
     if (_disciplines.isEmpty) {
       return const Center(child: Text('No disciplines for this event.'));
@@ -673,6 +806,7 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
                     style: TextStyle(fontSize: 10, color: Colors.orange)),
               ),
           ]),
+          _combineControl(d),
           if (prog?.overrideCode == 'CUSTOM' && (prog?.customStages?.isNotEmpty ?? false))
             Padding(
               padding: const EdgeInsets.only(top: 4),

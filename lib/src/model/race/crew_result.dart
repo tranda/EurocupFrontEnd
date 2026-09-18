@@ -15,6 +15,7 @@ class CrewResult {
   String? finalStatus; // Overall status across all rounds ('FINISHED' or 'DSQ')
   String? formattedFinalTime; // Formatted total time string (MM:SS.mmm)
   int? finalPosition; // Position based on final accumulated time (for final rounds)
+  int? categoryPosition; // Rank within this crew's OWN category (combined races)
   bool? isFinalRound; // Indicates if this crew result is from a final round
   Crew? crew;
   Team? team;
@@ -34,6 +35,7 @@ class CrewResult {
     this.finalStatus,
     this.formattedFinalTime,
     this.finalPosition,
+    this.categoryPosition,
     this.isFinalRound,
     this.crew,
     this.team,
@@ -54,6 +56,7 @@ class CrewResult {
         finalStatus: data['final_status'] as String?,
         formattedFinalTime: data['formatted_final_time'] as String?,
         finalPosition: data['final_position'] as int?,
+        categoryPosition: data['category_position'] as int?,
         isFinalRound: data['is_final_round'] as bool?,
         crew: data['crew'] == null
             ? null
@@ -82,6 +85,7 @@ class CrewResult {
         'final_status': finalStatus,
         'formatted_final_time': formattedFinalTime,
         'final_position': finalPosition,
+        'category_position': categoryPosition,
         'is_final_round': isFinalRound,
         'crew': crew?.toMap(),
         'team': team?.toMap(),

@@ -1711,32 +1711,72 @@ class _GridTabState extends State<GridTab> {
   Widget _disciplineBadges(RaceResult race) {
     final d = race.discipline;
     final cm = widget.config.colorMap;
+
+    // Combined race: distinct crew categories present (crew.discipline). When
+    // >1, show the shared boat/distance once plus one age+gender chip per
+    // category. Falls back to the single host discipline when crew categories
+    // aren't available.
+    final cats = <int, dynamic>{};
+    for (final cr in race.crewResults ?? const []) {
+      final cd = cr.crew?.discipline;
+      if (cd?.id != null) cats[cd!.id!] = cd;
+    }
+    final isCombined = cats.length > 1;
+
     final tokens = <MapEntry<String, String>>[];
     if ((d?.boatGroup ?? '').isNotEmpty) {
       tokens.add(MapEntry('boat', d!.boatGroup!));
     }
-    if ((d?.ageGroup ?? '').isNotEmpty) {
-      tokens.add(MapEntry('age', d!.ageGroup!));
-    }
-    if ((d?.genderGroup ?? '').isNotEmpty) {
-      tokens.add(MapEntry('gender', d!.genderGroup!));
+    if (!isCombined) {
+      if ((d?.ageGroup ?? '').isNotEmpty) {
+        tokens.add(MapEntry('age', d!.ageGroup!));
+      }
+      if ((d?.genderGroup ?? '').isNotEmpty) {
+        tokens.add(MapEntry('gender', d!.genderGroup!));
+      }
     }
     if (d?.distance != null) {
       tokens.add(MapEntry('distance', '${d!.distance}m'));
     }
     final competition = d?.competition;
-    if (tokens.isEmpty && (competition == null || competition.isEmpty)) {
+    if (tokens.isEmpty && !isCombined && (competition == null || competition.isEmpty)) {
       return const Text(
         'Unknown',
         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
       );
     }
+
+    final catChips = isCombined
+        ? (cats.values.toList()
+          ..sort((a, b) => (a.id as int).compareTo(b.id as int)))
+        : const [];
+
     return Wrap(
       spacing: 4,
       runSpacing: 2,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         for (final t in tokens) _wordBadge(cm, t.key, t.value),
+        if (isCombined) ...[
+          for (final c in catChips)
+            _wordBadge(
+              cm,
+              'age',
+              '${(c.ageGroup ?? '')} ${(c.genderGroup ?? '')}'.trim(),
+              displayValue: '${(c.ageGroup ?? '')} ${(c.genderGroup ?? '')}'.trim(),
+            ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.teal.shade600,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Text(
+              'COMBINED',
+              style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
         if (competition != null && competition.isNotEmpty) ...[
           const SizedBox(width: 2),
           _competitionBadge(competition),
