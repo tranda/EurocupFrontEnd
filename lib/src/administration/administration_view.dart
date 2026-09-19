@@ -84,7 +84,7 @@ class _AdministrationPageState extends State<AdministrationPage> {
               ),
             ),
             Visibility(
-              visible: (currentUser.accessLevel ?? 0) >= 2,
+              visible: (currentUser.accessLevel ?? 0) >= 1,
               child: ListTile(
                 title: Text('Race Schedule Builder',
                     style: Theme.of(context).textTheme.displayMedium,

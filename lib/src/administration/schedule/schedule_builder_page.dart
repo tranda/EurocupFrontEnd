@@ -27,10 +27,17 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
   ScheduleConfig? _config;
   bool _publishing = false;
 
+  /// Event Managers and up (>= 2) get the full builder. Referees (level 1)
+  /// reach this page to work the Grid only, so they see the Grid tab alone —
+  /// no Setup/Plan/Register/Import, no Publish/Snapshots.
+  static const int _gridTabIndex = 2;
+  bool get _fullBuilder => (currentUser.accessLevel ?? 0) >= 2;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
+    if (!_fullBuilder) _tabController.index = _gridTabIndex;
     _tabController.addListener(_persistTab);
   }
 
@@ -61,7 +68,7 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
     // Restore the active tab on refresh/deep-link (rides in the URL as &tab=,
     // with a local-storage fallback). Warm navigation (Competition arg) starts
     // on Setup.
-    if (args is Map) {
+    if (args is Map && _fullBuilder) {
       final t = int.tryParse(args['tab']?.toString() ?? '') ??
           loadScheduleBuilderTab();
       if (t != null && t >= 0 && t < _tabController.length) {
@@ -210,7 +217,7 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
             if (_config != null) _statusBadge(_config!.scheduleStatus),
           ]),
           actions: [
-            if (_config != null && _event?.id != null)
+            if (_fullBuilder && _config != null && _event?.id != null)
               TextButton.icon(
                 onPressed: () async {
                   final restored = await showDialog<bool>(
@@ -227,7 +234,7 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
                 icon: const Icon(Icons.bookmark_border),
                 label: const Text('Snapshots'),
               ),
-            if (_config != null)
+            if (_fullBuilder && _config != null)
               TextButton.icon(
                 onPressed: _publishing ? null : _togglePublish,
                 icon: Icon(_config!.isPublished ? Icons.lock_open : Icons.publish),
@@ -240,14 +247,17 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
               animation: _tabController,
               builder: (context, _) => Material(
                 color: Colors.white,
-                child: Row(children: [
-                  _tabButton(0, Icons.tune, 'Setup'),
-                  _tabButton(1, Icons.format_list_numbered, 'Plan & Seeds'),
-                  _tabButton(2, Icons.grid_on, 'Grid'),
-                  const Spacer(),
-                  _tabButton(3, Icons.group_add, 'Register Crews'),
-                  _tabButton(4, Icons.file_upload, 'Import'),
-                ]),
+                child: Row(children: _fullBuilder
+                    ? [
+                        _tabButton(0, Icons.tune, 'Setup'),
+                        _tabButton(1, Icons.format_list_numbered, 'Plan & Seeds'),
+                        _tabButton(2, Icons.grid_on, 'Grid'),
+                        const Spacer(),
+                        _tabButton(3, Icons.group_add, 'Register Crews'),
+                        _tabButton(4, Icons.file_upload, 'Import'),
+                      ]
+                    // Referees (level 1): Grid tab only.
+                    : [_tabButton(_gridTabIndex, Icons.grid_on, 'Grid')]),
               ),
             ),
           ),

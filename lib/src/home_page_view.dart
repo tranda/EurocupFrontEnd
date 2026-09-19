@@ -161,9 +161,9 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             Visibility(
-              visible: (currentUser.accessLevel ?? -1) >= 2,
+              visible: (currentUser.accessLevel ?? -1) >= 1,
               child: ListTile(
-                enabled: (currentUser.accessLevel ?? -1) >= 2,
+                enabled: (currentUser.accessLevel ?? -1) >= 1,
                 title: Text('Administration',
                     style: Theme.of(context).textTheme.displayMedium,
                     textAlign: TextAlign.left),
