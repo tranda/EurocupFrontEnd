@@ -54,7 +54,7 @@ class _AdministrationPageState extends State<AdministrationPage> {
               ),
             ),
             Visibility(
-              visible: (currentUser.accessLevel ?? 0) >= 3,
+              visible: (currentUser.accessLevel ?? 0) >= 2,
               child: ListTile(
                 title: Text('Events',
                     style: Theme.of(context).textTheme.displayMedium,
@@ -69,7 +69,7 @@ class _AdministrationPageState extends State<AdministrationPage> {
               ),
             ),
             Visibility(
-              visible: (currentUser.accessLevel ?? 0) >= 3,
+              visible: (currentUser.accessLevel ?? 0) >= 2,
               child: ListTile(
                 title: Text('Disciplines',
                     style: Theme.of(context).textTheme.displayMedium,
@@ -114,7 +114,7 @@ class _AdministrationPageState extends State<AdministrationPage> {
               ),
             ),
             Visibility(
-              visible: (currentUser.accessLevel ?? 0) >= 3,
+              visible: (currentUser.accessLevel ?? 0) >= 2,
               child: ListTile(
                 title: Text('Teams',
                     style: Theme.of(context).textTheme.displayMedium,
