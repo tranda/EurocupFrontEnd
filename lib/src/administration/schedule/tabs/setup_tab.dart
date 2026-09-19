@@ -40,6 +40,13 @@ class _SetupTabState extends State<SetupTab> {
   late FocusNode _hullsStandardFocus;
   late FocusNode _longMaxSmallFocus;
   late FocusNode _longMaxStandardFocus;
+  // Last persisted values for the hull/limit fields. These save passively (no
+  // full-page reload), so we can't lean on widget.config to dedupe repeat
+  // blurs — track what we last wrote and only PUT on a real change.
+  late String _savedHullsSmall;
+  late String _savedHullsStandard;
+  late int _savedLongMaxSmall;
+  late int _savedLongMaxStandard;
   bool _saving = false;
 
   /// Text for a nullable limit: empty when unset/0 (unlimited).
@@ -55,6 +62,10 @@ class _SetupTabState extends State<SetupTab> {
     _hullsStandardCtl = TextEditingController(text: widget.config.hullsStandard);
     _longMaxSmallCtl = TextEditingController(text: _limitText(widget.config.longRaceMaxSmall));
     _longMaxStandardCtl = TextEditingController(text: _limitText(widget.config.longRaceMaxStandard));
+    _savedHullsSmall = widget.config.hullsSmall;
+    _savedHullsStandard = widget.config.hullsStandard;
+    _savedLongMaxSmall = widget.config.longRaceMaxSmall ?? 0;
+    _savedLongMaxStandard = widget.config.longRaceMaxStandard ?? 0;
 
     // Commit each field on blur (focus loss), not just on Enter.
     _hullsSmallFocus = FocusNode()
@@ -102,15 +113,19 @@ class _SetupTabState extends State<SetupTab> {
     }
     if (oldWidget.config.hullsSmall != widget.config.hullsSmall) {
       _hullsSmallCtl.text = widget.config.hullsSmall;
+      _savedHullsSmall = widget.config.hullsSmall;
     }
     if (oldWidget.config.hullsStandard != widget.config.hullsStandard) {
       _hullsStandardCtl.text = widget.config.hullsStandard;
+      _savedHullsStandard = widget.config.hullsStandard;
     }
     if (oldWidget.config.longRaceMaxSmall != widget.config.longRaceMaxSmall) {
       _longMaxSmallCtl.text = _limitText(widget.config.longRaceMaxSmall);
+      _savedLongMaxSmall = widget.config.longRaceMaxSmall ?? 0;
     }
     if (oldWidget.config.longRaceMaxStandard != widget.config.longRaceMaxStandard) {
       _longMaxStandardCtl.text = _limitText(widget.config.longRaceMaxStandard);
+      _savedLongMaxStandard = widget.config.longRaceMaxStandard ?? 0;
     }
   }
 
@@ -142,14 +157,34 @@ class _SetupTabState extends State<SetupTab> {
     await _runWithLoading(() => api.updateScheduleConfig(widget.eventId, minCrewsPerRace: v));
   }
 
+  /// Persist a change without the full-page reload that _runWithLoading does.
+  /// Hull/limit settings only affect the next generation, not existing races,
+  /// so there's nothing to refetch — just PUT and report failures. Returns true
+  /// on success so callers can update their last-saved marker.
+  Future<bool> _savePassive(Future<void> Function() task) async {
+    try {
+      await task();
+      return true;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+      }
+      return false;
+    }
+  }
+
   Future<void> _saveHullsSmall(String v) async {
-    if (v == widget.config.hullsSmall) return;
-    await _runWithLoading(() => api.updateScheduleConfig(widget.eventId, hullsSmall: v));
+    if (v == _savedHullsSmall) return;
+    if (await _savePassive(() => api.updateScheduleConfig(widget.eventId, hullsSmall: v))) {
+      _savedHullsSmall = v;
+    }
   }
 
   Future<void> _saveHullsStandard(String v) async {
-    if (v == widget.config.hullsStandard) return;
-    await _runWithLoading(() => api.updateScheduleConfig(widget.eventId, hullsStandard: v));
+    if (v == _savedHullsStandard) return;
+    if (await _savePassive(() => api.updateScheduleConfig(widget.eventId, hullsStandard: v))) {
+      _savedHullsStandard = v;
+    }
   }
 
   /// Parse a limit field: blank / non-numeric / negative → 0 (unlimited).
@@ -157,14 +192,18 @@ class _SetupTabState extends State<SetupTab> {
 
   Future<void> _saveLongMaxSmall(String v) async {
     final parsed = _parseLimit(v);
-    if (parsed == (widget.config.longRaceMaxSmall ?? 0)) return;
-    await _runWithLoading(() => api.updateScheduleConfig(widget.eventId, longRaceMaxSmall: parsed));
+    if (parsed == _savedLongMaxSmall) return;
+    if (await _savePassive(() => api.updateScheduleConfig(widget.eventId, longRaceMaxSmall: parsed))) {
+      _savedLongMaxSmall = parsed;
+    }
   }
 
   Future<void> _saveLongMaxStandard(String v) async {
     final parsed = _parseLimit(v);
-    if (parsed == (widget.config.longRaceMaxStandard ?? 0)) return;
-    await _runWithLoading(() => api.updateScheduleConfig(widget.eventId, longRaceMaxStandard: parsed));
+    if (parsed == _savedLongMaxStandard) return;
+    if (await _savePassive(() => api.updateScheduleConfig(widget.eventId, longRaceMaxStandard: parsed))) {
+      _savedLongMaxStandard = parsed;
+    }
   }
 
   Future<void> _saveColorMap(Map<String, Map<String, String>> v) async {
