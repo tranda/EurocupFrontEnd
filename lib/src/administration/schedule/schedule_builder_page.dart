@@ -6,6 +6,7 @@ import '../../model/schedule/schedule_config.dart';
 import 'snapshots_dialog.dart';
 import 'tabs/grid_tab.dart';
 import 'tabs/import_tab.dart';
+import 'tabs/medals_tab.dart';
 import 'tabs/plan_and_seeds_tab.dart';
 import 'tabs/register_crews_tab.dart';
 import 'tabs/setup_tab.dart';
@@ -36,7 +37,7 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
     if (!_fullBuilder) _tabController.index = _gridTabIndex;
     _tabController.addListener(_persistTab);
   }
@@ -252,6 +253,7 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
                         _tabButton(0, Icons.tune, 'Setup'),
                         _tabButton(1, Icons.format_list_numbered, 'Plan & Seeds'),
                         _tabButton(2, Icons.grid_on, 'Grid'),
+                        _tabButton(5, Icons.emoji_events, 'Medals'),
                         const Spacer(),
                         _tabButton(3, Icons.group_add, 'Register Crews'),
                         _tabButton(4, Icons.file_upload, 'Import'),
@@ -296,6 +298,11 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
         GridTab(eventId: _event!.id!, config: _config!),
         RegisterCrewsTab(eventId: _event!.id!),
         ImportTab(eventId: _event!.id!),
+        MedalsTab(
+          eventId: _event!.id!,
+          standardReserves: _event!.standardReserves ?? 0,
+          smallReserves: _event!.smallReserves ?? 0,
+        ),
       ],
     );
   }
