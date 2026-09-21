@@ -206,15 +206,31 @@ class _MedalsTabState extends State<MedalsTab> {
   }
 
   Widget _totalCard(int total, int gold, int silver, int bronze) {
-    Widget chip(String label, int n, Color c) => Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    Widget chip(String label, int n, Color dot) => Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: c.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: c.withValues(alpha: 0.5)),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
           ),
-          child: Text('$label $n',
-              style: TextStyle(fontWeight: FontWeight.w600, color: c)),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Container(
+              width: 14,
+              height: 14,
+              decoration: BoxDecoration(
+                color: dot,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.black26),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(label,
+                style: const TextStyle(
+                    color: Colors.black54, fontSize: 13, fontWeight: FontWeight.w600)),
+            const SizedBox(width: 6),
+            Text('$n',
+                style: const TextStyle(
+                    color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold)),
+          ]),
         );
     return Container(
       width: double.infinity,
@@ -231,9 +247,9 @@ class _MedalsTabState extends State<MedalsTab> {
                 color: Colors.white, fontSize: 34, fontWeight: FontWeight.bold)),
         const SizedBox(height: 10),
         Wrap(spacing: 8, runSpacing: 8, children: [
-          chip('🥇 Gold', gold, const Color(0xFFB8860B)),
-          chip('🥈 Silver', silver, const Color(0xFF708090)),
-          chip('🥉 Bronze', bronze, const Color(0xFF8C5A2B)),
+          chip('Gold', gold, const Color(0xFFFFC107)),
+          chip('Silver', silver, const Color(0xFFB0BEC5)),
+          chip('Bronze', bronze, const Color(0xFFCD7F32)),
         ]),
       ]),
     );

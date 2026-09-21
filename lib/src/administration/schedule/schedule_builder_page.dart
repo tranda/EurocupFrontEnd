@@ -253,7 +253,7 @@ class _ScheduleBuilderPageState extends State<ScheduleBuilderPage>
                         _tabButton(0, Icons.tune, 'Setup'),
                         _tabButton(1, Icons.format_list_numbered, 'Plan & Seeds'),
                         _tabButton(2, Icons.grid_on, 'Grid'),
-                        _tabButton(5, Icons.emoji_events, 'Medals'),
+                        _tabButton(5, Icons.celebration, 'Medals'),
                         const Spacer(),
                         _tabButton(3, Icons.group_add, 'Register Crews'),
                         _tabButton(4, Icons.file_upload, 'Import'),
