@@ -42,6 +42,10 @@ class _GridTabState extends State<GridTab> {
 
   int get _laneCount => widget.config.laneCount;
 
+  /// Referees (level 1) get the Grid tab read-only — they can view it but every
+  /// mutating control is hidden. Event Managers and up (>= 2) edit freely.
+  bool get _canEdit => (currentUser.accessLevel ?? 0) >= 2;
+
   @override
   void initState() {
     super.initState();
@@ -789,18 +793,20 @@ class _GridTabState extends State<GridTab> {
           onChanged: (v) => setState(() => _filterStage = v),
         ),
         const Spacer(),
-        TextButton.icon(
-          onPressed: _addBreak,
-          icon: const Icon(Icons.coffee, size: 18),
-          label: const Text('Add break'),
-        ),
-        const SizedBox(width: 8),
-        TextButton.icon(
-          onPressed: _exportSchedule,
-          icon: const Icon(Icons.download, size: 18),
-          label: const Text('Export'),
-        ),
-        const SizedBox(width: 8),
+        if (_canEdit) ...[
+          TextButton.icon(
+            onPressed: _addBreak,
+            icon: const Icon(Icons.coffee, size: 18),
+            label: const Text('Add break'),
+          ),
+          const SizedBox(width: 8),
+          TextButton.icon(
+            onPressed: _exportSchedule,
+            icon: const Icon(Icons.download, size: 18),
+            label: const Text('Export'),
+          ),
+          const SizedBox(width: 8),
+        ],
         CompactIcon(
           Icons.refresh,
           tooltip: 'Refresh',
@@ -951,7 +957,8 @@ class _GridTabState extends State<GridTab> {
             // "Copy order from another day" — useful when day 2 has the
             // same races as day 1 just at a different distance, and you
             // want them in the same sequence.
-            if (dateLabel != 'Unscheduled' &&
+            if (_canEdit &&
+                dateLabel != 'Unscheduled' &&
                 availableDates.where((d) => d != dateLabel).isNotEmpty)
               TextButton.icon(
                 onPressed: () => _copyDayOrder(dateLabel, availableDates),
@@ -975,7 +982,7 @@ class _GridTabState extends State<GridTab> {
           itemCount: rows.length,
           itemBuilder: (ctx, i) {
             final race = rows[i];
-            final canDrag = race.status == 'SCHEDULED';
+            final canDrag = race.status == 'SCHEDULED' && _canEdit;
             final block = _blockForRace(race);
             final prevBlock = i == 0 ? null : _blockForRace(rows[i - 1]);
             final showSeparator = block != null && block.id != prevBlock?.id;
@@ -1115,42 +1122,44 @@ class _GridTabState extends State<GridTab> {
                 ),
               );
               final actionIcons = [
-                CompactIcon(
-                  Icons.auto_fix_high,
-                  tooltip: 'Auto-fill lanes (centre-out by seed)',
-                  onPressed: () => _autoFillLanes(race),
-                  color: Colors.white,
-                ),
-                CompactIcon(
-                  Icons.access_time,
-                  tooltip: 'Enter results (manual stopwatch times)',
-                  onPressed: () => _enterResults(race),
-                  color: Colors.white,
-                ),
-                CompactIcon(
-                  Icons.fast_forward,
-                  tooltip: 'Re-seed next un-seeded stage for this discipline (uses current results)',
-                  onPressed: () => _reseedNextStage(race),
-                  color: Colors.white,
-                ),
-                CompactIcon(
-                  Icons.cleaning_services,
-                  tooltip: 'Clear crews (empty this race so it can be re-filled or re-seeded)',
-                  onPressed: () => _clearSeeds(race),
-                  color: Colors.white,
-                ),
-                CompactIcon(
-                  Icons.edit,
-                  tooltip: 'Edit time/stage',
-                  onPressed: () => _editRace(race),
-                  color: Colors.white,
-                ),
-                CompactIcon(
-                  Icons.delete_outline,
-                  tooltip: 'Delete race',
-                  onPressed: () => _deleteRace(race),
-                  color: Colors.white,
-                ),
+                if (_canEdit) ...[
+                  CompactIcon(
+                    Icons.auto_fix_high,
+                    tooltip: 'Auto-fill lanes (centre-out by seed)',
+                    onPressed: () => _autoFillLanes(race),
+                    color: Colors.white,
+                  ),
+                  CompactIcon(
+                    Icons.access_time,
+                    tooltip: 'Enter results (manual stopwatch times)',
+                    onPressed: () => _enterResults(race),
+                    color: Colors.white,
+                  ),
+                  CompactIcon(
+                    Icons.fast_forward,
+                    tooltip: 'Re-seed next un-seeded stage for this discipline (uses current results)',
+                    onPressed: () => _reseedNextStage(race),
+                    color: Colors.white,
+                  ),
+                  CompactIcon(
+                    Icons.cleaning_services,
+                    tooltip: 'Clear crews (empty this race so it can be re-filled or re-seeded)',
+                    onPressed: () => _clearSeeds(race),
+                    color: Colors.white,
+                  ),
+                  CompactIcon(
+                    Icons.edit,
+                    tooltip: 'Edit time/stage',
+                    onPressed: () => _editRace(race),
+                    color: Colors.white,
+                  ),
+                  CompactIcon(
+                    Icons.delete_outline,
+                    tooltip: 'Delete race',
+                    onPressed: () => _deleteRace(race),
+                    color: Colors.white,
+                  ),
+                ],
                 if (raceId != null)
                   Icon(
                     isExpanded ? Icons.expand_less : Icons.expand_more,
@@ -1290,12 +1299,13 @@ class _GridTabState extends State<GridTab> {
               style: TextStyle(color: Colors.grey[500], fontSize: 11, fontStyle: FontStyle.italic),
             ),
           ),
-          CompactIcon(
-            Icons.edit_note,
-            tooltip: 'Set progression rule',
-            onPressed: () => _editProgressionNote(race),
-            color: Colors.grey[600],
-          ),
+          if (_canEdit)
+            CompactIcon(
+              Icons.edit_note,
+              tooltip: 'Set progression rule',
+              onPressed: () => _editProgressionNote(race),
+              color: Colors.grey[600],
+            ),
         ]),
       );
     }
@@ -1323,12 +1333,13 @@ class _GridTabState extends State<GridTab> {
             style: TextStyle(fontSize: 11.5, color: Colors.grey[800]),
           ),
         ),
-        CompactIcon(
-          Icons.edit,
-          tooltip: isOverride ? 'Edit override (clear to revert to auto)' : 'Override progression rule',
-          onPressed: () => _editProgressionNote(race),
-          color: Colors.grey[700],
-        ),
+        if (_canEdit)
+          CompactIcon(
+            Icons.edit,
+            tooltip: isOverride ? 'Edit override (clear to revert to auto)' : 'Override progression rule',
+            onPressed: () => _editProgressionNote(race),
+            color: Colors.grey[700],
+          ),
       ]),
     );
   }
@@ -1436,7 +1447,7 @@ class _GridTabState extends State<GridTab> {
         border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5)),
       ),
       child: ListTile(
-        onTap: () => _assignLane(race, lane),
+        onTap: _canEdit ? () => _assignLane(race, lane) : null,
         leading: _positionOrLaneCircle(
           lane: lane,
           position: position,
@@ -1888,20 +1899,22 @@ class _GridTabState extends State<GridTab> {
             '$durationLabel  ·  $modeLabel',
             style: const TextStyle(color: Colors.white70),
           ),
-          trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-            CompactIcon(
-              Icons.edit,
-              tooltip: 'Edit break',
-              onPressed: () => _editBreak(brk),
-              color: Colors.white,
-            ),
-            CompactIcon(
-              Icons.delete_outline,
-              tooltip: 'Delete break',
-              onPressed: () => _deleteBreak(brk),
-              color: Colors.white,
-            ),
-          ]),
+          trailing: _canEdit
+              ? Row(mainAxisSize: MainAxisSize.min, children: [
+                  CompactIcon(
+                    Icons.edit,
+                    tooltip: 'Edit break',
+                    onPressed: () => _editBreak(brk),
+                    color: Colors.white,
+                  ),
+                  CompactIcon(
+                    Icons.delete_outline,
+                    tooltip: 'Delete break',
+                    onPressed: () => _deleteBreak(brk),
+                    color: Colors.white,
+                  ),
+                ])
+              : null,
         ),
       ),
       const Divider(height: 4),
