@@ -579,7 +579,7 @@ class _SetupTabState extends State<SetupTab> {
           DropdownButton<int>(
             value: _laneCount,
             items: [
-              for (final n in const [3, 4, 6, 8, 9])
+              for (final n in const [3, 4, 5, 6, 8, 9])
                 DropdownMenuItem(
                   value: n,
                   child: Text(

@@ -37,19 +37,32 @@ class SchedulePreviewDialog extends StatelessWidget {
             _summaryRow(context),
             const SizedBox(height: 8),
             if (r.warnings.isNotEmpty) ...[
-              const Text('Warnings',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Warnings (${r.warnings.length})',
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 4),
-              ...r.warnings.map((w) => Padding(
-                    padding: const EdgeInsets.only(bottom: 2),
-                    child: Text('· $w',
-                        style: TextStyle(
-                            color: Colors.amber.shade900, fontSize: 12)),
-                  )),
+              // Bounded + scrollable so a long list (e.g. many skipped
+              // disciplines) doesn't overflow or crowd out the days list.
+              Flexible(
+                flex: 3,
+                child: Scrollbar(
+                  thumbVisibility: true,
+                  child: ListView.builder(
+                    primary: false,
+                    shrinkWrap: true,
+                    itemCount: r.warnings.length,
+                    itemBuilder: (_, i) => Padding(
+                      padding: const EdgeInsets.only(bottom: 2, right: 12),
+                      child: Text('· ${r.warnings[i]}',
+                          style: TextStyle(
+                              color: Colors.amber.shade900, fontSize: 12)),
+                    ),
+                  ),
+                ),
+              ),
               const SizedBox(height: 8),
             ],
             const Divider(),
-            Expanded(child: _daysList()),
+            Expanded(flex: 2, child: _daysList()),
           ],
         ),
       ),
