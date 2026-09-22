@@ -459,18 +459,24 @@ class _PlanAndSeedsTabState extends State<PlanAndSeedsTab> {
           ),
         ]),
         const SizedBox(height: 8),
-        ..._lastResult!.warnings.take(8).map((w) => Padding(
-              padding: const EdgeInsets.only(left: 24, top: 2),
-              child: Text('• $w', style: const TextStyle(fontSize: 12)),
-            )),
-        if (_lastResult!.warnings.length > 8)
-          Padding(
-            padding: const EdgeInsets.only(left: 24, top: 4),
-            child: Text(
-              '… and ${_lastResult!.warnings.length - 8} more.',
-              style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+        // Bounded + scrollable so the full list is readable (a full discipline
+        // matrix can produce dozens of skip warnings).
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 220),
+          child: Scrollbar(
+            thumbVisibility: true,
+            child: ListView.builder(
+              shrinkWrap: true,
+              primary: false,
+              itemCount: _lastResult!.warnings.length,
+              itemBuilder: (_, i) => Padding(
+                padding: const EdgeInsets.only(left: 24, top: 2, right: 12),
+                child: Text('• ${_lastResult!.warnings[i]}',
+                    style: const TextStyle(fontSize: 12)),
+              ),
             ),
           ),
+        ),
       ]),
     );
   }
