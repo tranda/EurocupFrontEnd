@@ -162,19 +162,20 @@ class _CrewDetailViewState extends State<CrewDetailView> {
             ),
           ]),
           subtitle: Text("${athlete.category}"),
-          trailing: IconButton(
-            icon: const Icon(
-              Icons.delete,
-              color: Colors.red,
-            ),
-            onPressed: locked
-                ? () {}
-                : () {
+          // No delete once crew entries are closed.
+          trailing: locked
+              ? null
+              : IconButton(
+                  icon: const Icon(
+                    Icons.delete,
+                    color: Colors.red,
+                  ),
+                  onPressed: () {
                     api.deleteCrewAthlete(crewAthletes[index]!['id']).then((value) {
                       setState(() {});
                     });
                   },
-          ),
+                ),
         ),
       );
     }
