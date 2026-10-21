@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 import 'src/app.dart';
+import 'src/services/update_checker.dart';
 import 'src/settings/settings_controller.dart';
 import 'src/settings/settings_service.dart';
 
@@ -37,6 +38,11 @@ void main() async {
   // SettingsView.
 
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Web: jump to the newest release if this copy is outdated (cached).
+  if (await UpdateChecker.reloadIfOutdated()) return;
+  UpdateChecker.startWatching();
+
   SystemChrome.setPreferredOrientations(
       [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
 

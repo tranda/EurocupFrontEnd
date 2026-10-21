@@ -28,6 +28,25 @@ jobs:
       - name: Build Web (base-href /web/)
         run: flutter build web --release --base-href "/web/"
 
+      # The app compares app_version.json with its own version and reloads
+      # when it is out of date. ?v= on the JS files makes every release a new
+      # URL, so browsers can't serve last release's cached copy.
+      - name: Version stamp & cache busting
+        run: |
+          V=$(grep -oE "(major|minor|patch) = '[0-9]+'" lib/config/app_version.dart | grep -oE "[0-9]+" | paste -sd. -)
+          echo "App version: $V"
+          echo "{\"version\":\"$V\"}" > build/web/app_version.json
+          sed -i "s/\"main.dart.js\"/\"main.dart.js?v=$V\"/g" build/web/flutter_bootstrap.js
+          sed -i "s/flutter_bootstrap.js\"/flutter_bootstrap.js?v=$V\"/" build/web/index.html
+          grep -q "main.dart.js?v=$V" build/web/flutter_bootstrap.js
+          grep -q "flutter_bootstrap.js?v=$V" build/web/index.html
+          printf '%s\n' \
+            '<IfModule mod_headers.c>' \
+            '  <FilesMatch "\.(html|js|json)$">' \
+            '    Header set Cache-Control "no-cache"' \
+            '  </FilesMatch>' \
+            '</IfModule>' > build/web/.htaccess
+
       - name: Upload artifact (optional)
         uses: actions/upload-artifact@v4
         with:

@@ -27,6 +27,7 @@ import 'package:eurocup_frontend/src/qr_scanner/barcode_scanner_controller.dart'
 import 'package:eurocup_frontend/src/races/discipline_race_list_view.dart';
 import 'package:eurocup_frontend/src/races/race_crew_detail_view.dart';
 import 'package:eurocup_frontend/src/races/boat_checkin_view.dart';
+import 'package:eurocup_frontend/src/services/update_checker.dart';
 import 'package:eurocup_frontend/src/races/boat_checkin_race_list_view.dart';
 import 'package:eurocup_frontend/src/races/race_detail_view.dart';
 import 'package:eurocup_frontend/src/races/race_results_list_view.dart';
@@ -224,6 +225,44 @@ class MyApp extends StatelessWidget {
                   constraints: const BoxConstraints(maxWidth: 1024),
                   child: child ?? const SizedBox(),
                 ),
+              ),
+              // "New version" banner, raised by UpdateChecker while the app is open.
+              ValueListenableBuilder<String?>(
+                valueListenable: UpdateChecker.available,
+                builder: (context, version, _) {
+                  if (version == null) return const SizedBox.shrink();
+                  return Positioned(
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    child: SafeArea(
+                      child: Material(
+                        color: const Color.fromARGB(255, 0, 80, 150),
+                        elevation: 4,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          child: Row(children: [
+                            const Icon(Icons.system_update, color: Colors.white),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text('New version $version is available',
+                                  style: const TextStyle(color: Colors.white)),
+                            ),
+                            TextButton(
+                              onPressed: () => UpdateChecker.reload(version),
+                              child: const Text('Reload',
+                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close, color: Colors.white70),
+                              onPressed: () => UpdateChecker.available.value = null,
+                            ),
+                          ]),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
               // Small version label visible on every page — bottom-right corner.
               Positioned(
