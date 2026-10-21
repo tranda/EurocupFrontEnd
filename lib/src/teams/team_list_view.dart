@@ -266,6 +266,9 @@ class ListViewState extends State<TeamListView> {
             children: [
               if (_canManage(team))
                 IconButton(
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                  padding: EdgeInsets.zero,
                   icon: Icon(
                     isTeamInactive ? Icons.visibility_off : Icons.visibility,
                     color: isTeamInactive ? Colors.orange : Colors.green,
@@ -283,12 +286,18 @@ class ListViewState extends State<TeamListView> {
                 ),
               if (currentUser.accessLevel != null && currentUser.accessLevel! >= 2) ...[
                 IconButton(
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                  padding: EdgeInsets.zero,
                   icon: const Icon(Icons.edit, color: Colors.blue),
                   onPressed: () {
                     _showEditDialog(context, team);
                   },
                 ),
                 IconButton(
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                  padding: EdgeInsets.zero,
                   icon: const Icon(Icons.delete, color: Colors.red),
                   onPressed: () {
                     _showDeleteConfirmation(context, team);
