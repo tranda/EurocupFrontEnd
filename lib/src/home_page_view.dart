@@ -4,6 +4,7 @@ import 'package:eurocup_frontend/src/crews/crew_list_view.dart';
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
 import 'package:eurocup_frontend/src/races/discipline_race_list_view.dart';
 import 'package:eurocup_frontend/src/races/competition_selector_view.dart';
+import 'package:eurocup_frontend/src/races/boat_checkin_race_list_view.dart';
 import 'package:eurocup_frontend/src/teams/team_list_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:excel/excel.dart';
@@ -159,6 +160,24 @@ class _HomePageState extends State<HomePage> {
                   color: Color.fromARGB(255, 0, 80, 150),
                 ),
               ),
+            ),
+            Visibility(
+              visible: (currentUser.accessLevel ?? -1) >= 1,
+              child: ListTile(
+                title: Text('Boat Check-in',
+                    style: Theme.of(context).textTheme.displayMedium,
+                    textAlign: TextAlign.left),
+                onTap: () {
+                  Navigator.pushNamed(context, BoatCheckinRaceListView.routeName);
+                },
+                leading: const Icon(
+                  Icons.qr_code_scanner,
+                  color: Color.fromARGB(255, 0, 80, 150),
+                ),
+              ),
+            ),
+            const SizedBox(
+              height: smallSpace,
             ),
             Visibility(
               visible: (currentUser.accessLevel ?? -1) >= 1,
