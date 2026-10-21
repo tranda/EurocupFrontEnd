@@ -1,5 +1,6 @@
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
@@ -12,7 +13,7 @@ import '../qr_scanner/barcode_scanner_controller.dart';
 /// Every scan is stored on the backend with the race's stage. Reserves can be
 /// scanned on board too; the mix check runs on who actually boarded.
 ///
-/// Arguments: raceResultId, crewId, title (team name), stage.
+/// Arguments: raceResultId, crewId, title (team name), stage, raceNumber, eventId.
 class BoatCheckinView extends StatefulWidget {
   const BoatCheckinView({super.key});
 
@@ -23,7 +24,11 @@ class BoatCheckinView extends StatefulWidget {
 }
 
 class _BoatCheckinViewState extends State<BoatCheckinView> {
+  static const _blue = Color.fromARGB(255, 0, 80, 150);
+
   int? _raceResultId;
+  int? _raceNumber;
+  int? _eventId;
   int? _crewId;
   String _title = '';
   String _stage = '';
@@ -42,6 +47,8 @@ class _BoatCheckinViewState extends State<BoatCheckinView> {
     _crewId = args?['crewId'] as int?;
     _title = (args?['title'] as String?) ?? '';
     _stage = (args?['stage'] as String?) ?? '';
+    _raceNumber = args?['raceNumber'] as int?;
+    _eventId = args?['eventId'] as int?;
     _load();
   }
 
@@ -129,14 +136,25 @@ class _BoatCheckinViewState extends State<BoatCheckinView> {
 
   @override
   Widget build(BuildContext context) {
-    final stage = (_state?['stage'] as String?) ?? _stage;
     return Scaffold(
       appBar: appBarWithAction(_busy || _state == null ? null : _scan,
-          title: stage.isEmpty ? _title : '$_title · $stage', icon: Icons.qr_code_scanner),
+          title: 'Boat Check-in', icon: Icons.qr_code_scanner),
       body: Container(
         decoration: bckDecoration(),
         child: _buildBody(),
       ),
+      floatingActionButton: _state == null
+          ? null
+          : FloatingActionButton.extended(
+              backgroundColor: _blue,
+              foregroundColor: Colors.white,
+              onPressed: _busy ? null : _scan,
+              icon: _busy
+                  ? const SizedBox(
+                      width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Icon(Icons.qr_code_scanner),
+              label: const Text('Scan'),
+            ),
     );
   }
 
@@ -144,63 +162,108 @@ class _BoatCheckinViewState extends State<BoatCheckinView> {
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_error != null) {
       return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Text(_error!, textAlign: TextAlign.center),
-            const SizedBox(height: 12),
-            ElevatedButton(onPressed: _load, child: const Text('Retry')),
-          ]),
-        ),
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          const Text('Error loading crew:', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          Text(_error!, style: const TextStyle(color: Colors.red), textAlign: TextAlign.center),
+          const SizedBox(height: 16),
+          ElevatedButton(onPressed: _load, child: const Text('Retry')),
+        ]),
       );
     }
 
     final roster = ((_state?['roster'] as List?) ?? []).cast<Map<String, dynamic>>();
     final summary = (_state?['summary'] as Map?)?.cast<String, dynamic>() ?? {};
+    final onBoard = roster.where((r) => r['checked_in'] == true).length;
 
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView.builder(
-        itemCount: roster.length + 1,
+        padding: const EdgeInsets.only(bottom: 88), // room for the Scan button
+        itemCount: roster.length + 2,
         itemBuilder: (context, index) {
-          if (index == 0) return _buildSummary(summary, roster);
-          return _buildRow(roster[index - 1]);
+          if (index == 0) return _buildHeader(summary);
+          if (index == 1) {
+            return ColoredPageHeader(
+              title: 'On board: $onBoard / ${roster.length}',
+              subtitle: 'Long-press a checked athlete to remove',
+              eventId: _eventId,
+            );
+          }
+          return _buildRow(roster[index - 2]);
         },
       ),
     );
   }
 
-  Widget _buildSummary(Map<String, dynamic> summary, List<Map<String, dynamic>> roster) {
-    final onBoard = roster.where((r) => r['checked_in'] == true).length;
+  /// White header block, same as Current Entries: crew, race, mix summary.
+  Widget _buildHeader(Map<String, dynamic> summary) {
+    final stage = (_state?['stage'] as String?) ?? _stage;
+    final raceNumber = _state?['race_number'] ?? _raceNumber;
+    final race = [if (raceNumber != null) 'Race $raceNumber', stage].where((s) => s.isNotEmpty).join(' · ');
     final warnings = ((summary['warnings'] as List?) ?? []).cast<String>();
-    final textStyle = Theme.of(context).textTheme.bodyLarge;
 
-    return Card(
-      margin: const EdgeInsets.all(8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('On board: $onBoard / ${roster.length}', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 4),
-            Text(
-              'Paddlers: ${summary['paddlers'] ?? 0} / ${summary['paddler_seats'] ?? '-'}'
-              '   ·   Women: ${summary['female'] ?? 0}   ·   Men: ${summary['male'] ?? 0}',
-              style: textStyle,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      color: Colors.white,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            _title,
+            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.bold,
+                ),
+            textAlign: TextAlign.center,
+          ),
+          if (race.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(race,
+                  style: const TextStyle(color: _blue, fontSize: 16, fontWeight: FontWeight.w600),
+                  textAlign: TextAlign.center),
             ),
-            for (final w in warnings)
-              Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Row(children: [
-                  const Icon(Icons.warning_amber, color: Colors.orange),
-                  const SizedBox(width: 6),
-                  Expanded(child: Text(w, style: textStyle?.copyWith(color: Colors.orange.shade900))),
-                ]),
+          const SizedBox(height: 12),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _chip('Paddlers ${summary['paddlers'] ?? 0} / ${summary['paddler_seats'] ?? '-'}', Colors.blue),
+              _chip('Women ${summary['female'] ?? 0}', Colors.pink),
+              _chip('Men ${summary['male'] ?? 0}', Colors.indigo),
+            ],
+          ),
+          for (final w in warnings)
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.orange.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange),
               ),
-          ],
-        ),
+              child: Row(children: [
+                Icon(Icons.warning_amber, color: Colors.orange.shade800),
+                const SizedBox(width: 6),
+                Expanded(child: Text(w, style: TextStyle(color: Colors.orange.shade900))),
+              ]),
+            ),
+        ],
       ),
+    );
+  }
+
+  Widget _chip(String text, MaterialColor color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.shade50,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color, width: 1),
+      ),
+      child: Text(text, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: color.shade800)),
     );
   }
 
@@ -209,22 +272,44 @@ class _BoatCheckinViewState extends State<BoatCheckinView> {
     final checkedIn = row['checked_in'] == true;
     final role = row['role'] as String? ?? '';
     final no = (row['no'] as int? ?? 0) + 1;
-    final roleLabel = role == 'paddler' ? '' : '($role) ';
 
-    return Column(children: [
-      ListTile(
-        leading: Icon(
+    return PageListItem(
+      onTap: null,
+      child: ListTile(
+        onLongPress: checkedIn && !_busy ? () => _undo(row) : null,
+        leading: Text('$no', style: Theme.of(context).textTheme.displaySmall),
+        title: Row(children: [
+          if (role != 'paddler')
+            Container(
+              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: role == 'reserve' ? Colors.grey.shade100 : Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: role == 'reserve' ? Colors.grey : Colors.blue.shade200),
+              ),
+              child: Text(
+                role.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: role == 'reserve' ? Colors.grey.shade800 : Colors.blue.shade700,
+                ),
+              ),
+            ),
+          Expanded(
+            child: Text('${athlete.firstName} ${athlete.lastName}',
+                style: Theme.of(context).textTheme.displaySmall),
+          ),
+        ]),
+        subtitle: Text('${athlete.gender ?? ''}  ${athlete.category ?? ''}'.trim()),
+        trailing: Icon(
           checkedIn ? Icons.check_circle : Icons.radio_button_unchecked,
           color: checkedIn ? Colors.green : Colors.grey,
-          size: 32,
+          size: 30,
         ),
-        title: Text('$no $roleLabel${athlete.firstName} ${athlete.lastName}',
-            style: Theme.of(context).textTheme.displaySmall),
-        subtitle: Text('${athlete.gender ?? ''} ${athlete.category ?? ''}'.trim()),
-        onLongPress: checkedIn && !_busy ? () => _undo(row) : null,
       ),
-      const Divider(height: 4),
-    ]);
+    );
   }
 
   void _showScanResult({required String status, String? message, Athlete? athlete}) {

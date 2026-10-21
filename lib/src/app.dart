@@ -165,8 +165,7 @@ class MyApp extends StatelessWidget {
     RaceResultsListView.routeName: CompetitionSelectorView.routeName,
     RaceResultDetailView.routeName: RaceResultsListView.routeName,
     BoatCheckinRaceListView.routeName: HomePage.routeName,
-    BoatCheckinCrewListView.routeName: BoatCheckinRaceListView.routeName,
-    BoatCheckinView.routeName: BoatCheckinCrewListView.routeName,
+    BoatCheckinView.routeName: BoatCheckinRaceListView.routeName,
 
     // Direct children of home
     AdministrationPage.routeName: HomePage.routeName,
@@ -561,11 +560,6 @@ class MyApp extends StatelessWidget {
             return const StartupWrapper(
               targetRoute: BoatCheckinRaceListView.routeName,
               child: BoatCheckinRaceListView(),
-            );
-          case BoatCheckinCrewListView.routeName:
-            return const StartupWrapper(
-              targetRoute: BoatCheckinCrewListView.routeName,
-              child: BoatCheckinCrewListView(),
             );
           case BoatCheckinView.routeName:
             return const StartupWrapper(
