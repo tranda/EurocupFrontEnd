@@ -165,49 +165,12 @@ class _AdminDisciplineListViewState extends State<AdminDisciplineListView> {
   }
 
   Widget _buildEventFilter() {
-    if (events.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: Colors.white,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Discipline Management',
-            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-              color: Colors.black87,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
+    return PageTitleBlock(
+      title: 'Discipline Management',
+      children: [
+        if (events.isNotEmpty)
           DropdownButtonFormField<Competition?>(
-            decoration: InputDecoration(
-              labelText: 'Filter by Event',
-              labelStyle: const TextStyle(
-                color: Color.fromARGB(255, 0, 80, 150),
-                fontWeight: FontWeight.w500,
-              ),
-              contentPadding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
-              fillColor: Colors.white,
-              filled: true,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.0),
-                borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.0),
-                borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.0),
-                borderSide: const BorderSide(color: Color.fromARGB(255, 0, 80, 150), width: 2.0),
-              ),
-            ),
+            decoration: pageFieldDecoration('Filter by Event'),
             style: const TextStyle(color: Colors.black87, fontSize: 16),
             dropdownColor: Colors.white,
             value: selectedEvent,
@@ -224,7 +187,116 @@ class _AdminDisciplineListViewState extends State<AdminDisciplineListView> {
               });
             },
           ),
-        ],
+      ],
+    );
+  }
+
+  /// Groups disciplines by boat group + competition, keeping the current order
+  /// of first appearance (and the order of rows within each group).
+  Map<String, List<Discipline>> _groupDisciplines() {
+    final groups = <String, List<Discipline>>{};
+    for (final d in filteredDisciplines) {
+      final key = '${d.boatGroup ?? ''}|${d.competition ?? ''}';
+      groups.putIfAbsent(key, () => <Discipline>[]).add(d);
+    }
+    return groups;
+  }
+
+  List<Widget> _buildSection(List<Discipline> items) {
+    final first = items.first;
+    final boatGroup = (first.boatGroup == null || first.boatGroup!.isEmpty) ? 'Other' : first.boatGroup!;
+    final competition = first.competition;
+    return [
+      ColoredPageHeader(
+        title: '$boatGroup (${items.length})',
+        eventId: selectedEvent?.id,
+        titleBadge: (competition != null && competition.isNotEmpty) ? _competitionBadge(competition) : null,
+      ),
+      const Divider(height: 4),
+      for (final d in items) _buildDisciplineRow(d),
+      pageSectionGap,
+    ];
+  }
+
+  void _openDiscipline(Discipline discipline) {
+    Navigator.pushNamed(
+      context,
+      DisciplineDetailView.routeName,
+      arguments: {
+        'discipline': discipline,
+        'events': events,
+      },
+    ).then((value) {
+      if (value == true) {
+        _loadData(isRefresh: true);
+      }
+    });
+  }
+
+  Widget _buildDisciplineRow(Discipline discipline) {
+    final event = events.firstWhere(
+      (e) => e.id == discipline.eventId,
+      orElse: () => const Competition(name: 'Unknown Event'),
+    );
+    final status = discipline.status ?? 'active';
+    return PageListItem(
+      onTap: () {
+        if (currentUser.accessLevel! >= 3) {
+          _openDiscipline(discipline);
+        }
+      },
+      child: ListTile(
+        title: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Text(
+                discipline.getDisplayName(),
+                style: Theme.of(context).textTheme.displaySmall,
+              ),
+            ),
+            if (discipline.competition != null && discipline.competition!.isNotEmpty) ...[
+              const SizedBox(width: 10),
+              _competitionBadge(discipline.competition!),
+            ],
+          ],
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Event: ${event.name} ${event.year}',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            const SizedBox(height: 4),
+            Wrap(
+              runSpacing: 4,
+              children: [
+                StatusChip(
+                  label: status,
+                  color: status == 'active' ? Colors.green : Colors.grey,
+                ),
+                if (discipline.teamsCount != null)
+                  StatusChip(label: 'Teams: ${discipline.teamsCount}'),
+              ],
+            ),
+          ],
+        ),
+        trailing: currentUser.accessLevel! >= 3
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit, color: Colors.blue),
+                    onPressed: () => _openDiscipline(discipline),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _deleteDiscipline(discipline),
+                  ),
+                ],
+              )
+            : const Icon(Icons.arrow_forward),
       ),
     );
   }
@@ -323,115 +395,21 @@ class _AdminDisciplineListViewState extends State<AdminDisciplineListView> {
           children: [
             RefreshIndicator(
               onRefresh: _refreshData,
-              child: ListView.builder(
-                itemCount: filteredDisciplines.length + 1, // +1 for header
-                itemBuilder: (context, index) {
-                  // First item is the filter header
-                  if (index == 0) {
-                    return _buildEventFilter();
-                  }
-
-                  // Adjust index for disciplines (subtract 1 because of header)
-                  final discipline = filteredDisciplines[index - 1];
-                  final event = events.firstWhere(
-                    (e) => e.id == discipline.eventId,
-                    orElse: () => const Competition(name: 'Unknown Event'),
-                  );
-
-                  return Column(
-                    children: [
-                      Container(
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(
-                              color: Colors.grey,
-                              width: 0.5,
-                            ),
-                          ),
-                        ),
-                        child: ListTile(
-                          title: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  discipline.getDisplayName(),
-                                  style:
-                                      Theme.of(context).textTheme.displaySmall,
-                                ),
-                              ),
-                              if (discipline.competition != null &&
-                                  discipline.competition!.isNotEmpty) ...[
-                                const SizedBox(width: 10),
-                                _competitionBadge(discipline.competition!),
-                              ],
-                            ],
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Event: ${event.name} ${event.year}',
-                                style: Theme.of(context).textTheme.headlineMedium,
-                              ),
-                              Text(
-                                'Status: ${discipline.status ?? 'active'}',
-                                style: Theme.of(context).textTheme.headlineMedium,
-                              ),
-                              if (discipline.teamsCount != null)
-                                Text(
-                                  'Teams: ${discipline.teamsCount}',
-                                  style: Theme.of(context).textTheme.headlineMedium,
-                                ),
-                            ],
-                          ),
-                          trailing: currentUser.accessLevel! >= 3 ? Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.blue),
-                                onPressed: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    DisciplineDetailView.routeName,
-                                    arguments: {
-                                      'discipline': discipline,
-                                      'events': events,
-                                    },
-                                  ).then((value) {
-                                    if (value == true) {
-                                      _loadData(isRefresh: true);
-                                    }
-                                  });
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _deleteDiscipline(discipline),
-                              ),
-                            ],
-                          ) : const Icon(Icons.arrow_forward),
-                          onTap: () {
-                            if (currentUser.accessLevel! >= 3) {
-                              Navigator.pushNamed(
-                                context,
-                                DisciplineDetailView.routeName,
-                                arguments: {
-                                  'discipline': discipline,
-                                  'events': events,
-                                },
-                              ).then((value) {
-                                if (value == true) {
-                                  _loadData(isRefresh: true);
-                                }
-                              });
-                            }
-                          },
-                        ),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  _buildEventFilter(),
+                  if (filteredDisciplines.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.all(24),
+                      child: Text(
+                        'No disciplines found',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.black54),
                       ),
-                    ],
-                  );
-                },
+                    ),
+                  for (final group in _groupDisciplines().values) ..._buildSection(group),
+                ],
               ),
             ),
             if (_isRefreshing) busyOverlay(context),

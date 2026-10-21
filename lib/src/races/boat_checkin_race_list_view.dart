@@ -185,7 +185,7 @@ class _BoatCheckinRaceListViewState extends State<BoatCheckinRaceListView> {
     final text = _event == null ? 'No active event' : 'No races (the schedule may not be published yet)';
     return Padding(
       padding: const EdgeInsets.all(24),
-      child: Text(text, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white)),
+      child: Text(text, textAlign: TextAlign.center, style: const TextStyle(color: Colors.black54)),
     );
   }
 

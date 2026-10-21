@@ -1,7 +1,7 @@
-import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/model/user.dart';
 import 'package:eurocup_frontend/src/users/user_detail_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
@@ -56,47 +56,89 @@ class ListViewState extends State<UserListView> {
             print('Number of users loaded: ${users.length}');
 
             if (users.isEmpty) {
-              return const Center(child: Text('No users found'));
+              return ListView(
+                children: const [
+                  PageTitleBlock(title: 'Users (0)'),
+                  Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Center(child: Text('No users found')),
+                  ),
+                ],
+              );
             }
 
-            return ListView.builder(
-              itemCount: users.length,
-              itemBuilder: (BuildContext context, int index) {
-                final user = users[index];
-                print('Displaying user $index: ${user.name}');
+            // Group by access level, highest first; unknown level last.
+            final Map<int?, List<User>> groups = {};
+            for (final user in users) {
+              groups.putIfAbsent(user.accessLevel, () => []).add(user);
+            }
+            final levels = groups.keys.toList()
+              ..sort((a, b) {
+                if (a == null) return b == null ? 0 : 1;
+                if (b == null) return -1;
+                return b.compareTo(a);
+              });
 
-                return Column(
-                  children: [
-                    ListTile(
-                      title: Text(
-                        '${user.name ?? 'Unknown'} (${user.username ?? 'no username'}, access level: ${user.accessLevel ?? 'N/A'})',
-                        style: Theme.of(context).textTheme.displaySmall,
-                      ),
-                      onTap: () {
-                        print('ListTile tapped for user: ${user.name}');
-                        print('User object: $user');
-                        print('User id: ${user.id}, name: ${user.name}, username: ${user.username}');
+            final children = <Widget>[
+              PageTitleBlock(title: 'Users (${users.length})'),
+            ];
+            for (final level in levels) {
+              final group = groups[level]!;
+              children.add(ColoredPageHeader(
+                  title: '${_accessLevelName(level)} (${group.length})'));
+              children.add(const Divider(height: 4));
+              for (final user in group) {
+                children.add(PageListItem(
+                  onTap: () {
+                    print('ListTile tapped for user: ${user.name}');
+                    print('User object: $user');
+                    print('User id: ${user.id}, name: ${user.name}, username: ${user.username}');
 
-                        Navigator.pushNamed(
-                          context,
-                          UserDetailView.routeName,
-                          arguments: user
-                        ).then((value) {
-                          print('Returned from UserDetailView');
-                          setState(() {});
-                        });
-                      },
-                      trailing: const Icon(Icons.arrow_forward)
+                    Navigator.pushNamed(
+                      context,
+                      UserDetailView.routeName,
+                      arguments: user
+                    ).then((value) {
+                      print('Returned from UserDetailView');
+                      setState(() {});
+                    });
+                  },
+                  child: ListTile(
+                    title: Text(
+                      user.name ?? 'Unknown',
+                      style: Theme.of(context).textTheme.displaySmall,
                     ),
-                    const Divider(height: 4),
-                    const Divider(height: smallSpace)
-                  ],
-                );
-              },
-            );
+                    subtitle: Text(_userSubtitle(user)),
+                    trailing: const Icon(Icons.arrow_forward),
+                  ),
+                ));
+              }
+              children.add(pageSectionGap);
+            }
+
+            return ListView(children: children);
           },
         ),
       ),
     );
+  }
+
+  String _accessLevelName(int? level) {
+    if (level == null) return 'No access level';
+    if (level == 3) return 'Admins';
+    if (level == 2) return 'Organisers';
+    if (level == 1) return 'Officials';
+    if (level == 0) return 'Club users';
+    if (level == -1) return 'Disabled';
+    return 'Access level $level';
+  }
+
+  String _userSubtitle(User user) {
+    final username = user.username ?? 'no username';
+    final email = user.email;
+    if (email != null && email.isNotEmpty && email != username) {
+      return '$username · $email';
+    }
+    return username;
   }
 }

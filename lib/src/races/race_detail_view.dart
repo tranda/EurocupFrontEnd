@@ -1,6 +1,7 @@
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/races/race_crew_detail_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
@@ -37,60 +38,69 @@ class ListViewState extends State<RaceDetailView> {
             }
             if (snapshot.hasData) {
               final teams = snapshot.data!;
-              // Debug: races list
-              return ListView.builder(
-                itemCount: teams.length,
-                itemBuilder: (BuildContext context, int index) {
-                  var competition = competitions.firstWhere(
-                      (element) => element.id == discipline.eventId);
-                  // var eventName = competition.name!;
-                  // var eventColor =
-                  //     competitionColor[discipline.eventId! - 1];
-                  var standardSize = 22;
-                  var smallSize = 12;
-                  var size = (discipline.boatGroup == "Standard"
-                      ? standardSize
-                      : smallSize);
-                  var reserves = (discipline.boatGroup == "Standard"
-                      ? competition.standardReserves!
-                      : competition.smallReserves!);
-                  var helmNo = discipline.boatGroup == "Standard"
-                      ? standardSize
-                      : smallSize;
-                  return Column(
+              var competition = competitions.firstWhere(
+                  (element) => element.id == discipline.eventId);
+              var standardSize = 22;
+              var smallSize = 12;
+              var size = (discipline.boatGroup == "Standard"
+                  ? standardSize
+                  : smallSize);
+              var reserves = (discipline.boatGroup == "Standard"
+                  ? competition.standardReserves!
+                  : competition.smallReserves!);
+              var helmNo = discipline.boatGroup == "Standard"
+                  ? standardSize
+                  : smallSize;
+              final canOpen = currentUser.accessLevel! > 0;
+              return ListView(
+                children: [
+                  PageTitleBlock(
+                    title: discipline.getDisplayName(),
                     children: [
-                      ListTile(
-                          // tileColor: Colors.blue,
-                          title: Text(
-                            teams[index].team!.name!,
-                            style: Theme.of(context).textTheme.displaySmall,
+                      Text('${competition.name ?? ''} ${competition.year ?? ''}'.trim(),
+                          style: const TextStyle(color: pageBlue, fontSize: 16, fontWeight: FontWeight.w600),
+                          textAlign: TextAlign.center),
+                    ],
+                  ),
+                  ColoredPageHeader(
+                    title: 'Teams (${teams.length})',
+                    eventId: discipline.eventId,
+                  ),
+                  const Divider(height: 4),
+                  for (final entry in teams)
+                    PageListItem(
+                      child: ListTile(
+                          title: Row(
+                            children: [
+                              CountryBadge(country: entry.team?.club?.country),
+                              Expanded(
+                                child: Text(
+                                  entry.team!.name!,
+                                  style: Theme.of(context).textTheme.displaySmall,
+                                ),
+                              ),
+                            ],
                           ),
-                          onTap: currentUser.accessLevel! > 0
+                          onTap: canOpen
                               ? () {
                                   Navigator.pushNamed(
                                       context, RaceCrewDetailView.routeName,
                                       arguments: {
-                                        'crewId': teams[index].crew!.id,
+                                        'crewId': entry.crew!.id,
                                         'size': size + reserves,
                                         'helmNo': helmNo,
                                         // 'title': discipline.getDisplayName()
-                                        'title': teams[index].team!.name!
+                                        'title': entry.team!.name!,
+                                        // Optional, header only.
+                                        'discipline': discipline.getDisplayName(),
+                                        'eventId': discipline.eventId,
                                       });
                                 }
                               : () {},
-                          trailing: currentUser.accessLevel! > 0
-                          ?const Icon(Icons.arrow_forward)
-                          : null
-                      ),
-                      const Divider(
-                        height: 4,
-                      ),
-                      const Divider(
-                        height: smallSpace,
-                      )
-                    ],
-                  );
-                },
+                          trailing: canOpen ? const Icon(Icons.arrow_forward) : null),
+                    ),
+                  pageSectionGap,
+                ],
               );
             }
             return (const Text('No data'));

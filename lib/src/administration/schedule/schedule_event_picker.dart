@@ -1,6 +1,7 @@
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/material.dart';
 
 import 'schedule_builder_page.dart';
@@ -60,18 +61,50 @@ class _ScheduleEventPickerState extends State<ScheduleEventPicker> {
 
   Widget _buildBody() {
     if (_loading) return const Center(child: CircularProgressIndicator());
-    if (_error != null) return Center(child: Text('Error: $_error'));
-    if (_events.isEmpty) return const Center(child: Text('No events found.'));
 
-    return ListView.builder(
-      itemCount: _events.length,
-      itemBuilder: (_, i) => _eventTile(_events[i]),
+    final children = <Widget>[const PageTitleBlock(title: 'Race Schedule Builder')];
+    if (_error != null) {
+      children.add(_message('Error: $_error'));
+    } else if (_events.isEmpty) {
+      children.add(_message('No events found.'));
+    } else {
+      final active = _events.where((e) => e.isActive).toList();
+      final inactive = _events.where((e) => !e.isActive).toList();
+      if (active.isNotEmpty) children.addAll(_section('Active', active));
+      if (inactive.isNotEmpty) children.addAll(_section('Inactive', inactive));
+    }
+
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: children,
     );
   }
 
+  Widget _message(String text) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Text(text, textAlign: TextAlign.center, style: const TextStyle(color: Colors.black54)),
+    );
+  }
+
+  List<Widget> _section(String title, List<Competition> items) {
+    return [
+      ColoredPageHeader(title: '$title (${items.length})'),
+      const Divider(height: 4),
+      for (final event in items) _eventTile(event),
+      pageSectionGap,
+    ];
+  }
+
   Widget _eventTile(Competition event) {
-    return Column(children: [
-      ListTile(
+    final available = event.available ?? true;
+    return PageListItem(
+      onTap: () => Navigator.pushNamed(
+        context,
+        '${ScheduleBuilderPage.routeName}?competitionId=${event.id}',
+        arguments: event,
+      ),
+      child: ListTile(
         title: Text(
           '${event.name ?? "Event"} ${event.year ?? ""}'.trim(),
           style: Theme.of(context).textTheme.displaySmall,
@@ -82,57 +115,22 @@ class _ScheduleEventPickerState extends State<ScheduleEventPicker> {
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: 4),
-          Row(children: [
-            _statusBadge(
-              event.status ?? 'active',
-              fg: event.isActive ? Colors.green.shade800 : Colors.grey.shade700,
-              bg: event.isActive ? Colors.green.shade100 : Colors.grey.shade300,
-              border: event.isActive ? Colors.green : Colors.grey,
+          Wrap(runSpacing: 4, children: [
+            StatusChip(
+              label: event.status ?? 'active',
+              color: event.isActive ? Colors.green : Colors.grey,
             ),
-            const SizedBox(width: 8),
-            _statusBadge(
-              event.isRaceEntriesOpen ? 'Entries Open' : 'Entries Closed',
-              fg: event.isRaceEntriesOpen ? Colors.blue.shade800 : Colors.orange.shade800,
-              bg: event.isRaceEntriesOpen ? Colors.blue.shade100 : Colors.orange.shade100,
-              border: event.isRaceEntriesOpen ? Colors.blue : Colors.orange,
+            StatusChip(
+              label: event.isRaceEntriesOpen ? 'Entries Open' : 'Entries Closed',
+              color: event.isRaceEntriesOpen ? Colors.blue : Colors.orange,
             ),
-            const SizedBox(width: 8),
-            _statusBadge(
-              (event.available ?? true) ? 'Available' : 'Unavailable',
-              fg: (event.available ?? true) ? Colors.teal.shade800 : Colors.red.shade800,
-              bg: (event.available ?? true) ? Colors.teal.shade100 : Colors.red.shade100,
-              border: (event.available ?? true) ? Colors.teal : Colors.red,
+            StatusChip(
+              label: available ? 'Available' : 'Unavailable',
+              color: available ? Colors.teal : Colors.red,
             ),
           ]),
         ]),
         trailing: const Icon(Icons.chevron_right),
-        onTap: () => Navigator.pushNamed(
-          context,
-          '${ScheduleBuilderPage.routeName}?competitionId=${event.id}',
-          arguments: event,
-        ),
-      ),
-      const Divider(height: 4),
-      const Divider(height: smallSpace),
-    ]);
-  }
-
-  Widget _statusBadge(
-    String text, {
-    required Color fg,
-    required Color bg,
-    required Color border,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: border, width: 1),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: fg),
       ),
     );
   }

@@ -1,5 +1,5 @@
-import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
@@ -63,76 +63,89 @@ class _ApiKeysListViewState extends State<ApiKeysListView> {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
+            final children = <Widget>[const PageTitleBlock(title: 'API Keys')];
             if (snapshot.hasError) {
-              return Center(child: Text('Failed to load keys: ${snapshot.error}'));
+              children.add(_message('Failed to load keys: ${snapshot.error}'));
+            } else {
+              final keys = snapshot.data ?? [];
+              if (keys.isEmpty) {
+                children.add(_message('No API keys yet. Tap + to create one.'));
+              } else {
+                final active = keys.where((k) => !_isInactive(k)).toList();
+                final inactive = keys.where(_isInactive).toList();
+                if (active.isNotEmpty) children.addAll(_section(context, 'Active', active));
+                if (inactive.isNotEmpty) {
+                  children.addAll(_section(context, 'Expired / revoked', inactive));
+                }
+              }
             }
-            final keys = snapshot.data ?? [];
-            if (keys.isEmpty) {
-              return const Center(child: Text('No API keys yet. Tap + to create one.'));
-            }
-            return ListView.separated(
-              itemCount: keys.length,
-              separatorBuilder: (_, __) => const Divider(height: smallSpace),
-              itemBuilder: (context, index) => _keyTile(context, keys[index]),
-            );
+            return ListView(children: children);
           },
         ),
       ),
     );
   }
 
+  bool _isExpired(ApiKey key) => key.expiresAt != null && key.expiresAt!.isBefore(DateTime.now());
+
+  bool _isInactive(ApiKey key) => !key.isActive || _isExpired(key);
+
+  Widget _message(String text) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Text(text, textAlign: TextAlign.center, style: const TextStyle(color: Colors.black54)),
+    );
+  }
+
+  List<Widget> _section(BuildContext context, String title, List<ApiKey> keys) {
+    return [
+      ColoredPageHeader(title: '$title (${keys.length})'),
+      const Divider(height: 4),
+      for (final key in keys) _keyTile(context, key),
+      pageSectionGap,
+    ];
+  }
+
   Widget _keyTile(BuildContext context, ApiKey key) {
-    final expired = key.expiresAt != null && key.expiresAt!.isBefore(DateTime.now());
-    final inactive = !key.isActive || expired;
-    return Opacity(
-      opacity: inactive ? 0.5 : 1.0,
-      child: ListTile(
-        title: Text(
-          key.name ?? '(unnamed)',
-          style: Theme.of(context).textTheme.displaySmall,
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Wrap(
-              spacing: 6,
-              runSpacing: 4,
-              children: [
-                for (final p in key.permissions)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Colors.blue.shade200),
-                    ),
-                    child: Text(p,
-                        style: TextStyle(
-                            color: Colors.blue.shade700,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600)),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${key.keyPrefix ?? 'ak_…'}…  •  '
-              '${expired ? 'expired' : (key.expiresAt == null ? 'never expires' : 'expires ${_fmtDate(key.expiresAt)}')}',
-              style: const TextStyle(fontSize: 12),
-            ),
-            Text(
-              key.lastUsedAt == null
-                  ? 'never used'
-                  : 'last used ${_fmtDate(key.lastUsedAt)}',
-              style: const TextStyle(fontSize: 12, color: Colors.black54),
-            ),
-          ],
-        ),
-        trailing: IconButton(
-          tooltip: 'Delete key',
-          icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-          onPressed: () => _confirmDelete(key),
+    final expired = _isExpired(key);
+    final inactive = _isInactive(key);
+    return PageListItem(
+      child: Opacity(
+        opacity: inactive ? 0.5 : 1.0,
+        child: ListTile(
+          title: Text(
+            key.name ?? '(unnamed)',
+            style: Theme.of(context).textTheme.displaySmall,
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 4),
+              Wrap(
+                runSpacing: 4,
+                children: [
+                  for (final p in key.permissions) StatusChip(label: p, color: Colors.blue),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${key.keyPrefix ?? 'ak_…'}…  •  '
+                '${expired ? 'expired' : (key.expiresAt == null ? 'never expires' : 'expires ${_fmtDate(key.expiresAt)}')}',
+                style: const TextStyle(fontSize: 12),
+              ),
+              Text(
+                key.lastUsedAt == null
+                    ? 'never used'
+                    : 'last used ${_fmtDate(key.lastUsedAt)}',
+                style: const TextStyle(fontSize: 12, color: Colors.black54),
+              ),
+            ],
+          ),
+          trailing: IconButton(
+            tooltip: 'Delete key',
+            icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+            onPressed: () => _confirmDelete(key),
+          ),
         ),
       ),
     );

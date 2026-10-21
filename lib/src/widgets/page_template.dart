@@ -293,3 +293,112 @@ class PageListItem extends StatelessWidget {
     );
   }
 }
+// ---------------------------------------------------------------------------
+// Style C building blocks (the Current Entries look), shared by list pages:
+//   PageTitleBlock  → white block with big title + filters (dropdown, chips)
+//   ColoredPageHeader → event-coloured section bar grouping the rows
+//   PageListItem + ListTile(title: displaySmall) → the rows
+//   CountryBadge    → "🇷🇸 SRB" chip in front of club/team names
+// ---------------------------------------------------------------------------
+
+const Color pageBlue = Color.fromARGB(255, 0, 80, 150);
+
+/// White block at the top of a list page: big bold title, then any filters.
+class PageTitleBlock extends StatelessWidget {
+  const PageTitleBlock({super.key, required this.title, this.children = const []});
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: Colors.white,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            title,
+            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.bold,
+                ),
+            textAlign: TextAlign.center,
+          ),
+          for (final child in children) ...[const SizedBox(height: 12), child],
+          const SizedBox(height: 4),
+        ],
+      ),
+    );
+  }
+}
+
+/// Outlined field look used by the "Select Event" dropdown.
+InputDecoration pageFieldDecoration(String label) {
+  OutlineInputBorder border(Color color, double width) => OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8.0),
+        borderSide: BorderSide(color: color, width: width),
+      );
+  return InputDecoration(
+    labelText: label,
+    labelStyle: const TextStyle(color: pageBlue, fontWeight: FontWeight.w500),
+    contentPadding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
+    fillColor: Colors.white,
+    filled: true,
+    border: border(Colors.grey, 1.0),
+    enabledBorder: border(Colors.grey, 1.0),
+    focusedBorder: border(pageBlue, 2.0),
+  );
+}
+
+/// Flag + 3-letter country code chip, as on Current Entries.
+class CountryBadge extends StatelessWidget {
+  const CountryBadge({super.key, required this.country});
+
+  final String? country;
+
+  @override
+  Widget build(BuildContext context) {
+    if (country == null || country!.isEmpty) return const SizedBox.shrink();
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: Colors.blue.shade200),
+      ),
+      child: Text(
+        '${getCountryFlag(country)} ${getCountryCode(country)}',
+        style: TextStyle(color: Colors.blue.shade700, fontSize: 12, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+}
+
+/// Small rounded chip for statuses ("active", "expired", "2 MB").
+class StatusChip extends StatelessWidget {
+  const StatusChip({super.key, required this.label, this.color = Colors.blue});
+
+  final String label;
+  final MaterialColor color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(right: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.shade300),
+      ),
+      child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color.shade800)),
+    );
+  }
+}
+
+/// Spacer between sections, as Current Entries uses.
+const Widget pageSectionGap = Divider(height: smallSpace);

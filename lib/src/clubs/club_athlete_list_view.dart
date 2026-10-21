@@ -3,6 +3,7 @@ import 'package:eurocup_frontend/src/clubs/club_details_view.dart';
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
@@ -75,55 +76,49 @@ class _ClubAthleteListViewState extends State<ClubAthleteListView> {
             }
             if (snapshot.hasData) {
               final athletes = snapshot.data!;
-
-              return ListView.builder(
-                itemCount: athletes.length,
-                itemBuilder: (BuildContext context, int index) {
-                  final athlete = athletes[index];
+              final children = <Widget>[
+                PageTitleBlock(title: '$title (${athletes.length})'),
+              ];
+              if (athletes.isEmpty) {
+                children.add(const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Center(child: Text('No athletes in this club')),
+                ));
+              }
+              for (final group in _groupAthletesByCategory(athletes)) {
+                children.add(ColoredPageHeader(
+                    title: '${group.key} (${group.value.length})'));
+                children.add(const Divider(height: 4));
+                for (final athlete in group.value) {
                   final coach = athlete.coach! ? ' (Coach)' : "";
                   final photoUrl = athlete.photo != null && athlete.photo!.isNotEmpty
                       ? "https://$imagePrefix/${athlete.photo}"
                       : "";
-
-                  return Column(
-                    children: [
-                      ListTile(
-                          leading: _athleteAvatar(photoUrl, athlete.certificate != null),
-                          // leading: Text(
-                          //   athlete.eurocup ?? "",
-                          //   style: Theme.of(context).textTheme.labelMedium,
-                          // ),
-                          title: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                                '${athlete.firstName} ${athlete.lastName} $coach',
-                                style:
-                                    Theme.of(context).textTheme.displaySmall),
-                          ),
-                          onTap: () {
-                            Navigator.pushNamed(
-                                context, AthleteDetailView.routeName,
-                                arguments: {
-                                  'mode': 'r',
-                                  'allowEdit': false,
-                                  'athlete': athlete
-                                }).then((value) {
-                              setState(() {});
-                            });
-                          },
-                          subtitle: Padding(
-                            padding: const EdgeInsetsDirectional.symmetric(
-                                horizontal: (8.0), vertical: 0),
-                            child: Text(athlete.category ?? ""),
-                          ),
-                          trailing: const Icon(Icons.arrow_forward)),
-                      const Divider(
-                        height: 4,
-                      )
-                    ],
-                  );
-                },
-              );
+                  children.add(PageListItem(
+                    onTap: () {
+                      Navigator.pushNamed(
+                          context, AthleteDetailView.routeName,
+                          arguments: {
+                            'mode': 'r',
+                            'allowEdit': false,
+                            'athlete': athlete
+                          }).then((value) {
+                        setState(() {});
+                      });
+                    },
+                    child: ListTile(
+                      leading: _athleteAvatar(photoUrl, athlete.certificate != null),
+                      title: Text(
+                          '${athlete.firstName} ${athlete.lastName}$coach',
+                          style: Theme.of(context).textTheme.displaySmall),
+                      subtitle: Text(athlete.category ?? ""),
+                      trailing: const Icon(Icons.arrow_forward),
+                    ),
+                  ));
+                }
+                children.add(pageSectionGap);
+              }
+              return ListView(children: children);
             }
             return (const Text('No data'));
           },
@@ -131,4 +126,30 @@ class _ClubAthleteListViewState extends State<ClubAthleteListView> {
       ),
     );
   }
+}
+
+/// Groups athletes by category, ordered like [disciplineAgeGroups]; unknown
+/// categories follow alphabetically, athletes without a category go last.
+List<MapEntry<String, List<Athlete>>> _groupAthletesByCategory(
+    List<Athlete> athletes) {
+  const noCategory = 'No category';
+  final Map<String, List<Athlete>> groups = {};
+  for (final athlete in athletes) {
+    final cat = (athlete.category == null || athlete.category!.trim().isEmpty)
+        ? noCategory
+        : athlete.category!;
+    groups.putIfAbsent(cat, () => []).add(athlete);
+  }
+  int rank(String cat) {
+    if (cat == noCategory) return 1 << 30;
+    final i = disciplineAgeGroups.indexOf(cat);
+    return i >= 0 ? i : disciplineAgeGroups.length;
+  }
+
+  final keys = groups.keys.toList()
+    ..sort((a, b) {
+      final r = rank(a).compareTo(rank(b));
+      return r != 0 ? r : a.toLowerCase().compareTo(b.toLowerCase());
+    });
+  return [for (final k in keys) MapEntry(k, groups[k]!)];
 }

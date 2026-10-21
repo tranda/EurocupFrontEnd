@@ -1,6 +1,6 @@
 import 'dart:html' as html;
-import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
@@ -203,20 +203,63 @@ class _DatabaseBackupViewState extends State<DatabaseBackupView> {
     return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
-  Widget _badge(String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color, width: 1),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          color: HSLColor.fromColor(color).withLightness(0.3).toColor(),
+  static const List<String> _monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+  ];
+
+  /// Section label from the backup date ("September 2026"); keeps list order.
+  String _monthLabel(Map<String, dynamic> backup) {
+    final raw = backup['created_at']?.toString() ?? '';
+    final date = DateTime.tryParse(raw);
+    if (date == null) return 'Unknown date';
+    return '${_monthNames[date.month - 1]} ${date.year}';
+  }
+
+  Map<String, List<Map<String, dynamic>>> _groupByMonth() {
+    final groups = <String, List<Map<String, dynamic>>>{};
+    for (final b in backups) {
+      groups.putIfAbsent(_monthLabel(b), () => <Map<String, dynamic>>[]).add(b);
+    }
+    return groups;
+  }
+
+  Widget _buildBackupRow(Map<String, dynamic> backup) {
+    return PageListItem(
+      child: ListTile(
+        title: Text(
+          backup['filename'] ?? 'Unknown',
+          style: Theme.of(context).textTheme.displaySmall,
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Wrap(
+            runSpacing: 4,
+            children: [
+              StatusChip(label: backup['created_at']?.toString() ?? '', color: Colors.blue),
+              StatusChip(label: _formatSize(backup['size']), color: Colors.teal),
+            ],
+          ),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.save, color: Colors.blue),
+              tooltip: 'Download',
+              onPressed: () => _downloadBackup(backup['filename']),
+            ),
+            IconButton(
+              icon: const Icon(Icons.refresh, color: Colors.orange),
+              tooltip: 'Restore',
+              onPressed: () => _restoreBackup(backup['filename']),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              tooltip: 'Delete',
+              onPressed: () => _deleteBackup(backup['filename']),
+            ),
+          ],
         ),
       ),
     );
@@ -224,94 +267,46 @@ class _DatabaseBackupViewState extends State<DatabaseBackupView> {
 
   @override
   Widget build(BuildContext context) {
+    final groups = _groupByMonth();
     return Scaffold(
       appBar: appBar(title: 'Database Backups'),
       body: Container(
         decoration: bckDecoration(),
         child: Stack(
           children: [
-            Column(
+            ListView(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _createBackup,
-                      icon: const Icon(Icons.backup),
-                      label: const Text('Create Backup Now'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                PageTitleBlock(
+                  title: 'Database Backups',
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _createBackup,
+                        icon: const Icon(Icons.backup),
+                        label: const Text('Create Backup Now'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
                       ),
                     ),
+                  ],
+                ),
+                if (backups.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Text(
+                      'No backups found',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16, color: Colors.black54),
+                    ),
                   ),
-                ),
-                const Divider(height: 4),
-                Expanded(
-                  child: backups.isEmpty
-                      ? const Center(
-                          child: Text('No backups found',
-                              style: TextStyle(fontSize: 16, color: Colors.grey)),
-                        )
-                      : ListView.builder(
-                          itemCount: backups.length,
-                          itemBuilder: (context, index) {
-                            final backup = backups[index];
-                            return Column(
-                              children: [
-                                ListTile(
-                                  title: Text(
-                                    backup['filename'] ?? 'Unknown',
-                                    style: Theme.of(context).textTheme.displaySmall,
-                                  ),
-                                  subtitle: Padding(
-                                    padding: const EdgeInsets.only(top: 4),
-                                    child: Row(
-                                      children: [
-                                        _badge(
-                                            backup['created_at'] ?? '',
-                                            Colors.blue),
-                                        const SizedBox(width: 8),
-                                        _badge(
-                                            _formatSize(backup['size']),
-                                            Colors.teal),
-                                      ],
-                                    ),
-                                  ),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(Icons.save,
-                                            color: Colors.blue),
-                                        tooltip: 'Download',
-                                        onPressed: () => _downloadBackup(
-                                            backup['filename']),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.refresh,
-                                            color: Colors.orange),
-                                        tooltip: 'Restore',
-                                        onPressed: () => _restoreBackup(
-                                            backup['filename']),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.delete,
-                                            color: Colors.red),
-                                        tooltip: 'Delete',
-                                        onPressed: () => _deleteBackup(
-                                            backup['filename']),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const Divider(height: 4),
-                                const Divider(height: smallSpace),
-                              ],
-                            );
-                          },
-                        ),
-                ),
+                for (final entry in groups.entries) ...[
+                  ColoredPageHeader(title: '${entry.key} (${entry.value.length})'),
+                  const Divider(height: 4),
+                  for (final backup in entry.value) _buildBackupRow(backup),
+                  pageSectionGap,
+                ],
               ],
             ),
             if (isLoading) busyOverlay(context),

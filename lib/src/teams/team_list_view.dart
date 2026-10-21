@@ -1,6 +1,7 @@
 
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
@@ -173,141 +174,130 @@ class ListViewState extends State<TeamListView> {
                 if (aActive == bActive) return 0;
                 return aActive ? -1 : 1;
               });
-              // Debug: teams list
-              return ListView.builder(
-                itemCount: teams.length,
-                itemBuilder: (BuildContext context, int index) {
-                  final team = teams[index];
-                  final isTeamInactive = team.active == false;
-                  final isInactiveClub = team.club?.active == false;
-                  // Inactive teams/clubs are not clickable for non-admins;
-                  // admins (accessLevel >= 3) can still open and modify.
-                  final isAdmin = (currentUser.accessLevel ?? 0) >= 3;
-                  final blockOpen =
-                      (isTeamInactive || isInactiveClub) && !isAdmin;
-                  return Opacity(
-                    opacity: (isInactiveClub || isTeamInactive) ? 0.5 : 1.0,
-                    child: Column(
-                    children: [
-                      ListTile(
-                          // tileColor: Colors.blue,
-                          title: Row(
-                            children: [
-                              if (teams[index].club?.country != null)
-                                Container(
-                                  margin: const EdgeInsets.only(right: 8),
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue.shade50,
-                                    borderRadius: BorderRadius.circular(4),
-                                    border: Border.all(color: Colors.blue.shade200),
-                                  ),
-                                  child: Text(
-                                    '${getCountryFlag(teams[index].club!.country)} ${getCountryCode(teams[index].club!.country)}',
-                                    style: TextStyle(
-                                      color: Colors.blue.shade700,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              Expanded(
-                                child: Text(
-                                  teams[index].name!,
-                                  style: Theme.of(context).textTheme.displaySmall,
-                                ),
-                              ),
-                            ],
-                          ),
-                          subtitle: (teams[index].club?.name != null && teams[index].club!.name!.isNotEmpty)
-                              ? Padding(
-                                  padding: const EdgeInsets.only(top: 4),
-                                  child: Text(
-                                    teams[index].club!.name!,
-                                    style: TextStyle(
-                                      color: Colors.grey.shade700,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                )
-                              : null,
-                          onTap: blockOpen
-                              ? null
-                              : () {
-                            // A team is "inactive" for registration if the
-                            // team itself or its club is marked inactive.
-                            final teamInactive =
-                                isTeamInactive || isInactiveClub;
-                            // Persist for refresh recovery: teamId rides in the
-                            // URL, name/flag in localStorage. Without this the
-                            // page's args are lost on reload and it crashes grey.
-                            saveSelectedTeam(
-                              teamId: teams[index].id,
-                              teamName: teams[index].name,
-                              teamInactive: teamInactive,
-                            );
-                            Navigator.pushNamed(
-                                context,
-                                '${DisciplineListView.routeName}?teamId=${teams[index].id}',
-                                arguments: {
-                                  'teamId': teams[index].id,
-                                  'teamName': teams[index].name,
-                                  'teamInactive': teamInactive,
-                                }).then((value) {
-                              setState(() {});
-                            });
-                          },
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (_canManage(team))
-                                IconButton(
-                                  icon: Icon(
-                                    isTeamInactive ? Icons.visibility_off : Icons.visibility,
-                                    color: isTeamInactive ? Colors.orange : Colors.green,
-                                  ),
-                                  tooltip: isTeamInactive
-                                      ? 'Inactive — tap to reactivate'
-                                      : 'Active — tap to mark inactive',
-                                  onPressed: () {
-                                    if (isTeamInactive) {
-                                      _toggleActive(context, team, true);
-                                    } else {
-                                      _confirmDeactivate(context, team);
-                                    }
-                                  },
-                                ),
-                              if (currentUser.accessLevel != null && currentUser.accessLevel! >= 2) ...[
-                                IconButton(
-                                  icon: const Icon(Icons.edit, color: Colors.blue),
-                                  onPressed: () {
-                                    _showEditDialog(context, teams[index]);
-                                  },
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.delete, color: Colors.red),
-                                  onPressed: () {
-                                    _showDeleteConfirmation(context, teams[index]);
-                                  },
-                                ),
-                              ],
-                              const Icon(Icons.arrow_forward),
-                            ],
-                          )),
-                      const Divider(
-                        height: 4,
-                      ),
-                      const Divider(
-                        height: smallSpace,
-                      )
-                    ],
-                  ),
-                );
-              },
-            );
-          }
+              final activeTeams = teams.where((t) => t.active != false).toList();
+              final hiddenTeams = teams.where((t) => t.active == false).toList();
+              return ListView(
+                children: [
+                  PageTitleBlock(title: pageTitle),
+                  ..._buildSection(context, 'Active teams', activeTeams),
+                  if (hiddenTeams.isNotEmpty)
+                    ..._buildSection(context, 'Hidden teams', hiddenTeams),
+                ],
+              );
+            }
             return (const Text('No data'));
           },
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildSection(BuildContext context, String title, List<Team> teams) {
+    return [
+      ColoredPageHeader(title: '$title (${teams.length})'),
+      const Divider(height: 4),
+      for (final team in teams) _buildTeamRow(context, team),
+      pageSectionGap,
+    ];
+  }
+
+  Widget _buildTeamRow(BuildContext context, Team team) {
+    final isTeamInactive = team.active == false;
+    final isInactiveClub = team.club?.active == false;
+    // Inactive teams/clubs are not clickable for non-admins;
+    // admins (accessLevel >= 3) can still open and modify.
+    final isAdmin = (currentUser.accessLevel ?? 0) >= 3;
+    final blockOpen = (isTeamInactive || isInactiveClub) && !isAdmin;
+    final VoidCallback? onOpen = blockOpen
+        ? null
+        : () {
+            // A team is "inactive" for registration if the
+            // team itself or its club is marked inactive.
+            final teamInactive = isTeamInactive || isInactiveClub;
+            // Persist for refresh recovery: teamId rides in the
+            // URL, name/flag in localStorage. Without this the
+            // page's args are lost on reload and it crashes grey.
+            saveSelectedTeam(
+              teamId: team.id,
+              teamName: team.name,
+              teamInactive: teamInactive,
+            );
+            Navigator.pushNamed(
+                context,
+                '${DisciplineListView.routeName}?teamId=${team.id}',
+                arguments: {
+                  'teamId': team.id,
+                  'teamName': team.name,
+                  'teamInactive': teamInactive,
+                }).then((value) {
+              setState(() {});
+            });
+          };
+    return Opacity(
+      opacity: (isInactiveClub || isTeamInactive) ? 0.5 : 1.0,
+      child: PageListItem(
+        onTap: onOpen,
+        child: ListTile(
+          title: Row(
+            children: [
+              CountryBadge(country: team.club?.country),
+              Expanded(
+                child: Text(
+                  team.name!,
+                  style: Theme.of(context).textTheme.displaySmall,
+                ),
+              ),
+            ],
+          ),
+          subtitle: (team.club?.name != null && team.club!.name!.isNotEmpty)
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    team.club!.name!,
+                    style: TextStyle(
+                      color: Colors.grey.shade700,
+                      fontSize: 13,
+                    ),
+                  ),
+                )
+              : null,
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_canManage(team))
+                IconButton(
+                  icon: Icon(
+                    isTeamInactive ? Icons.visibility_off : Icons.visibility,
+                    color: isTeamInactive ? Colors.orange : Colors.green,
+                  ),
+                  tooltip: isTeamInactive
+                      ? 'Inactive — tap to reactivate'
+                      : 'Active — tap to mark inactive',
+                  onPressed: () {
+                    if (isTeamInactive) {
+                      _toggleActive(context, team, true);
+                    } else {
+                      _confirmDeactivate(context, team);
+                    }
+                  },
+                ),
+              if (currentUser.accessLevel != null && currentUser.accessLevel! >= 2) ...[
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.blue),
+                  onPressed: () {
+                    _showEditDialog(context, team);
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () {
+                    _showDeleteConfirmation(context, team);
+                  },
+                ),
+              ],
+              const Icon(Icons.arrow_forward),
+            ],
+          ),
         ),
       ),
     );

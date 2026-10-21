@@ -1,5 +1,6 @@
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
@@ -53,62 +54,49 @@ class ListViewState extends State<ClubAdelListView> {
             }
             if (snapshot.hasData) {
               final clubs = snapshot.data!;
-              // Debug: clubs list
-              return ListView.builder(
-                itemCount: clubs.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return Column(
-                    children: [
-                      ListTile(
-                          // tileColor: Colors.blue,
+              return ListView(
+                children: [
+                  PageTitleBlock(title: 'Clubs req ADEL (${clubs.length})'),
+                  if (clubs.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.all(24),
+                      child: Center(child: Text('No clubs found')),
+                    )
+                  else ...[
+                    ColoredPageHeader(
+                        title: 'Clubs requiring ADEL (${clubs.length})'),
+                    const Divider(height: 4),
+                    for (final club in clubs)
+                      PageListItem(
+                        onTap: () {
+                          Navigator.pushNamed(
+                              context, ClubAthleteListView.routeName,
+                              arguments: {
+                                'clubId': club.id,
+                                'title': club.name!
+                              }).then((value) {
+                            setState(() {});
+                          });
+                        },
+                        child: ListTile(
                           title: Row(
                             children: [
-                              if (clubs[index].country != null)
-                                Container(
-                                  margin: const EdgeInsets.only(right: 8),
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue.shade50,
-                                    borderRadius: BorderRadius.circular(4),
-                                    border: Border.all(color: Colors.blue.shade200),
-                                  ),
-                                  child: Text(
-                                    '${getCountryFlag(clubs[index].country)} ${getCountryCode(clubs[index].country)}',
-                                    style: TextStyle(
-                                      color: Colors.blue.shade700,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
+                              CountryBadge(country: club.country),
                               Expanded(
                                 child: Text(
-                                  clubs[index].name!,
-                                  style: Theme.of(context).textTheme.displaySmall,
+                                  club.name ?? '',
+                                  style:
+                                      Theme.of(context).textTheme.displaySmall,
                                 ),
                               ),
                             ],
                           ),
-                          onTap: () {
-                            Navigator.pushNamed(
-                                context, ClubAthleteListView.routeName,
-                                arguments: {
-                                  'clubId': clubs[index].id,
-                                  'title': clubs[index].name!
-                                }).then((value) {
-                              setState(() {});
-                            });
-                          },
-                          trailing: const Icon(Icons.arrow_forward)),
-                      const Divider(
-                        height: 4,
+                          trailing: const Icon(Icons.arrow_forward),
+                        ),
                       ),
-                      const Divider(
-                        height: smallSpace,
-                      )
-                    ],
-                  );
-                },
+                    pageSectionGap,
+                  ],
+                ],
               );
             }
             return (const Text('No data'));

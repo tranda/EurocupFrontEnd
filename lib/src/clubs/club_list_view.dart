@@ -1,5 +1,6 @@
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
@@ -72,79 +73,76 @@ class ListViewState extends State<ClubListView> {
                     .toLowerCase()
                     .compareTo((b.name ?? '').toLowerCase());
               });
-              // Debug: clubs list
-              return ListView.builder(
-                itemCount: clubs.length,
-                itemBuilder: (BuildContext context, int index) {
-                  final isInactive = clubs[index].active == false;
-                  return Opacity(
-                    opacity: isInactive ? 0.5 : 1.0,
-                    child: Column(
-                      children: [
-                        ListTile(
-                            // tileColor: Colors.blue,
-                            title: Row(
-                            children: [
-                              if (clubs[index].country != null)
-                                Container(
-                                  margin: const EdgeInsets.only(right: 8),
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue.shade50,
-                                    borderRadius: BorderRadius.circular(4),
-                                    border: Border.all(color: Colors.blue.shade200),
-                                  ),
-                                  child: Text(
-                                    '${getCountryFlag(clubs[index].country)} ${getCountryCode(clubs[index].country)}',
-                                    style: TextStyle(
-                                      color: Colors.blue.shade700,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              Expanded(
-                                child: Text(
-                                  clubs[index].name!,
-                                  style: Theme.of(context).textTheme.displaySmall,
-                                ),
-                              ),
-                            ],
+              final activeClubs =
+                  clubs.where((c) => c.active != false).toList();
+              final inactiveClubs =
+                  clubs.where((c) => c.active == false).toList();
+
+              Widget clubRow(Club club, bool isInactive) {
+                return Opacity(
+                  opacity: isInactive ? 0.5 : 1.0,
+                  child: PageListItem(
+                    onTap: () {
+                      // Persist for refresh recovery: clubId rides in the
+                      // URL, plus localStorage fallback. Without this the
+                      // page's args are lost on reload and it crashes grey.
+                      saveSelectedClubId(club.id);
+                      Navigator.pushNamed(
+                          context,
+                          '${ClubDetailPage.routeName}?clubId=${club.id}',
+                          arguments: {
+                            'clubId': club.id,
+                          }).then((value) {
+                        setState(() {
+                          dataFuture = api.getClubs(
+                              activeOnly: currentUser.accessLevel != null &&
+                                      currentUser.accessLevel! >= 2
+                                  ? false
+                                  : true);
+                        });
+                      });
+                    },
+                    child: ListTile(
+                      title: Row(
+                        children: [
+                          CountryBadge(country: club.country),
+                          Expanded(
+                            child: Text(
+                              club.name ?? '',
+                              style: Theme.of(context).textTheme.displaySmall,
+                            ),
                           ),
-                          onTap: () {
-                            // Persist for refresh recovery: clubId rides in the
-                            // URL, plus localStorage fallback. Without this the
-                            // page's args are lost on reload and it crashes grey.
-                            saveSelectedClubId(clubs[index].id);
-                            Navigator.pushNamed(
-                                context,
-                                '${ClubDetailPage.routeName}?clubId=${clubs[index].id}',
-                                arguments: {
-                                  'clubId': clubs[index].id,
-                                }).then((value) {
-                              setState(() {
-                                dataFuture = api.getClubs(
-                                    activeOnly: currentUser.accessLevel !=
-                                                null &&
-                                            currentUser.accessLevel! >= 2
-                                        ? false
-                                        : true);
-                              });
-                            });
-                          },
-                          trailing: const Icon(Icons.arrow_forward)),
-                      const Divider(
-                        height: 4,
+                        ],
                       ),
-                      const Divider(
-                        height: smallSpace,
-                      )
-                    ],
+                      trailing: const Icon(Icons.arrow_forward),
+                    ),
                   ),
                 );
-              },
-            );
-          }
+              }
+
+              List<Widget> section(String title, List<Club> items, bool inactive) {
+                if (items.isEmpty) return [];
+                return [
+                  ColoredPageHeader(title: '$title (${items.length})'),
+                  const Divider(height: 4),
+                  for (final club in items) clubRow(club, inactive),
+                  pageSectionGap,
+                ];
+              }
+
+              return ListView(
+                children: [
+                  PageTitleBlock(title: 'Clubs (${clubs.length})'),
+                  if (clubs.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.all(24),
+                      child: Center(child: Text('No clubs found')),
+                    ),
+                  ...section('Active clubs', activeClubs, false),
+                  ...section('Inactive clubs', inactiveClubs, true),
+                ],
+              );
+            }
           return (const Text('No data'));
         },
       ),

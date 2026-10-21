@@ -1,5 +1,6 @@
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:eurocup_frontend/src/model/race/race.dart';
@@ -250,9 +251,7 @@ class _DisciplineListViewState extends State<DisciplineListView> {
         //     title: teamName,
         //     icon: Icons.save),
         body: Container(
-          // decoration: const BoxDecoration(
-          //     image: DecorationImage(
-          //         image: AssetImage('assets/images/bck.jpg'), fit: BoxFit.cover)),
+          decoration: bckDecoration(),
           child: FutureBuilder(
             future: _disciplinesFuture,
             builder: (context, snapshot) {
@@ -263,102 +262,99 @@ class _DisciplineListViewState extends State<DisciplineListView> {
                 // Filter disciplines to only show those from active events
                 final activeEventIds = competitions.where((c) => c.isActive).map((c) => c.id).toSet();
                 final activeDisciplines = disciplines.where((d) => activeEventIds.contains(d.eventId)).toList();
-                // Debug: discipline counts
-                return ListView.builder(
-                  itemCount: activeDisciplines.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    final discipline = activeDisciplines[index];
-                    final inactiveStatus =
-                        discipline.status == "inactive" ? "(INACTIVE)" : "";
-                    var competition = competitions.firstWhere(
-                        (element) => element.id == discipline.eventId);
-                    var eventName = '${competition.name!} ${competition.year}';
-                    var eventColor = competitionColor.isNotEmpty && discipline.eventId! <= competitionColor.length 
-                        ? competitionColor[discipline.eventId! - 1] 
-                        : Colors.transparent;
-                    final registered = _registeredIds.contains(discipline.id);
-                    final isLoading = _loadingIds.contains(discipline.id);
-                    return Column(
-                      children: [
-                        ListTile(
-                            tileColor: eventColor,
-                            leading: Text(eventName, 
-                            style: Theme.of(context).textTheme.labelSmall,
-                            ),
-                            title: Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    "${discipline.getDisplayName()} $inactiveStatus",
-                                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white),
-                                  ),
-                                ),
-                                if (discipline.competition != null &&
-                                    discipline.competition!.isNotEmpty) ...[
-                                  const SizedBox(width: 10),
-                                  _competitionBadge(discipline.competition!),
-                                ],
-                              ],
-                            ),
-                            trailing: SizedBox(
-                              width: 28,
-                              height: 28,
-                              child: isLoading
-                                  // Only this row shows a loader while its
-                                  // register/unregister request is in flight.
-                                  ? const Center(
-                                      child: SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      ),
-                                    )
-                                  : locked
-                                      // When locked, show status only.
-                                      ? (registered
-                                          ? Icon(
-                                              Icons.check_circle_outline,
-                                              color: Colors.green.shade200,
-                                              size: 28,
-                                            )
-                                          : const Icon(
-                                              Icons.radio_button_unchecked,
-                                              color: Colors.grey,
-                                              size: 28,
-                                            ))
-                                      // When not locked, tapping toggles it.
-                                      : GestureDetector(
-                                          onTap: () => _toggleDiscipline(
-                                              teamId!, discipline.id!),
-                                          child: registered
-                                              ? Icon(
-                                                  Icons.check_circle_outline,
-                                                  color: Colors.green.shade200,
-                                                  size: 28,
-                                                )
-                                              : const Icon(
-                                                  Icons.radio_button_unchecked,
-                                                  color: Colors.grey,
-                                                  size: 28,
-                                                ),
-                                        ),
-                            )),
-                        const Divider(
-                          height: 4,
-                        ),
-                        const Divider(
-                          height: smallSpace,
-                        )
-                      ],
-                    );
-                  },
-                );
+                // Group by event + boat group (Standard / Small), keeping order.
+                final Map<String, List<Discipline>> groups = {};
+                for (final d in activeDisciplines) {
+                  groups.putIfAbsent('${d.eventId}|${d.boatGroup ?? ''}', () => []).add(d);
+                }
+                final children = <Widget>[
+                  PageTitleBlock(title: teamName ?? 'Races'),
+                ];
+                groups.forEach((key, items) {
+                  final first = items.first;
+                  final competition = competitions.firstWhere(
+                      (element) => element.id == first.eventId);
+                  final eventName = '${competition.name!} ${competition.year}';
+                  final boatGroup = first.boatGroup ?? '';
+                  final applied = items.where((d) => _registeredIds.contains(d.id)).length;
+                  children.addAll([
+                    ColoredPageHeader(
+                      title: boatGroup.isEmpty
+                          ? '$eventName (${items.length})'
+                          : '$eventName · $boatGroup (${items.length})',
+                      subtitle: '$applied applied',
+                      eventId: first.eventId,
+                    ),
+                    const Divider(height: 4),
+                    for (final d in items) _buildDisciplineRow(context, d, teamId),
+                    pageSectionGap,
+                  ]);
+                });
+                return ListView(children: children);
               }
               return (const Text('No data'));
             },
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDisciplineRow(BuildContext context, Discipline discipline, int? teamId) {
+    final inactiveStatus = discipline.status == "inactive" ? " (INACTIVE)" : "";
+    final registered = _registeredIds.contains(discipline.id);
+    final isLoading = _loadingIds.contains(discipline.id);
+    final Widget statusIcon = registered
+        ? Icon(
+            Icons.check_circle_outline,
+            color: Colors.green.shade400,
+            size: 28,
+          )
+        : const Icon(
+            Icons.radio_button_unchecked,
+            color: Colors.grey,
+            size: 28,
+          );
+    return PageListItem(
+      child: ListTile(
+        title: Row(
+          children: [
+            Flexible(
+              child: Text(
+                "${discipline.getDisplayName()}$inactiveStatus",
+                style: Theme.of(context).textTheme.displaySmall,
+              ),
+            ),
+            if (discipline.competition != null &&
+                discipline.competition!.isNotEmpty) ...[
+              const SizedBox(width: 10),
+              _competitionBadge(discipline.competition!),
+            ],
+          ],
+        ),
+        trailing: SizedBox(
+          width: 28,
+          height: 28,
+          child: isLoading
+              // Only this row shows a loader while its
+              // register/unregister request is in flight.
+              ? const Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                    ),
+                  ),
+                )
+              : locked
+                  // When locked, show status only.
+                  ? statusIcon
+                  // When not locked, tapping toggles it.
+                  : GestureDetector(
+                      onTap: () => _toggleDiscipline(teamId!, discipline.id!),
+                      child: statusIcon,
+                    ),
         ),
       ),
     );

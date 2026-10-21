@@ -1,5 +1,6 @@
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
@@ -113,147 +114,121 @@ class _EventListViewState extends State<EventListView> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
+                  return _buildMessage('Error: ${snapshot.error}');
                 }
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No events found'));
+                  return _buildMessage('No events found');
                 }
 
                 events = snapshot.data!;
                 // Sort events by year (newest first)
                 events.sort((a, b) => (b.year ?? 0).compareTo(a.year ?? 0));
-                return ListView.builder(
-                  itemCount: events.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    final event = events[index];
-                    return Column(
-                      children: [
-                        ListTile(
-                          title: Text(
-                            '${event.name} ${event.year}',
-                            style: Theme.of(context).textTheme.displaySmall,
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                event.location ?? 'No location',
-                                style: Theme.of(context).textTheme.headlineMedium,
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: event.isActive ? Colors.green.shade100 : Colors.grey.shade300,
-                                      borderRadius: BorderRadius.circular(4),
-                                      border: Border.all(
-                                        color: event.isActive ? Colors.green : Colors.grey,
-                                        width: 1,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      event.status ?? 'active',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w500,
-                                        color: event.isActive ? Colors.green.shade800 : Colors.grey.shade700,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: event.isRaceEntriesOpen ? Colors.blue.shade100 : Colors.orange.shade100,
-                                      borderRadius: BorderRadius.circular(4),
-                                      border: Border.all(
-                                        color: event.isRaceEntriesOpen ? Colors.blue : Colors.orange,
-                                        width: 1,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      event.isRaceEntriesOpen ? 'Entries Open' : 'Entries Closed',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w500,
-                                        color: event.isRaceEntriesOpen ? Colors.blue.shade800 : Colors.orange.shade800,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: (event.available ?? true) ? Colors.teal.shade100 : Colors.red.shade100,
-                                      borderRadius: BorderRadius.circular(4),
-                                      border: Border.all(
-                                        color: (event.available ?? true) ? Colors.teal : Colors.red,
-                                        width: 1,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      (event.available ?? true) ? 'Available' : 'Unavailable',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w500,
-                                        color: (event.available ?? true) ? Colors.teal.shade800 : Colors.red.shade800,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          trailing: currentUser.accessLevel! >= 3 ? Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.blue),
-                                onPressed: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    EventDetailView.routeName,
-                                    arguments: {'event': event},
-                                  ).then((value) {
-                                    if (value == true) {
-                                      _loadEvents();
-                                    }
-                                  });
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _deleteEvent(event),
-                              ),
-                            ],
-                          ) : const Icon(Icons.arrow_forward),
-                          onTap: () {
-                            if (currentUser.accessLevel! >= 3) {
-                              Navigator.pushNamed(
-                                context,
-                                EventDetailView.routeName,
-                                arguments: {'event': event},
-                              ).then((value) {
-                                if (value == true) {
-                                  _loadEvents();
-                                }
-                              });
-                            }
-                          },
-                        ),
-                        const Divider(height: 4),
-                        const Divider(height: smallSpace),
-                      ],
-                    );
-                  },
+                final active = events.where((e) => e.isActive).toList();
+                final inactive = events.where((e) => !e.isActive).toList();
+                return ListView(
+                  children: [
+                    const PageTitleBlock(title: 'Event Management'),
+                    if (active.isNotEmpty) ..._buildSection('Active', active),
+                    if (inactive.isNotEmpty) ..._buildSection('Inactive', inactive),
+                  ],
                 );
               },
             ),
             if (isLoading) busyOverlay(context),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildMessage(String text) {
+    return ListView(
+      children: [
+        const PageTitleBlock(title: 'Event Management'),
+        Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(text, textAlign: TextAlign.center, style: const TextStyle(color: Colors.black54)),
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildSection(String title, List<Competition> items) {
+    return [
+      ColoredPageHeader(title: '$title (${items.length})'),
+      const Divider(height: 4),
+      for (final event in items) _buildEventRow(event),
+      pageSectionGap,
+    ];
+  }
+
+  void _openEvent(Competition event) {
+    Navigator.pushNamed(
+      context,
+      EventDetailView.routeName,
+      arguments: {'event': event},
+    ).then((value) {
+      if (value == true) {
+        _loadEvents();
+      }
+    });
+  }
+
+  Widget _buildEventRow(Competition event) {
+    final available = event.available ?? true;
+    return PageListItem(
+      onTap: () {
+        if (currentUser.accessLevel! >= 3) {
+          _openEvent(event);
+        }
+      },
+      child: ListTile(
+        title: Text(
+          '${event.name} ${event.year}',
+          style: Theme.of(context).textTheme.displaySmall,
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              event.location ?? 'No location',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            const SizedBox(height: 4),
+            Wrap(
+              runSpacing: 4,
+              children: [
+                StatusChip(
+                  label: event.status ?? 'active',
+                  color: event.isActive ? Colors.green : Colors.grey,
+                ),
+                StatusChip(
+                  label: event.isRaceEntriesOpen ? 'Entries Open' : 'Entries Closed',
+                  color: event.isRaceEntriesOpen ? Colors.blue : Colors.orange,
+                ),
+                StatusChip(
+                  label: available ? 'Available' : 'Unavailable',
+                  color: available ? Colors.teal : Colors.red,
+                ),
+              ],
+            ),
+          ],
+        ),
+        trailing: currentUser.accessLevel! >= 3
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit, color: Colors.blue),
+                    onPressed: () => _openEvent(event),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _deleteEvent(event),
+                  ),
+                ],
+              )
+            : const Icon(Icons.arrow_forward),
       ),
     );
   }
