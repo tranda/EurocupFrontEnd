@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:eurocup_frontend/src/races/race_results_list_view.dart';
 
@@ -89,140 +90,96 @@ class _CompetitionSelectorViewState extends State<CompetitionSelectorView> {
     return Scaffold(
       appBar: appBar(title: 'Race Results'),
       body: Container(
-        decoration: naslovnaDecoration(),
-        child: Center(
-          child: SingleChildScrollView(
-            child: Container(
-              margin: const EdgeInsets.all(16),
-              child: Card(
-                elevation: 8,
-                color: Colors.blue.shade50,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+        // Fill the screen even when the content is short.
+        height: double.infinity,
+        decoration: bckDecoration(),
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: 24),
+          children: [
+            const MenuBanner(),
+            PageTitleBlock(
+              title: 'Race Results',
+              children: [
+                Text(
+                  'Select a competition to view live results',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.black54,
+                      ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                      children: [
-
-                      // Title
+                if (_isLoading)
+                  const Center(child: CircularProgressIndicator())
+                else if (_errorMessage != null)
+                  Column(
+                    children: [
                       Text(
-                        'Race Results',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
+                        _errorMessage!,
+                        style: const TextStyle(color: Colors.red),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Select a competition to view live results',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.black54,
-                        ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _isLoading = true;
+                            _errorMessage = null;
+                          });
+                          initState();
+                        },
+                        child: const Text('Retry'),
                       ),
-                      const SizedBox(height: 32),
-
-                      // Competition Selection
-                      if (_isLoading)
-                        const CircularProgressIndicator()
-                      else if (_errorMessage != null)
-                        Column(
-                          children: [
-                            Text(
-                              _errorMessage!,
-                              style: const TextStyle(color: Colors.red),
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  _isLoading = true;
-                                  _errorMessage = null;
-                                });
-                                initState();
-                              },
-                              child: const Text('Retry'),
-                            ),
-                          ],
-                        )
-                      else
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            // Competition Dropdown - matching login page style
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: Colors.grey.shade300,
-                                  width: 1,
-                                ),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: availableEvents.any((event) => event['id'] == selectedEventId)
-                                      ? selectedEventId
-                                      : availableEvents.isNotEmpty ? availableEvents.first['id'] : "1",
-                                  isExpanded: true,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 4,
-                                  ),
-                                  style: const TextStyle(
-                                    color: Colors.black87,
-                                    fontSize: 14,
-                                  ),
-                                  icon: const Icon(
-                                    Icons.keyboard_arrow_down,
-                                    color: Colors.black54,
-                                  ),
-                                  items: availableEvents.map((event) {
-                                    return DropdownMenuItem<String>(
-                                      value: event['id'],
-                                      child: Text(event['name']!),
-                                    );
-                                  }).toList(),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      selectedEventId = value;
-                                    });
-                                  },
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-
-                            // View Results Button
-                            ElevatedButton(
-                              onPressed: selectedEventId != null ? _viewResults : null,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: selectedEventId != null
-                                    ? competitionColor[(int.tryParse(selectedEventId ?? '1') ?? 1) - 1]
-                                    : Colors.grey,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                              ),
-                              child: const Text(
-                                'View Race Results',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
                     ],
+                  )
+                else ...[
+                  // Competition Dropdown
+                  DropdownButtonFormField<String>(
+                    initialValue: availableEvents.any((event) => event['id'] == selectedEventId)
+                        ? selectedEventId
+                        : availableEvents.isNotEmpty ? availableEvents.first['id'] : "1",
+                    isExpanded: true,
+                    decoration: pageFieldDecoration('Select Event'),
+                    style: const TextStyle(color: Colors.black87, fontSize: 16),
+                    dropdownColor: Colors.white,
+                    items: availableEvents.map((event) {
+                      return DropdownMenuItem<String>(
+                        value: event['id'],
+                        child: Text(event['name']!, overflow: TextOverflow.ellipsis),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        selectedEventId = value;
+                      });
+                    },
                   ),
-                ),
-              ),
+
+                  // View Results Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: selectedEventId != null ? _viewResults : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: pageBlue,
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: Colors.grey,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: const Text(
+                        'View Race Results',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
-          ),
+          ],
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:eurocup_frontend/src/model/club_details.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/material.dart';
 
 class ClubDetailView extends StatefulWidget {
@@ -18,31 +19,19 @@ class _ClubDetailViewState extends State<ClubDetailView> {
     super.initState();
   }
 
-  Widget _sectionLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.2,
-          color: Color.fromARGB(255, 0, 80, 150),
-        ),
-      ),
-    );
-  }
-
   Widget _statRow(String label, String value) {
     final style = Theme.of(context).textTheme.displaySmall;
-    return Column(
-      children: [
-        ListTile(
-          title: Text(label, style: style),
-          trailing: Text(value, style: style),
+    return PageListItem(
+      child: ListTile(
+        title: Text(label, style: style),
+        trailing: Text(
+          value,
+          style: style?.copyWith(
+            fontWeight: FontWeight.bold,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
         ),
-        const Divider(height: 4),
-      ],
+      ),
     );
   }
 
@@ -57,6 +46,8 @@ class _ClubDetailViewState extends State<ClubDetailView> {
         title: title,
       ),
       body: Container(
+        // Fill the screen even when the content is short.
+        height: double.infinity,
         decoration: bckDecoration(),
         child: FutureBuilder<ClubDetails>(
           future: api.getClubDetails(clubId),
@@ -67,15 +58,23 @@ class _ClubDetailViewState extends State<ClubDetailView> {
             if (snapshot.hasData) {
               final details = snapshot.data!;
               return ListView(
-                padding: const EdgeInsets.only(top: 8, bottom: 24),
+                padding: const EdgeInsets.only(bottom: 24),
                 children: [
-                  _sectionLabel('ATHLETES'),
+                  PageTitleBlock(title: title),
+                  pageSectionGap,
+                  const ColoredPageHeader(title: 'Athletes'),
+                  const Divider(height: 4),
                   _statRow('Total', '${details.total}'),
                   _statRow('With AD certificate', '${details.withCertificate}'),
                   _statRow('Eurocup', '${details.eurocup}'),
                   _statRow('Festival',
                       '${details.pfestival! - details.eurocup!}'),
-                  _sectionLabel('BY CATEGORY  ·  EUROCUP / FESTIVAL'),
+                  pageSectionGap,
+                  const ColoredPageHeader(
+                    title: 'By category',
+                    subtitle: 'Eurocup / Festival',
+                  ),
+                  const Divider(height: 4),
                   _statRow('Junior',
                       '${details.juniorEC} / ${details.junior! - details.juniorEC!}'),
                   _statRow('U24',
@@ -94,7 +93,7 @@ class _ClubDetailViewState extends State<ClubDetailView> {
                 ],
               );
             } else {
-              return (const Text('No data'));
+              return const Center(child: Text('No data'));
             }
           },
         ),

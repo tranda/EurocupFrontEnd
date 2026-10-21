@@ -19,6 +19,7 @@ class UserDetailView extends StatefulWidget {
 }
 
 class _UserDetailViewState extends State<UserDetailView> {
+  bool _showPassword = false;
   final _formKey = GlobalKey<FormState>();
   final TextEditingController nameController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
@@ -522,8 +523,16 @@ class _UserDetailViewState extends State<UserDetailView> {
                           }
                           return null;
                         },
-                        textCapitalization: TextCapitalization.words,
-                        decoration: pageFieldDecoration('Password'),
+                        obscureText: !_showPassword,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        decoration: pageFieldDecoration('Password').copyWith(
+                          suffixIcon: IconButton(
+                            icon: Icon(_showPassword ? Icons.visibility_off : Icons.visibility),
+                            tooltip: _showPassword ? 'Hide password' : 'Show password',
+                            onPressed: () => setState(() => _showPassword = !_showPassword),
+                          ),
+                        ),
                         controller: passwordController,
                         enabled: editable && newUser,
                         style: Theme.of(context).textTheme.displaySmall,
@@ -538,9 +547,10 @@ class _UserDetailViewState extends State<UserDetailView> {
                           }
                           return null;
                         },
-                        textCapitalization: TextCapitalization.words,
-                        decoration:
-                            pageFieldDecoration('Password Confirmation'),
+                        obscureText: !_showPassword,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        decoration: pageFieldDecoration('Password Confirmation'),
                         controller: passwordConfirmedController,
                         enabled: editable && newUser,
                         style: Theme.of(context).textTheme.displaySmall,

@@ -1,11 +1,11 @@
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:flutter/material.dart';
 
-import '../../../common.dart';
 import '../../../model/schedule/event_day.dart';
 import '../../../model/schedule/schedule_block.dart';
 import '../../../model/schedule/schedule_config.dart';
 import '../../../widgets/compact_icon.dart';
+import '../../../widgets/page_template.dart';
 import '../color_map_editor.dart';
 
 /// Setup tab: lane count + days + blocks editor.
@@ -529,32 +529,90 @@ class _SetupTabState extends State<SetupTab> {
 
   @override
   Widget build(BuildContext context) {
+    final days = widget.config.days.toList()..sort((a, b) => a.date.compareTo(b.date));
     return Stack(children: [
       ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.only(bottom: 80),
         children: [
-          _laneCountCard(),
-          const SizedBox(height: 12),
-          _fleetCard(),
-          const SizedBox(height: 12),
-          _defaultRoundsCard(),
-          const SizedBox(height: 12),
-          _minCrewsPerRaceCard(),
-          const SizedBox(height: 12),
-          ColorMapEditor(
-            value: widget.config.colorMap,
-            onChanged: _saveColorMap,
-            enabled: !_saving,
+          // Boats: lane count + fleet hulls + long-distance limit
+          ColoredPageHeader(
+            title: 'Boats',
+            subtitle: 'Lanes, fleet hulls and long-distance limits',
+            eventId: widget.eventId,
           ),
-          const SizedBox(height: 16),
-          ...(widget.config.days.toList()..sort((a, b) => a.date.compareTo(b.date))).map(_dayCard),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            onPressed: _saving ? null : _addDay,
-            icon: const Icon(Icons.add),
-            label: const Text('Add Day'),
+          _section([
+            _laneCountField(),
+            _hint('Fleet (hull letters): comma list per boat group, e.g. "D,E,F". '
+                'Empty = no rotation. Placement respects turnaround = fleet size × gap.'),
+            _fleetFields(),
+            _hint('Long-distance team limit (>1000m): max teams (boats) per '
+                'long-distance race, per boat group. Blank or 0 = unlimited (one '
+                'Final). Above the limit the field splits into balanced flights '
+                '("Final 1", "Final 2", …).'),
+            _longDistanceFields(),
+          ]),
+          pageSectionGap,
+
+          // Plan rules: rounds + min crews per race
+          ColoredPageHeader(
+            title: 'Plan rules',
+            subtitle: 'Rounds and minimum crews per race',
+            eventId: widget.eventId,
           ),
-          const SizedBox(height: 80),
+          _section([
+            _defaultRoundsField(),
+            _hint('Rounds are applied when registered crews ≤ lanes (no heats / semis needed).'),
+            _minCrewsPerRaceField(),
+            _hint('Disciplines with fewer crews than this are auto-marked inactive '
+                'after every registration import.'),
+          ]),
+          pageSectionGap,
+
+          // Race row colours (ColorMapEditor draws its own Card; flatten it
+          // so it sits on the page background like the other sections).
+          ColoredPageHeader(title: 'Race row colours', eventId: widget.eventId),
+          Theme(
+            data: Theme.of(context).copyWith(
+              cardTheme: const CardThemeData(
+                color: Colors.transparent,
+                surfaceTintColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                elevation: 0,
+                margin: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(),
+              ),
+            ),
+            child: ColorMapEditor(
+              value: widget.config.colorMap,
+              onChanged: _saveColorMap,
+              enabled: !_saving,
+            ),
+          ),
+          pageSectionGap,
+
+          // Days and blocks
+          ColoredPageHeader(
+            title: 'Days and blocks',
+            subtitle: 'Race days and their time blocks',
+            eventId: widget.eventId,
+          ),
+          if (days.isEmpty)
+            _section([_hint('No days yet. Add a day to start defining blocks.')]),
+          for (final day in days) ...[
+            _dayHeader(day),
+            _dayBlocks(day),
+          ],
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                onPressed: _saving ? null : _addDay,
+                icon: const Icon(Icons.add),
+                label: const Text('Add Day'),
+              ),
+            ),
+          ),
         ],
       ),
       if (_saving)
@@ -567,273 +625,206 @@ class _SetupTabState extends State<SetupTab> {
     ]);
   }
 
-  Widget _laneCountCard() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(children: [
-          const Icon(Icons.straighten, color: Color.fromARGB(255, 0, 80, 150)),
-          const SizedBox(width: 12),
-          const Text('Lane count', style: TextStyle(fontWeight: FontWeight.bold)),
-          const Spacer(),
-          DropdownButton<int>(
-            value: _laneCount,
-            items: [
-              for (final n in const [3, 4, 5, 6, 8, 9])
-                DropdownMenuItem(
-                  value: n,
-                  child: Text(
-                    '$n lanes${(n == 4 || n == 6 || n == 8) ? "" : " (no IDBF plan)"}',
-                  ),
-                ),
-            ],
-            onChanged: _saving ? null : (v) {
-              if (v != null) _saveLaneCount(v);
-            },
-          ),
-        ]),
+  /// Fields under a section bar: h16/v12 padding, 12px between fields.
+  Widget _section(List<Widget> fields) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (int i = 0; i < fields.length; i++) ...[
+            if (i > 0) const SizedBox(height: 12),
+            fields[i],
+          ],
+        ],
       ),
     );
   }
 
-  Widget _fleetCard() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Row(children: [
-            Icon(Icons.directions_boat, color: Color.fromARGB(255, 0, 80, 150)),
-            SizedBox(width: 12),
-            Text('Fleet (hull letters)', style: TextStyle(fontWeight: FontWeight.bold)),
-          ]),
-          const SizedBox(height: 4),
-          const Text(
-            'Comma list per boat group, e.g. "D,E,F". Empty = no rotation. '
-            'Placement respects turnaround = fleet size × gap.',
-            style: TextStyle(fontSize: 11, color: Colors.grey),
-          ),
-          const SizedBox(height: 12),
-          Row(children: [
-            Expanded(
-              child: TextField(
-                controller: _hullsSmallCtl,
-                focusNode: _hullsSmallFocus,
-                enabled: !_saving,
-                decoration: const InputDecoration(
-                  labelText: 'Small hulls',
-                  hintText: 'D,E,F',
-                  isDense: true,
-                  border: OutlineInputBorder(),
-                ),
-                textInputAction: TextInputAction.next,
-                onEditingComplete: () => _saveHullsSmall(_hullsSmallCtl.text.trim()),
-                onSubmitted: (v) => _saveHullsSmall(v.trim()),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextField(
-                controller: _hullsStandardCtl,
-                focusNode: _hullsStandardFocus,
-                enabled: !_saving,
-                decoration: const InputDecoration(
-                  labelText: 'Standard hulls',
-                  hintText: 'A,B,C',
-                  isDense: true,
-                  border: OutlineInputBorder(),
-                ),
-                textInputAction: TextInputAction.done,
-                onEditingComplete: () => _saveHullsStandard(_hullsStandardCtl.text.trim()),
-                onSubmitted: (v) => _saveHullsStandard(v.trim()),
-              ),
-            ),
-          ]),
-          const SizedBox(height: 16),
-          const Text('Long-distance team limit (>1000m)', style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          const Text(
-            'Max teams (boats) per long-distance race, per boat group. Blank or 0 '
-            '= unlimited (one Final). Above the limit the field splits into '
-            'balanced flights ("Final 1", "Final 2", …).',
-            style: TextStyle(fontSize: 11, color: Colors.grey),
-          ),
-          const SizedBox(height: 12),
-          Row(children: [
-            Expanded(
-              child: TextField(
-                controller: _longMaxSmallCtl,
-                focusNode: _longMaxSmallFocus,
-                enabled: !_saving,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Small max teams',
-                  hintText: 'unlimited',
-                  isDense: true,
-                  border: OutlineInputBorder(),
-                ),
-                textInputAction: TextInputAction.next,
-                onEditingComplete: () => _saveLongMaxSmall(_longMaxSmallCtl.text),
-                onSubmitted: (v) => _saveLongMaxSmall(v),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextField(
-                controller: _longMaxStandardCtl,
-                focusNode: _longMaxStandardFocus,
-                enabled: !_saving,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Standard max teams',
-                  hintText: 'unlimited',
-                  isDense: true,
-                  border: OutlineInputBorder(),
-                ),
-                textInputAction: TextInputAction.done,
-                onEditingComplete: () => _saveLongMaxStandard(_longMaxStandardCtl.text),
-                onSubmitted: (v) => _saveLongMaxStandard(v),
-              ),
-            ),
-          ]),
-        ]),
-      ),
-    );
+  /// Small grey explanatory text under a section bar.
+  Widget _hint(String text) {
+    return Text(text, style: const TextStyle(fontSize: 12, color: Colors.black54));
   }
 
-  Widget _defaultRoundsCard() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-          const Icon(Icons.repeat, color: Color.fromARGB(255, 0, 80, 150)),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Rounds', style: TextStyle(fontWeight: FontWeight.bold)),
-              Text(
-                'Applied when registered crews ≤ lanes (no heats / semis needed).',
-                style: TextStyle(fontSize: 11, color: Colors.grey),
-              ),
-            ]),
-          ),
-          const SizedBox(width: 12),
-          DropdownButton<int>(
-            value: _defaultRounds,
-            items: [
-              for (final n in const [1, 2, 3, 4, 5, 6])
-                DropdownMenuItem(value: n, child: Text('$n round${n == 1 ? "" : "s"}')),
-            ],
-            onChanged: _saving ? null : (v) {
-              if (v != null) _saveDefaultRounds(v);
-            },
-          ),
-        ]),
+  /// Outlined dropdown matching pageFieldDecoration.
+  Widget _dropdownField<T>({
+    required String label,
+    required T value,
+    required List<DropdownMenuItem<T>> items,
+    required ValueChanged<T?>? onChanged,
+  }) {
+    return InputDecorator(
+      decoration: pageFieldDecoration(label).copyWith(
+        contentPadding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
       ),
-    );
-  }
-
-  Widget _minCrewsPerRaceCard() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-          const Icon(Icons.groups, color: Color.fromARGB(255, 0, 80, 150)),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Min crews per race', style: TextStyle(fontWeight: FontWeight.bold)),
-              Text(
-                'Disciplines with fewer crews than this are auto-marked inactive '
-                'after every registration import.',
-                style: TextStyle(fontSize: 11, color: Colors.grey),
-              ),
-            ]),
-          ),
-          const SizedBox(width: 12),
-          DropdownButton<int>(
-            value: _minCrewsPerRace,
-            items: [
-              for (final n in const [1, 2, 3, 4, 5, 6, 7, 8])
-                DropdownMenuItem(value: n, child: Text('$n crew${n == 1 ? "" : "s"}')),
-            ],
-            onChanged: _saving ? null : (v) {
-              if (v != null) _saveMinCrewsPerRace(v);
-            },
-          ),
-        ]),
-      ),
-    );
-  }
-
-  Widget _dayCard(EventDay day) {
-    final dateStr = day.date.toIso8601String().substring(0, 10);
-    final headerColor = competitionColor[0]; // deep blue
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      clipBehavior: Clip.antiAlias,
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Container(
-          color: headerColor,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(children: [
-            const Icon(Icons.event, color: Colors.white, size: 20),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(
-                  day.name?.isNotEmpty == true ? day.name! : dateStr,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                if (day.name?.isNotEmpty == true)
-                  Text(
-                    dateStr,
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
-              ]),
-            ),
-            if (widget.config.days.length > 1)
-              CompactIcon(
-                Icons.content_copy,
-                tooltip: 'Copy blocks from another day',
-                onPressed: () => _copyBlocksFrom(day),
-                color: Colors.white,
-              ),
-            CompactIcon(
-              Icons.edit,
-              tooltip: 'Edit day',
-              onPressed: () => _editDay(day),
-              color: Colors.white,
-            ),
-            CompactIcon(
-              Icons.delete_outline,
-              tooltip: 'Delete day',
-              onPressed: () => _deleteDay(day),
-              color: Colors.white,
-            ),
-          ]),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<T>(
+          value: value,
+          isExpanded: true,
+          items: items,
+          onChanged: onChanged,
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            if (day.blocks.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: Text('No blocks yet.', style: TextStyle(color: Colors.grey)),
-              ),
-            ...day.blocks.map(_blockTile),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: () => _addBlock(day),
-                icon: const Icon(Icons.add),
-                label: const Text('Add Block'),
-              ),
+      ),
+    );
+  }
+
+  Widget _laneCountField() {
+    return _dropdownField<int>(
+      label: 'Lane count',
+      value: _laneCount,
+      items: [
+        for (final n in const [3, 4, 5, 6, 8, 9])
+          DropdownMenuItem(
+            value: n,
+            child: Text(
+              '$n lanes${(n == 4 || n == 6 || n == 8) ? "" : " (no IDBF plan)"}',
             ),
-          ]),
+          ),
+      ],
+      onChanged: _saving ? null : (v) {
+        if (v != null) _saveLaneCount(v);
+      },
+    );
+  }
+
+  Widget _fleetFields() {
+    return Row(children: [
+      Expanded(
+        child: TextField(
+          controller: _hullsSmallCtl,
+          focusNode: _hullsSmallFocus,
+          enabled: !_saving,
+          decoration: pageFieldDecoration('Small hulls').copyWith(hintText: 'D,E,F'),
+          textInputAction: TextInputAction.next,
+          onEditingComplete: () => _saveHullsSmall(_hullsSmallCtl.text.trim()),
+          onSubmitted: (v) => _saveHullsSmall(v.trim()),
+        ),
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: TextField(
+          controller: _hullsStandardCtl,
+          focusNode: _hullsStandardFocus,
+          enabled: !_saving,
+          decoration: pageFieldDecoration('Standard hulls').copyWith(hintText: 'A,B,C'),
+          textInputAction: TextInputAction.done,
+          onEditingComplete: () => _saveHullsStandard(_hullsStandardCtl.text.trim()),
+          onSubmitted: (v) => _saveHullsStandard(v.trim()),
+        ),
+      ),
+    ]);
+  }
+
+  Widget _longDistanceFields() {
+    return Row(children: [
+      Expanded(
+        child: TextField(
+          controller: _longMaxSmallCtl,
+          focusNode: _longMaxSmallFocus,
+          enabled: !_saving,
+          keyboardType: TextInputType.number,
+          decoration: pageFieldDecoration('Small max teams').copyWith(hintText: 'unlimited'),
+          textInputAction: TextInputAction.next,
+          onEditingComplete: () => _saveLongMaxSmall(_longMaxSmallCtl.text),
+          onSubmitted: (v) => _saveLongMaxSmall(v),
+        ),
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: TextField(
+          controller: _longMaxStandardCtl,
+          focusNode: _longMaxStandardFocus,
+          enabled: !_saving,
+          keyboardType: TextInputType.number,
+          decoration: pageFieldDecoration('Standard max teams').copyWith(hintText: 'unlimited'),
+          textInputAction: TextInputAction.done,
+          onEditingComplete: () => _saveLongMaxStandard(_longMaxStandardCtl.text),
+          onSubmitted: (v) => _saveLongMaxStandard(v),
+        ),
+      ),
+    ]);
+  }
+
+  Widget _defaultRoundsField() {
+    return _dropdownField<int>(
+      label: 'Rounds',
+      value: _defaultRounds,
+      items: [
+        for (final n in const [1, 2, 3, 4, 5, 6])
+          DropdownMenuItem(value: n, child: Text('$n round${n == 1 ? "" : "s"}')),
+      ],
+      onChanged: _saving ? null : (v) {
+        if (v != null) _saveDefaultRounds(v);
+      },
+    );
+  }
+
+  Widget _minCrewsPerRaceField() {
+    return _dropdownField<int>(
+      label: 'Min crews per race',
+      value: _minCrewsPerRace,
+      items: [
+        for (final n in const [1, 2, 3, 4, 5, 6, 7, 8])
+          DropdownMenuItem(value: n, child: Text('$n crew${n == 1 ? "" : "s"}')),
+      ],
+      onChanged: _saving ? null : (v) {
+        if (v != null) _saveMinCrewsPerRace(v);
+      },
+    );
+  }
+
+  Widget _dayHeader(EventDay day) {
+    final dateStr = day.date.toIso8601String().substring(0, 10);
+    final hasName = day.name?.isNotEmpty == true;
+    return ColoredPageHeader(
+      title: hasName ? day.name! : dateStr,
+      subtitle: hasName ? dateStr : null,
+      eventId: widget.eventId,
+      leading: const Icon(Icons.event, color: Colors.white),
+      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+        if (widget.config.days.length > 1)
+          CompactIcon(
+            Icons.content_copy,
+            tooltip: 'Copy blocks from another day',
+            onPressed: () => _copyBlocksFrom(day),
+            color: Colors.white,
+          ),
+        CompactIcon(
+          Icons.edit,
+          tooltip: 'Edit day',
+          onPressed: () => _editDay(day),
+          color: Colors.white,
+        ),
+        CompactIcon(
+          Icons.delete_outline,
+          tooltip: 'Delete day',
+          onPressed: () => _deleteDay(day),
+          color: Colors.white,
+        ),
+      ]),
+    );
+  }
+
+  Widget _dayBlocks(EventDay day) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        if (day.blocks.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Text('No blocks yet.', style: TextStyle(color: Colors.grey)),
+          ),
+        for (int i = 0; i < day.blocks.length; i++) ...[
+          if (i > 0) const Divider(height: 1),
+          _blockTile(day.blocks[i]),
+        ],
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            onPressed: () => _addBlock(day),
+            icon: const Icon(Icons.add),
+            label: const Text('Add Block'),
+          ),
         ),
       ]),
     );

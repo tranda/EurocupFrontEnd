@@ -79,19 +79,11 @@ class _ColorMapEditorState extends State<ColorMapEditor> {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            const Icon(Icons.palette, color: Color.fromARGB(255, 0, 80, 150)),
-            const SizedBox(width: 12),
-            const Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Race row colours', style: TextStyle(fontWeight: FontWeight.bold)),
-                Text(
-                  'Each discipline word in the Grid is rendered with the colour you pick here.',
-                  style: TextStyle(fontSize: 11, color: Colors.grey),
-                ),
-              ]),
-            ),
-          ]),
+          // Title comes from the Setup tab's section bar.
+          Text(
+            'Each discipline word in the Grid is rendered with the colour you pick here.',
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+          ),
           const SizedBox(height: 12),
           for (final cat in RaceColorPalette.categoryValues.keys) ...[
             _categorySection(cat),
