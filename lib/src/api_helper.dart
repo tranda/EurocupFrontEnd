@@ -2372,3 +2372,78 @@ Future<void> createTeamForImport(String name, int clubId) async {
     throw Exception('Failed to create team (${res.statusCode}): ${res.body}');
   }
 }
+
+// ---------------------------------------------------------------------------
+// Boat marshal check-in. Results are raw maps; see BoatCheckinView.
+// ---------------------------------------------------------------------------
+
+/// Signed QR string for an athlete badge. Only the backend can sign it.
+Future<String?> getAthleteQrToken(int athleteId) async {
+  var headers = {'Authorization': 'Bearer $token', 'Cache-Control': 'no-cache'};
+  var request = http.Request('GET', Uri.parse('$apiURL/athletes/$athleteId/qr-token'));
+  request.headers.addAll(headers);
+  http.StreamedResponse response = await request.send();
+  if (response.statusCode == 200) {
+    final result = jsonDecode(await response.stream.bytesToString());
+    return result['token'] as String?;
+  }
+  return null;
+}
+
+/// Roster for one crew in one race, with who is already on board.
+Future<Map<String, dynamic>> getBoatCheckins(int raceResultId, int crewId) async {
+  var headers = {'Authorization': 'Bearer $token', 'Cache-Control': 'no-cache'};
+  var timestamp = DateTime.now().millisecondsSinceEpoch;
+  var request = http.Request('GET',
+      Uri.parse('$apiURL/race-results/$raceResultId/crews/$crewId/boat-checkins?t=$timestamp'));
+  request.headers.addAll(headers);
+  http.StreamedResponse response = await request.send();
+  final body = await response.stream.bytesToString();
+  if (response.statusCode == 200) {
+    return jsonDecode(body) as Map<String, dynamic>;
+  }
+  throw Exception(_messageFrom(body) ?? 'Failed to load check-in (${response.statusCode})');
+}
+
+/// Sends a scanned QR. Returns {status, message, athlete, checkin}.
+/// status: checked_in | already_checked_in | not_in_crew | in_other_crew | invalid_qr
+Future<Map<String, dynamic>> postBoatCheckin(int raceResultId, int crewId, String qr) async {
+  var headers = {
+    'Authorization': 'Bearer $token',
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
+  var request = http.Request(
+      'POST', Uri.parse('$apiURL/race-results/$raceResultId/crews/$crewId/boat-checkins'));
+  request.body = jsonEncode({'qr': qr});
+  request.headers.addAll(headers);
+  http.StreamedResponse response = await request.send();
+  final body = await response.stream.bytesToString();
+  final decoded = jsonDecode(body);
+  if (decoded is Map<String, dynamic> && decoded.containsKey('status')) {
+    return decoded;
+  }
+  throw Exception(_messageFrom(body) ?? 'Check-in failed (${response.statusCode})');
+}
+
+/// Takes an athlete off the boat (e.g. a reserve swapped back).
+Future<Map<String, dynamic>> deleteBoatCheckin(int raceResultId, int crewId, int athleteId) async {
+  var headers = {'Authorization': 'Bearer $token', 'Accept': 'application/json'};
+  var request = http.Request('DELETE',
+      Uri.parse('$apiURL/race-results/$raceResultId/crews/$crewId/boat-checkins/$athleteId'));
+  request.headers.addAll(headers);
+  http.StreamedResponse response = await request.send();
+  final body = await response.stream.bytesToString();
+  if (response.statusCode == 200) {
+    return jsonDecode(body) as Map<String, dynamic>;
+  }
+  throw Exception(_messageFrom(body) ?? 'Failed to undo check-in (${response.statusCode})');
+}
+
+String? _messageFrom(String body) {
+  try {
+    final decoded = jsonDecode(body);
+    if (decoded is Map && decoded['message'] is String) return decoded['message'] as String;
+  } catch (_) {}
+  return null;
+}

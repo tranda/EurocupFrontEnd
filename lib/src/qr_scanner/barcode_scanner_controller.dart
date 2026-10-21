@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
-import '../model/athlete/athlete.dart';
-import 'qr_code_util.dart';
 
 class BarCodeScannerController extends StatefulWidget {
   const BarCodeScannerController({super.key});
@@ -29,29 +27,8 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
     );
   }
 
-  Athlete? findAthleteById(List<Athlete> list, int searchId) {
-    try {
-      return list.firstWhere((athlete) => athlete.id == searchId);
-    } catch (e) {
-      return null;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    // Safely extract route arguments with null safety
-    final routeSettings = ModalRoute.of(context)?.settings;
-    final args = routeSettings?.arguments;
-
-    // Handle null or invalid arguments
-    List<Athlete> listAthlete = [];
-    if (args != null && args is Map && args.containsKey('list')) {
-      final athleteList = args['list'];
-      if (athleteList is List<Athlete>) {
-        listAthlete = athleteList;
-      }
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('QR Scanner'),
@@ -89,7 +66,7 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
                     key: ValueKey(controller.hashCode),
                     controller: controller,
                     onDetect: (capture) {
-                      _onBarcodeDetect(capture, listAthlete);
+                      _onBarcodeDetect(capture);
                     },
                   ),
                 ),
@@ -124,30 +101,23 @@ class _BarCodeScannerControllerState extends State<BarCodeScannerController> {
     );
   }
 
-  void _onBarcodeDetect(BarcodeCapture capture, List<Athlete> listAthlete) {
-    if (!isProcessing) {
-      final List<Barcode> barcodes = capture.barcodes;
-      if (barcodes.isNotEmpty) {
-        setState(() {
-          isProcessing = true;
-        });
+  /// Returns the raw QR text to the caller ({'qr': value}).
+  /// The backend checks the signature, so nothing is verified here.
+  void _onBarcodeDetect(BarcodeCapture capture) {
+    if (isProcessing) return;
+    final barcodes = capture.barcodes;
+    if (barcodes.isEmpty) return;
 
-        final qrValue = barcodes.first.rawValue ?? '';
-        final athleteId = QrCodeUtil.verify(qrValue);
+    final qrValue = barcodes.first.rawValue ?? '';
+    setState(() {
+      isProcessing = true;
+    });
 
-        if (athleteId == null) {
-          _showResultAndResume(passed: false, message: 'INVALID QR CODE');
-          return;
-        }
-
-        Athlete? athlete = findAthleteById(listAthlete, athleteId);
-        if (athlete != null) {
-          Navigator.pop(context, {'success': true, 'athlete': athlete});
-        } else {
-          Navigator.pop(context, {'success': false, 'athleteId': athleteId});
-        }
-      }
+    if (!qrValue.startsWith('EVT2.')) {
+      _showResultAndResume(passed: false, message: 'INVALID QR CODE');
+      return;
     }
+    Navigator.pop(context, {'qr': qrValue});
   }
 
   void _showResultAndResume({required bool passed, required String message}) {

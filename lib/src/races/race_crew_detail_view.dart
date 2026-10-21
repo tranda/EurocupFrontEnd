@@ -1,15 +1,11 @@
-import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/model/race/crew.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
 import '../athletes/athlete_detail_view.dart';
-import '../athletes/image_widget_web.dart' if (dart.library.io) 'package:flutter/material.dart';
 import '../model/athlete/athlete.dart';
 
-import '../qr_scanner/barcode_scanner_controller.dart';
 
 class RaceCrewDetailView extends StatefulWidget {
   const RaceCrewDetailView({super.key});
@@ -46,10 +42,6 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
     return true;
   }
 
-  // Removed old scanQR method - now using BarCodeScannerController
-
-  // Removed old _scan method - now using BarCodeScannerController
-
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments as Map;
@@ -59,34 +51,7 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
     String title = args['title'];
 
     return Scaffold(
-      appBar: appBarWithAction(() {
-        Navigator.pushNamed(
-          context,
-          BarCodeScannerController.routeName,
-          arguments: {'list': listAthlete},
-        ).then((value) async {
-          if (value != null && value is Map) {
-            if (value['success'] == true) {
-              final athlete = value['athlete'] as Athlete;
-              final photoUrl = athlete.photo != null && athlete.photo!.isNotEmpty
-                  ? "https://$imagePrefix/${athlete.photo}"
-                  : "";
-              _showScanResult(
-                context,
-                passed: true,
-                athleteName: '${athlete.firstName} ${athlete.lastName}',
-                photoUrl: photoUrl,
-              );
-            } else {
-              _showScanResult(
-                context,
-                passed: false,
-                athleteName: 'Athlete ID: ${value['athleteId']}',
-              );
-            }
-          }
-        });
-      }, title: title, icon: Icons.qr_code_scanner),
+      appBar: appBar(title: title),
       body: Container(
         decoration: bckDecoration(),
         child: FutureBuilder(
@@ -164,92 +129,5 @@ class _RaceCrewDetailViewState extends State<RaceCrewDetailView> {
         ),
       ),
     );
-  }
-
-  void _showScanResult(BuildContext context, {required bool passed, required String athleteName, String photoUrl = ''}) {
-    final statusColor = passed ? Colors.green : Colors.red;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        backgroundColor: passed ? Colors.green.shade50 : Colors.red.shade50,
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (photoUrl.isNotEmpty)
-              Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: kIsWeb
-                        ? WebImage(imageUrl: photoUrl, width: 200, height: 200)
-                        : Image.network(photoUrl, width: 200, height: 200, fit: BoxFit.cover),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: statusColor,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 3),
-                    ),
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      passed ? Icons.check : Icons.close,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                ],
-              ),
-            if (photoUrl.isEmpty)
-              Icon(
-                passed ? Icons.check_circle : Icons.cancel,
-                color: statusColor,
-                size: 100,
-              ),
-            const SizedBox(height: 16),
-            Text(
-              athleteName,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              passed ? 'PASSED' : 'NOT IN THIS CREW',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: statusColor.shade700,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-        actions: [
-          Center(
-            child: TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK', style: TextStyle(fontSize: 18)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<bool?> openDialog() async {
-    return await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-              content: null,
-              title: Text(
-                "Save Your changes?",
-                style: Theme.of(context).textTheme.displaySmall,
-              ),
-              actions: <Widget>[
-                TextButton(onPressed: () {}, child: const Text("OK")),
-              ],
-            ));
   }
 }

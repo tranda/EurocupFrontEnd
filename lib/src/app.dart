@@ -26,6 +26,7 @@ import 'package:eurocup_frontend/src/reset_password_view.dart';
 import 'package:eurocup_frontend/src/qr_scanner/barcode_scanner_controller.dart';
 import 'package:eurocup_frontend/src/races/discipline_race_list_view.dart';
 import 'package:eurocup_frontend/src/races/race_crew_detail_view.dart';
+import 'package:eurocup_frontend/src/races/boat_checkin_view.dart';
 import 'package:eurocup_frontend/src/races/race_detail_view.dart';
 import 'package:eurocup_frontend/src/races/race_results_list_view.dart';
 import 'package:eurocup_frontend/src/races/race_result_detail_view.dart';
@@ -162,6 +163,7 @@ class MyApp extends StatelessWidget {
     // stack on refresh and bounce unauthenticated public viewers to login.
     RaceResultsListView.routeName: CompetitionSelectorView.routeName,
     RaceResultDetailView.routeName: RaceResultsListView.routeName,
+    BoatCheckinView.routeName: RaceResultDetailView.routeName,
 
     // Direct children of home
     AdministrationPage.routeName: HomePage.routeName,
@@ -551,6 +553,11 @@ class MyApp extends StatelessWidget {
             return const StartupWrapper(
               targetRoute: RaceCrewDetailView.routeName,
               child: RaceCrewDetailView(),
+            );
+          case BoatCheckinView.routeName:
+            return const StartupWrapper(
+              targetRoute: BoatCheckinView.routeName,
+              child: BoatCheckinView(),
             );
           case BarCodeScannerController.routeName:
             return const StartupWrapper(

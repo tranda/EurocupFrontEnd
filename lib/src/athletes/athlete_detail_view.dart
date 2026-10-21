@@ -4,7 +4,6 @@ import 'dart:typed_data';
 
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
-import 'package:eurocup_frontend/src/qr_scanner/qr_code_util.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -573,11 +572,16 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
         ));
   }
 
-  void _showQrCode(Athlete athlete) {
-    final qrData = QrCodeUtil.generate(
-      athleteId: athlete.id!,
-      clubId: athlete.clubId ?? 0,
-    );
+  Future<void> _showQrCode(Athlete athlete) async {
+    // The backend signs the QR; the app never holds the key.
+    final qrData = await api.getAthleteQrToken(athlete.id!);
+    if (!mounted) return;
+    if (qrData == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not load QR code')),
+      );
+      return;
+    }
 
     showDialog(
       context: context,

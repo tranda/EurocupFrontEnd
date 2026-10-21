@@ -1,6 +1,7 @@
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/model/race/race_result.dart';
 import 'package:eurocup_frontend/src/model/race/crew_result.dart';
+import 'package:eurocup_frontend/src/races/boat_checkin_view.dart';
 import 'package:eurocup_frontend/src/races/race_results_list_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
@@ -255,7 +256,21 @@ class _RaceResultDetailViewState extends State<RaceResultDetailView> {
 
           // Adjust index for crew results (subtract 1 because of header)
           final crewResult = crewResults[index - 1];
-          return _buildCrewResultItem(context, crewResult, raceResult, isFinal, isLastRound);
+          final item = _buildCrewResultItem(context, crewResult, raceResult, isFinal, isLastRound);
+          // Boat marshals (access level 1+) tap a crew to check athletes on board.
+          final crewId = crewResult.crewId ?? crewResult.crew?.id;
+          if ((currentUser.accessLevel ?? 0) < 1 || crewId == null || raceResult.id == null) {
+            return item;
+          }
+          return InkWell(
+            onTap: () => Navigator.pushNamed(context, BoatCheckinView.routeName, arguments: {
+              'raceResultId': raceResult.id,
+              'crewId': crewId,
+              'title': crewResult.crew?.team?.name ?? crewResult.team?.name ?? 'Crew',
+              'stage': raceResult.stage ?? '',
+            }),
+            child: item,
+          );
         },
       ),
     );
