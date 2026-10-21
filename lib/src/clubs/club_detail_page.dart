@@ -252,6 +252,8 @@ class _ClubDetailPageState extends State<ClubDetailPage> {
         ],
       ),
       body: Container(
+        // Fill the screen even when the content is short.
+        height: double.infinity,
         decoration: bckDecoration(),
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),

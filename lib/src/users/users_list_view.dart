@@ -127,7 +127,7 @@ class ListViewState extends State<UserListView> {
     if (level == null) return 'No access level';
     if (level == 3) return 'Admins';
     if (level == 2) return 'Organisers';
-    if (level == 1) return 'Officials';
+    if (level == 1) return 'Judges';
     if (level == 0) return 'Club users';
     if (level == -1) return 'Disabled';
     return 'Access level $level';

@@ -327,6 +327,8 @@ class _UserDetailViewState extends State<UserDetailView> {
           ],
         ),
         body: Container(
+          // Fill the screen even when the form is short.
+          height: double.infinity,
           decoration: bckDecoration(),
           child: SingleChildScrollView(
             child: Form(
