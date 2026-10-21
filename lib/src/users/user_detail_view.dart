@@ -1,5 +1,6 @@
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/material.dart';
 
 import 'package:eurocup_frontend/src/common.dart';
@@ -281,6 +282,22 @@ class _UserDetailViewState extends State<UserDetailView> {
     super.dispose();
   }
 
+  /// Style C section body: 16px padding, 12px gaps between fields.
+  Widget _section(List<Widget> fields) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (int i = 0; i < fields.length; i++) ...[
+            if (i > 0) const SizedBox(height: 12),
+            fields[i],
+          ],
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     switch (mode) {
@@ -312,15 +329,19 @@ class _UserDetailViewState extends State<UserDetailView> {
         body: Container(
           decoration: bckDecoration(),
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
             child: Form(
               key: _formKey,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: TextFormField(
+                  PageTitleBlock(
+                    title: newUser
+                        ? 'New user'
+                        : ((user.name ?? '').isNotEmpty ? user.name! : 'User'),
+                  ),
+                  const ColoredPageHeader(title: 'Account'),
+                  _section([
+                    TextFormField(
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Required';
@@ -328,8 +349,7 @@ class _UserDetailViewState extends State<UserDetailView> {
                         return null;
                       },
                       textCapitalization: TextCapitalization.words,
-                      decoration:
-                          buildStandardInputDecorationWithLabel('Full Name'),
+                      decoration: pageFieldDecoration('Full Name'),
                       controller: nameController,
                       enabled: editable,
                       style: Theme.of(context).textTheme.displaySmall,
@@ -337,43 +357,7 @@ class _UserDetailViewState extends State<UserDetailView> {
                         user.name = value;
                       },
                     ),
-                  ),
-                  TextFormField(
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Required';
-                      }
-                      return null;
-                    },
-                    textCapitalization: TextCapitalization.words,
-                    decoration:
-                        buildStandardInputDecorationWithLabel('Username'),
-                    controller: usernameController,
-                    enabled: editable && newUser,
-                    style: Theme.of(context).textTheme.displaySmall,
-                    onChanged: (value) {
-                      user.username = value;
-                    },
-                  ),
-                  TextFormField(
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Required';
-                      }
-                      return null;
-                    },
-                    textCapitalization: TextCapitalization.words,
-                    decoration: buildStandardInputDecorationWithLabel('email'),
-                    controller: eMailController,
-                    enabled: newUser,
-                    style: Theme.of(context).textTheme.displaySmall,
-                    onChanged: (value) {
-                      user.email = value;
-                    },
-                  ),
-                  Visibility(
-                    visible: newUser,
-                    child: TextFormField(
+                    TextFormField(
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Required';
@@ -381,156 +365,189 @@ class _UserDetailViewState extends State<UserDetailView> {
                         return null;
                       },
                       textCapitalization: TextCapitalization.words,
-                      decoration: buildPasswordInputDecoration('Password'),
-                      controller: passwordController,
+                      decoration: pageFieldDecoration('Username'),
+                      controller: usernameController,
                       enabled: editable && newUser,
                       style: Theme.of(context).textTheme.displaySmall,
                       onChanged: (value) {
-                        user.password = value;
+                        user.username = value;
                       },
                     ),
-                  ),
-                  Visibility(
-                    visible: newUser,
-                    child: TextFormField(
+                    TextFormField(
                       validator: (value) {
-                        if (value != passwordController.text) {
-                          return 'Must be the same as Password';
+                        if (value == null || value.isEmpty) {
+                          return 'Required';
                         }
                         return null;
                       },
                       textCapitalization: TextCapitalization.words,
-                      decoration:
-                          buildPasswordInputDecoration('Password Confirmation'),
-                      controller: passwordConfirmedController,
-                      enabled: editable && newUser,
+                      decoration: pageFieldDecoration('email'),
+                      controller: eMailController,
+                      enabled: newUser,
                       style: Theme.of(context).textTheme.displaySmall,
                       onChanged: (value) {
-                        user.password_confirmation = value;
+                        user.email = value;
                       },
                     ),
-                  ),
-                  (!editable)
-                      ? TextFormField(
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Required!';
-                            }
-                            return null;
-                          },
-                          decoration:
-                              buildStandardInputDecorationWithLabel('Club'),
-                          controller: clubController,
-                          enabled: false,
-                          style: Theme.of(context).textTheme.displaySmall,
-                        )
-                      : DropdownButtonFormField<int>(
-                          isExpanded: true,
-                          hint: Text(
-                            user.clubId != null && user.clubId != 0 && !_clubs.any((c) => c.id == user.clubId)
-                                ? 'Invalid ID: ${user.clubId}'
-                                : 'Select Club',
-                            overflow: TextOverflow.ellipsis,
+                  ]),
+                  pageSectionGap,
+                  const ColoredPageHeader(title: 'Access'),
+                  _section([
+                    (!editable)
+                        ? TextFormField(
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Required!';
+                              }
+                              return null;
+                            },
+                            decoration: pageFieldDecoration('Club'),
+                            controller: clubController,
+                            enabled: false,
+                            style: Theme.of(context).textTheme.displaySmall,
+                          )
+                        : DropdownButtonFormField<int>(
+                            isExpanded: true,
+                            decoration: pageFieldDecoration('Club'),
+                            hint: Text(
+                              user.clubId != null && user.clubId != 0 && !_clubs.any((c) => c.id == user.clubId)
+                                  ? 'Invalid ID: ${user.clubId}'
+                                  : 'Select Club',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            value: _isLoadingData ? null : _getValidClubValue(),
+                            validator: (value) {
+                              if (value == null) {
+                                return 'Required - Please select a valid club';
+                              }
+                              return null;
+                            },
+                            items: _isLoadingData ? [] : _buildClubDropdownItems(),
+                            onChanged: (value) {
+                              setState(() {
+                                user.clubId = value;
+                              });
+                            },
+                            style: Theme.of(context).textTheme.displaySmall,
                           ),
-                          value: _isLoadingData ? null : _getValidClubValue(),
-                          validator: (value) {
-                            if (value == null) {
-                              return 'Required - Please select a valid club';
-                            }
-                            return null;
-                          },
-                          items: _isLoadingData ? [] : _buildClubDropdownItems(),
-                          onChanged: (value) {
-                            setState(() {
-                              user.clubId = value;
-                            });
-                          },
-                          style: Theme.of(context).textTheme.displaySmall,
-                          padding:
-                              const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-                        ),
-                  (!editable)
-                      ? TextFormField(
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Required!';
-                            }
-                            return null;
-                          },
-                          decoration:
-                              buildStandardInputDecorationWithLabel('Event'),
-                          controller: eventController,
-                          enabled: false,
-                          style: Theme.of(context).textTheme.displaySmall,
-                        )
-                      : DropdownButtonFormField<int>(
-                          isExpanded: true,
-                          hint: Text(
-                            user.eventId != null && user.eventId != 0 && !_events.any((e) => e.id == user.eventId)
-                                ? 'Invalid ID: ${user.eventId}'
-                                : 'Select Event',
-                            overflow: TextOverflow.ellipsis,
+                    (!editable)
+                        ? TextFormField(
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Required!';
+                              }
+                              return null;
+                            },
+                            decoration: pageFieldDecoration('Event'),
+                            controller: eventController,
+                            enabled: false,
+                            style: Theme.of(context).textTheme.displaySmall,
+                          )
+                        : DropdownButtonFormField<int>(
+                            isExpanded: true,
+                            decoration: pageFieldDecoration('Event'),
+                            hint: Text(
+                              user.eventId != null && user.eventId != 0 && !_events.any((e) => e.id == user.eventId)
+                                  ? 'Invalid ID: ${user.eventId}'
+                                  : 'Select Event',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            value: _isLoadingData ? null : _getValidEventValue(),
+                            validator: (value) {
+                              if (value == null) {
+                                return 'Required - Please select a valid event';
+                              }
+                              return null;
+                            },
+                            items: _isLoadingData ? [] : _buildEventDropdownItems(),
+                            onChanged: (value) {
+                              setState(() {
+                                user.eventId = value;
+                              });
+                            },
+                            style: Theme.of(context).textTheme.displaySmall,
                           ),
-                          value: _isLoadingData ? null : _getValidEventValue(),
-                          validator: (value) {
-                            if (value == null) {
-                              return 'Required - Please select a valid event';
-                            }
-                            return null;
-                          },
-                          items: _isLoadingData ? [] : _buildEventDropdownItems(),
-                          onChanged: (value) {
-                            setState(() {
-                              user.eventId = value;
-                            });
-                          },
-                          style: Theme.of(context).textTheme.displaySmall,
-                          padding:
-                              const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-                        ),
-                  (!editable)
-                      ? TextFormField(
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Required!';
-                            }
-                            return null;
-                          },
-                          decoration: buildStandardInputDecorationWithLabel(
-                              'Access level'),
-                          controller: accessLevelController,
-                          enabled: false,
-                          style: Theme.of(context).textTheme.displaySmall,
-                        )
-                      : DropdownButtonFormField(
-                          hint: const Text('Select Access level'),
-                          value: user.accessLevel ?? -1,
-                          validator: (value) {
-                            if (value == null) {
-                              return 'Required';
-                            }
-                            return null;
-                          },
-                          items: const [
-                            DropdownMenuItem(
-                                value: -1, child: Text('N/A')),
-                            DropdownMenuItem(
-                                value: 0, child: Text('Club Manager')),
-                            DropdownMenuItem(value: 1, child: Text('Judge')),
-                            DropdownMenuItem(
-                                value: 2, child: Text('Event Manager')),
-                            DropdownMenuItem(
-                                value: 3, child: Text('Administrator'))
-                          ],
-                          onChanged: (value) {
-                            setState(() {
-                              user.accessLevel = value;
-                            });
-                          },
-                          style: Theme.of(context).textTheme.displaySmall,
-                          padding:
-                              const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-                        ),
+                    (!editable)
+                        ? TextFormField(
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Required!';
+                              }
+                              return null;
+                            },
+                            decoration: pageFieldDecoration('Access level'),
+                            controller: accessLevelController,
+                            enabled: false,
+                            style: Theme.of(context).textTheme.displaySmall,
+                          )
+                        : DropdownButtonFormField(
+                            decoration: pageFieldDecoration('Access level'),
+                            hint: const Text('Select Access level'),
+                            value: user.accessLevel ?? -1,
+                            validator: (value) {
+                              if (value == null) {
+                                return 'Required';
+                              }
+                              return null;
+                            },
+                            items: const [
+                              DropdownMenuItem(
+                                  value: -1, child: Text('N/A')),
+                              DropdownMenuItem(
+                                  value: 0, child: Text('Club Manager')),
+                              DropdownMenuItem(value: 1, child: Text('Judge')),
+                              DropdownMenuItem(
+                                  value: 2, child: Text('Event Manager')),
+                              DropdownMenuItem(
+                                  value: 3, child: Text('Administrator'))
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                user.accessLevel = value;
+                              });
+                            },
+                            style: Theme.of(context).textTheme.displaySmall,
+                          ),
+                  ]),
+                  if (newUser) ...[
+                    pageSectionGap,
+                    const ColoredPageHeader(title: 'Password'),
+                    _section([
+                      TextFormField(
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Required';
+                          }
+                          return null;
+                        },
+                        textCapitalization: TextCapitalization.words,
+                        decoration: pageFieldDecoration('Password'),
+                        controller: passwordController,
+                        enabled: editable && newUser,
+                        style: Theme.of(context).textTheme.displaySmall,
+                        onChanged: (value) {
+                          user.password = value;
+                        },
+                      ),
+                      TextFormField(
+                        validator: (value) {
+                          if (value != passwordController.text) {
+                            return 'Must be the same as Password';
+                          }
+                          return null;
+                        },
+                        textCapitalization: TextCapitalization.words,
+                        decoration:
+                            pageFieldDecoration('Password Confirmation'),
+                        controller: passwordConfirmedController,
+                        enabled: editable && newUser,
+                        style: Theme.of(context).textTheme.displaySmall,
+                        onChanged: (value) {
+                          user.password_confirmation = value;
+                        },
+                      ),
+                    ]),
+                  ],
                   const SizedBox(
                     height: bigSpace,
                   ),

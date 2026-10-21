@@ -1,8 +1,8 @@
 import 'package:eurocup_frontend/src/users/users_list_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/material.dart';
 
-import '../clubs/club_adel_list_view.dart';
 import '../clubs/club_list_view.dart';
 import '../common.dart';
 import '../model/user.dart';
@@ -30,152 +30,47 @@ class _AdministrationPageState extends State<AdministrationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final level = currentUser.accessLevel ?? 0;
+    void go(String route) => Navigator.pushNamed(context, route);
+
     return Scaffold(
-      appBar: appBar(title: 'Events Platform'),
+      appBar: appBar(title: 'Administration'),
       body: Container(
-        decoration: naslovnaDecoration(),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.center,
+        decoration: bckDecoration(),
+        child: ListView(
           children: [
-            Visibility(
-              visible: (currentUser.accessLevel ?? 0) >= 3,
-              child: ListTile(
-                title: Text('Users',
-                    style: Theme.of(context).textTheme.displayMedium,
-                    textAlign: TextAlign.left),
-                onTap: () {
-                  Navigator.pushNamed(context, UserListView.routeName);
-                },
-                leading: const Icon(
-                  Icons.play_arrow,
-                  color: Color.fromARGB(255, 0, 80, 150),
-                ),
-              ),
-            ),
-            Visibility(
-              visible: (currentUser.accessLevel ?? 0) >= 2,
-              child: ListTile(
-                title: Text('Events',
-                    style: Theme.of(context).textTheme.displayMedium,
-                    textAlign: TextAlign.left),
-                onTap: () {
-                  Navigator.pushNamed(context, EventListView.routeName);
-                },
-                leading: const Icon(
-                  Icons.play_arrow,
-                  color: Color.fromARGB(255, 0, 80, 150),
-                ),
-              ),
-            ),
-            Visibility(
-              visible: (currentUser.accessLevel ?? 0) >= 2,
-              child: ListTile(
-                title: Text('Disciplines',
-                    style: Theme.of(context).textTheme.displayMedium,
-                    textAlign: TextAlign.left),
-                onTap: () {
-                  Navigator.pushNamed(context, AdminDisciplineListView.routeName);
-                },
-                leading: const Icon(
-                  Icons.play_arrow,
-                  color: Color.fromARGB(255, 0, 80, 150),
-                ),
-              ),
-            ),
-            Visibility(
-              visible: (currentUser.accessLevel ?? 0) >= 1,
-              child: ListTile(
-                title: Text('Race Schedule Builder',
-                    style: Theme.of(context).textTheme.displayMedium,
-                    textAlign: TextAlign.left),
-                onTap: () {
-                  Navigator.pushNamed(context, ScheduleEventPicker.routeName);
-                },
-                leading: const Icon(
-                  Icons.event_available,
-                  color: Color.fromARGB(255, 0, 80, 150),
-                ),
-              ),
-            ),
-            Visibility(
-              visible: (currentUser.accessLevel ?? 0) >= 2,
-              child: ListTile(
-                title: Text('Clubs',
-                    style: Theme.of(context).textTheme.displayMedium,
-                    textAlign: TextAlign.left),
-                onTap: () {
-                  Navigator.pushNamed(context, ClubListView.routeName);
-                },
-                leading: const Icon(
-                  Icons.play_arrow,
-                  color: Color.fromARGB(255, 0, 80, 150),
-                ),
-              ),
-            ),
-            Visibility(
-              visible: (currentUser.accessLevel ?? 0) >= 2,
-              child: ListTile(
-                title: Text('Teams',
-                    style: Theme.of(context).textTheme.displayMedium,
-                    textAlign: TextAlign.left),
-                onTap: () {
-                  Navigator.pushNamed(context, TeamListView.routeName);
-                },
-                leading: const Icon(
-                  Icons.play_arrow,
-                  color: Color.fromARGB(255, 0, 80, 150),
-                ),
-              ),
-            ),
-            Visibility(
-              visible: (currentUser.accessLevel ?? 0) >= 3,
-              child: ListTile(
-                title: Text('Database Backups',
-                    style: Theme.of(context).textTheme.displayMedium,
-                    textAlign: TextAlign.left),
-                onTap: () {
-                  Navigator.pushNamed(context, DatabaseBackupView.routeName);
-                },
-                leading: const Icon(
-                  Icons.backup,
-                  color: Color.fromARGB(255, 0, 80, 150),
-                ),
-              ),
-            ),
-            Visibility(
-              visible: (currentUser.accessLevel ?? 0) >= 3,
-              child: ListTile(
-                title: Text('API Keys',
-                    style: Theme.of(context).textTheme.displayMedium,
-                    textAlign: TextAlign.left),
-                onTap: () {
-                  Navigator.pushNamed(context, ApiKeysListView.routeName);
-                },
-                leading: const Icon(
-                  Icons.vpn_key,
-                  color: Color.fromARGB(255, 0, 80, 150),
-                ),
-              ),
-            ),
-            Visibility(
-              visible: false, // (currentUser.accessLevel ?? 0) >= 2,
-              child: ListTile(
-                title: Text('Clubs req ADEL',
-                    style: Theme.of(context).textTheme.displayMedium,
-                    textAlign: TextAlign.left),
-                onTap: () {
-                  Navigator.pushNamed(context, ClubAdelListView.routeName);
-                },
-                leading: const Icon(
-                  Icons.play_arrow,
-                  color: Color.fromARGB(255, 0, 80, 150),
-                ),
-              ),
-            ),
-            const SizedBox(
-              height: bigSpace,
-            ),
+            const MenuBanner(),
+            MenuSection(title: 'Events', rows: [
+              if (level >= 2)
+                MenuRow(icon: Icons.event, title: 'Events', onTap: () => go(EventListView.routeName)),
+              if (level >= 2)
+                MenuRow(
+                    icon: Icons.category,
+                    title: 'Disciplines',
+                    onTap: () => go(AdminDisciplineListView.routeName)),
+              if (level >= 1)
+                MenuRow(
+                    icon: Icons.event_available,
+                    title: 'Race Schedule Builder',
+                    onTap: () => go(ScheduleEventPicker.routeName)),
+            ]),
+            MenuSection(title: 'Clubs and people', rows: [
+              if (level >= 2)
+                MenuRow(icon: Icons.shield, title: 'Clubs', onTap: () => go(ClubListView.routeName)),
+              if (level >= 2)
+                MenuRow(icon: Icons.flag, title: 'Teams', onTap: () => go(TeamListView.routeName)),
+              if (level >= 3)
+                MenuRow(icon: Icons.person, title: 'Users', onTap: () => go(UserListView.routeName)),
+            ]),
+            MenuSection(title: 'System', rows: [
+              if (level >= 3)
+                MenuRow(
+                    icon: Icons.backup,
+                    title: 'Database Backups',
+                    onTap: () => go(DatabaseBackupView.routeName)),
+              if (level >= 3)
+                MenuRow(icon: Icons.vpn_key, title: 'API Keys', onTap: () => go(ApiKeysListView.routeName)),
+            ]),
           ],
         ),
       ),

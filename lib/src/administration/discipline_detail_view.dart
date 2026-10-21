@@ -157,8 +157,28 @@ class _DisciplineDetailViewState extends State<DisciplineDetailView> {
     }
   }
 
+  /// Section body: fields with consistent 12px gaps.
+  Widget _section(List<Widget> fields) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (int i = 0; i < fields.length; i++) ...[
+            if (i > 0) const SizedBox(height: 12),
+            fields[i],
+          ],
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final eventId = _selectedEvent?.id ?? _discipline?.eventId;
+    final title = _isEditMode && _discipline != null ? _discipline!.getDisplayName() : 'New discipline';
+    final eventName = _selectedEvent?.name ?? '';
+
     return Scaffold(
       appBar: appBar(title: _isEditMode ? 'Edit Discipline' : 'Create Discipline'),
       body: Container(
@@ -169,314 +189,139 @@ class _DisciplineDetailViewState extends State<DisciplineDetailView> {
               key: _formKey,
               child: ListView(
                 children: [
-                  // Form Fields
-
-                  Container(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: Colors.grey,
-                          width: 0.5,
+                  PageTitleBlock(
+                    title: title,
+                    children: [
+                      if (eventName.isNotEmpty)
+                        Text(
+                          eventName,
+                          style: const TextStyle(color: pageBlue, fontSize: 16, fontWeight: FontWeight.w600),
+                          textAlign: TextAlign.center,
                         ),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedBoatGroup,
-                        decoration: InputDecoration(
-                          labelText: 'Boat Group',
-                          labelStyle: const TextStyle(
-                            color: Color.fromARGB(255, 0, 80, 150),
-                            fontWeight: FontWeight.w500,
-                          ),
-                          contentPadding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
-                          fillColor: Colors.white,
-                          filled: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Color.fromARGB(255, 0, 80, 150), width: 2.0),
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.black87, fontSize: 16),
-                        dropdownColor: Colors.white,
-                        items: disciplineBoatGroups.map((boatGroup) => DropdownMenuItem<String>(
-                          value: boatGroup,
-                          child: Text(boatGroup),
-                        )).toList(),
-                        onChanged: (String? boatGroup) {
-                          setState(() {
-                            _selectedBoatGroup = boatGroup ?? 'Standard';
-                          });
-                        },
-                      ),
-                    ),
+                    ],
                   ),
 
-                  Container(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: Colors.grey,
-                          width: 0.5,
-                        ),
-                      ),
+                  ColoredPageHeader(title: 'Discipline details', eventId: eventId),
+                  _section([
+                    DropdownButtonFormField<String>(
+                      value: _selectedBoatGroup,
+                      decoration: pageFieldDecoration('Boat Group'),
+                      style: const TextStyle(color: Colors.black87, fontSize: 16),
+                      dropdownColor: Colors.white,
+                      items: disciplineBoatGroups.map((boatGroup) => DropdownMenuItem<String>(
+                        value: boatGroup,
+                        child: Text(boatGroup),
+                      )).toList(),
+                      onChanged: (String? boatGroup) {
+                        setState(() {
+                          _selectedBoatGroup = boatGroup ?? 'Standard';
+                        });
+                      },
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedAgeGroup,
-                        decoration: InputDecoration(
-                          labelText: 'Age Group',
-                          labelStyle: const TextStyle(
-                            color: Color.fromARGB(255, 0, 80, 150),
-                            fontWeight: FontWeight.w500,
-                          ),
-                          contentPadding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
-                          fillColor: Colors.white,
-                          filled: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Color.fromARGB(255, 0, 80, 150), width: 2.0),
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.black87, fontSize: 16),
-                        dropdownColor: Colors.white,
-                        items: disciplineAgeGroups.map((ageGroup) => DropdownMenuItem<String>(
-                          value: ageGroup,
-                          child: Text(ageGroup),
-                        )).toList(),
-                        onChanged: (String? ageGroup) {
-                          setState(() {
-                            _selectedAgeGroup = ageGroup ?? 'Junior';
-                          });
-                        },
-                      ),
+                    DropdownButtonFormField<String>(
+                      value: _selectedAgeGroup,
+                      decoration: pageFieldDecoration('Age Group'),
+                      style: const TextStyle(color: Colors.black87, fontSize: 16),
+                      dropdownColor: Colors.white,
+                      items: disciplineAgeGroups.map((ageGroup) => DropdownMenuItem<String>(
+                        value: ageGroup,
+                        child: Text(ageGroup),
+                      )).toList(),
+                      onChanged: (String? ageGroup) {
+                        setState(() {
+                          _selectedAgeGroup = ageGroup ?? 'Junior';
+                        });
+                      },
                     ),
-                  ),
+                    DropdownButtonFormField<String>(
+                      value: _selectedGenderGroup,
+                      decoration: pageFieldDecoration('Gender Group'),
+                      style: const TextStyle(color: Colors.black87, fontSize: 16),
+                      dropdownColor: Colors.white,
+                      items: disciplineGenderGroups.map((genderGroup) => DropdownMenuItem<String>(
+                        value: genderGroup,
+                        child: Text(genderGroup),
+                      )).toList(),
+                      onChanged: (String? genderGroup) {
+                        setState(() {
+                          _selectedGenderGroup = genderGroup ?? 'Mixed';
+                        });
+                      },
+                    ),
+                    DropdownButtonFormField<int>(
+                      value: _distanceController.text.isNotEmpty
+                        ? int.tryParse(_distanceController.text)
+                        : null,
+                      decoration: pageFieldDecoration('Distance (meters)'),
+                      style: const TextStyle(color: Colors.black87, fontSize: 16),
+                      dropdownColor: Colors.white,
+                      items: disciplineDistanceOptions.map((distance) => DropdownMenuItem<int>(
+                        value: distance,
+                        child: Text('${distance}m'),
+                      )).toList(),
+                      onChanged: (int? distance) {
+                        if (distance != null) {
+                          _distanceController.text = distance.toString();
+                        }
+                      },
+                      validator: (value) {
+                        if (value == null) {
+                          return 'Please select a distance';
+                        }
+                        return null;
+                      },
+                    ),
+                  ]),
+                  pageSectionGap,
 
-                  Container(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: Colors.grey,
-                          width: 0.5,
-                        ),
+                  ColoredPageHeader(title: 'Competition and status', eventId: eventId),
+                  _section([
+                    TextFormField(
+                      controller: _competitionController,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: pageFieldDecoration('Competition (optional)').copyWith(
+                        hintText: 'e.g. Club, Corporate',
                       ),
+                      style: const TextStyle(color: Colors.black87, fontSize: 16),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedGenderGroup,
-                        decoration: InputDecoration(
-                          labelText: 'Gender Group',
-                          labelStyle: const TextStyle(
-                            color: Color.fromARGB(255, 0, 80, 150),
-                            fontWeight: FontWeight.w500,
-                          ),
-                          contentPadding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
-                          fillColor: Colors.white,
-                          filled: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Color.fromARGB(255, 0, 80, 150), width: 2.0),
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.black87, fontSize: 16),
-                        dropdownColor: Colors.white,
-                        items: disciplineGenderGroups.map((genderGroup) => DropdownMenuItem<String>(
-                          value: genderGroup,
-                          child: Text(genderGroup),
-                        )).toList(),
-                        onChanged: (String? genderGroup) {
-                          setState(() {
-                            _selectedGenderGroup = genderGroup ?? 'Mixed';
-                          });
-                        },
-                      ),
+                    DropdownButtonFormField<String>(
+                      value: _selectedStatus,
+                      decoration: pageFieldDecoration('Status'),
+                      style: const TextStyle(color: Colors.black87, fontSize: 16),
+                      dropdownColor: Colors.white,
+                      items: disciplineStatusOptions.map((status) => DropdownMenuItem<String>(
+                        value: status,
+                        child: Text(status.toUpperCase()),
+                      )).toList(),
+                      onChanged: (String? status) {
+                        setState(() {
+                          _selectedStatus = status ?? 'active';
+                        });
+                      },
                     ),
-                  ),
-
-                  Container(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: Colors.grey,
-                          width: 0.5,
-                        ),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      child: DropdownButtonFormField<int>(
-                        value: _distanceController.text.isNotEmpty
-                          ? int.tryParse(_distanceController.text)
-                          : null,
-                        decoration: InputDecoration(
-                          labelText: 'Distance (meters)',
-                          labelStyle: const TextStyle(
-                            color: Color.fromARGB(255, 0, 80, 150),
-                            fontWeight: FontWeight.w500,
-                          ),
-                          contentPadding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
-                          fillColor: Colors.white,
-                          filled: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Color.fromARGB(255, 0, 80, 150), width: 2.0),
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.black87, fontSize: 16),
-                        dropdownColor: Colors.white,
-                        items: disciplineDistanceOptions.map((distance) => DropdownMenuItem<int>(
-                          value: distance,
-                          child: Text('${distance}m'),
-                        )).toList(),
-                        onChanged: (int? distance) {
-                          if (distance != null) {
-                            _distanceController.text = distance.toString();
-                          }
-                        },
-                        validator: (value) {
-                          if (value == null) {
-                            return 'Please select a distance';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                  ),
-
-                  Container(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: Colors.grey,
-                          width: 0.5,
-                        ),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      child: TextFormField(
-                        controller: _competitionController,
-                        textCapitalization: TextCapitalization.words,
-                        decoration: InputDecoration(
-                          labelText: 'Competition (optional)',
-                          hintText: 'e.g. Club, Corporate',
-                          labelStyle: const TextStyle(
-                            color: Color.fromARGB(255, 0, 80, 150),
-                            fontWeight: FontWeight.w500,
-                          ),
-                          contentPadding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
-                          fillColor: Colors.white,
-                          filled: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Color.fromARGB(255, 0, 80, 150), width: 2.0),
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.black87, fontSize: 16),
-                      ),
-                    ),
-                  ),
-
-                  Container(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: Colors.grey,
-                          width: 0.5,
-                        ),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedStatus,
-                        decoration: InputDecoration(
-                          labelText: 'Status',
-                          labelStyle: const TextStyle(
-                            color: Color.fromARGB(255, 0, 80, 150),
-                            fontWeight: FontWeight.w500,
-                          ),
-                          contentPadding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
-                          fillColor: Colors.white,
-                          filled: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Color.fromARGB(255, 0, 80, 150), width: 2.0),
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.black87, fontSize: 16),
-                        dropdownColor: Colors.white,
-                        items: disciplineStatusOptions.map((status) => DropdownMenuItem<String>(
-                          value: status,
-                          child: Text(status.toUpperCase()),
-                        )).toList(),
-                        onChanged: (String? status) {
-                          setState(() {
-                            _selectedStatus = status ?? 'active';
-                          });
-                        },
-                      ),
-                    ),
-                  ),
+                  ]),
+                  pageSectionGap,
 
                   // Button Section
-                  Container(
+                  Padding(
                     padding: const EdgeInsets.all(16),
-                    child: longButtons(
-                      _isEditMode ? 'Update Discipline' : 'Create Discipline',
-                      _saveDiscipline,
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _saveDiscipline,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: pageBlue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                        ),
+                        child: Text(
+                          _isEditMode ? 'Update Discipline' : 'Create Discipline',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                      ),
                     ),
                   ),
                 ],

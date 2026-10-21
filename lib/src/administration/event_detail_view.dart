@@ -196,28 +196,8 @@ class _EventDetailViewState extends State<EventDetailView> {
     return InkWell(
       onTap: onTap,
       child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: const TextStyle(
-            color: Color.fromARGB(255, 0, 80, 150),
-            fontWeight: FontWeight.w500,
-          ),
-          contentPadding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
-          fillColor: Colors.white,
-          filled: true,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
-            borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
-            borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
-            borderSide: const BorderSide(color: Color.fromARGB(255, 0, 80, 150), width: 2.0),
-          ),
-          suffixIcon: const Icon(Icons.calendar_today, color: Color.fromARGB(255, 0, 80, 150)),
+        decoration: pageFieldDecoration(label).copyWith(
+          suffixIcon: const Icon(Icons.calendar_today, color: pageBlue),
         ),
         child: Text(
           _formatDateTime(dateTime),
@@ -227,6 +207,55 @@ class _EventDetailViewState extends State<EventDetailView> {
           ),
         ),
       ),
+    );
+  }
+
+  /// Section body: fields with consistent 12px gaps.
+  Widget _section(List<Widget> fields) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (int i = 0; i < fields.length; i++) ...[
+            if (i > 0) const SizedBox(height: 12),
+            fields[i],
+          ],
+        ],
+      ),
+    );
+  }
+
+  String? _validateNonNegative(String? value) {
+    if (value != null && value.trim().isNotEmpty) {
+      final number = int.tryParse(value.trim());
+      if (number == null || number < 0) {
+        return 'Please enter a valid positive number';
+      }
+    }
+    return null;
+  }
+
+  Widget _numberField(TextEditingController controller, String label) {
+    return TextFormField(
+      controller: controller,
+      decoration: pageFieldDecoration(label),
+      style: const TextStyle(color: Colors.black87, fontSize: 16),
+      keyboardType: TextInputType.number,
+      validator: _validateNonNegative,
+    );
+  }
+
+  Widget _boatConfigRow(TextEditingController reserves, TextEditingController minGender,
+      TextEditingController maxGender) {
+    return Row(
+      children: [
+        Expanded(child: _numberField(reserves, 'Reserves')),
+        const SizedBox(width: 12),
+        Expanded(child: _numberField(minGender, 'Min Gender')),
+        const SizedBox(width: 12),
+        Expanded(child: _numberField(maxGender, 'Max Gender')),
+      ],
     );
   }
 
@@ -298,6 +327,13 @@ class _EventDetailViewState extends State<EventDetailView> {
 
   @override
   Widget build(BuildContext context) {
+    final eventId = _event?.id;
+    final title = _isEditMode && (_event?.name ?? '').isNotEmpty ? _event!.name! : 'New event';
+    final subtitleParts = <String>[
+      if ((_event?.location ?? '').isNotEmpty) _event!.location!,
+      if (_event?.year != null) _event!.year.toString(),
+    ];
+
     return Scaffold(
       appBar: appBar(title: _isEditMode ? 'Edit Event' : 'Create Event'),
       body: Container(
@@ -308,602 +344,181 @@ class _EventDetailViewState extends State<EventDetailView> {
               key: _formKey,
               child: ListView(
                 children: [
-                  // Basic Information Section Header
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    color: Colors.white,
-                    child: Text(
-                      'Basic Information',
-                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
+                  PageTitleBlock(
+                    title: title,
+                    children: [
+                      if (subtitleParts.isNotEmpty)
+                        Text(
+                          subtitleParts.join(' · '),
+                          style: const TextStyle(color: pageBlue, fontSize: 16, fontWeight: FontWeight.w600),
+                          textAlign: TextAlign.center,
+                        ),
+                    ],
                   ),
 
-                  // Event Name
-                  Container(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: Colors.grey, width: 0.5),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      child: TextFormField(
-                        controller: _nameController,
-                        decoration: InputDecoration(
-                          labelText: 'Event Name',
-                          labelStyle: const TextStyle(
-                            color: Color.fromARGB(255, 0, 80, 150),
-                            fontWeight: FontWeight.w500,
-                          ),
-                          contentPadding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
-                          fillColor: Colors.white,
-                          filled: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Color.fromARGB(255, 0, 80, 150), width: 2.0),
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.black87, fontSize: 16),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter an event name';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                  ),
-
-                  // Location
-                  Container(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: Colors.grey, width: 0.5),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      child: TextFormField(
-                        controller: _locationController,
-                        decoration: InputDecoration(
-                          labelText: 'Location',
-                          labelStyle: const TextStyle(
-                            color: Color.fromARGB(255, 0, 80, 150),
-                            fontWeight: FontWeight.w500,
-                          ),
-                          contentPadding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
-                          fillColor: Colors.white,
-                          filled: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: const BorderSide(color: Color.fromARGB(255, 0, 80, 150), width: 2.0),
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.black87, fontSize: 16),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter a location';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                  ),
-
-                  // Year and Status
-                  Container(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: Colors.grey, width: 0.5),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _yearController,
-                              decoration: InputDecoration(
-                                labelText: 'Year',
-                                labelStyle: const TextStyle(
-                                  color: Color.fromARGB(255, 0, 80, 150),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                contentPadding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
-                                fillColor: Colors.white,
-                                filled: true,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Color.fromARGB(255, 0, 80, 150), width: 2.0),
-                                ),
-                              ),
-                              style: const TextStyle(color: Colors.black87, fontSize: 16),
-                              keyboardType: TextInputType.number,
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'Please enter a year';
-                                }
-                                final year = int.tryParse(value.trim());
-                                if (year == null || year < 2020 || year > 2050) {
-                                  return 'Please enter a valid year (2020-2050)';
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: _status,
-                              decoration: InputDecoration(
-                                labelText: 'Status',
-                                labelStyle: const TextStyle(
-                                  color: Color.fromARGB(255, 0, 80, 150),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                contentPadding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
-                                fillColor: Colors.white,
-                                filled: true,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Color.fromARGB(255, 0, 80, 150), width: 2.0),
-                                ),
-                              ),
-                              style: const TextStyle(color: Colors.black87, fontSize: 16),
-                              dropdownColor: Colors.white,
-                              items: const [
-                                DropdownMenuItem(value: 'active', child: Text('Active')),
-                                DropdownMenuItem(value: 'inactive', child: Text('Inactive')),
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  _status = value ?? 'active';
-                                });
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Available Toggle
-                  Container(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: Colors.grey, width: 0.5),
-                      ),
-                    ),
-                    child: SwitchListTile(
-                      title: const Text(
-                        'Available',
-                        style: TextStyle(
-                          color: Color.fromARGB(255, 0, 80, 150),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      subtitle: Text(
-                        _available
-                          ? 'Event is visible in public views'
-                          : 'Event is hidden from public views (admin only)',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: _available ? Colors.teal.shade700 : Colors.red.shade700,
-                        ),
-                      ),
-                      value: _available,
-                      onChanged: (bool value) {
-                        setState(() {
-                          _available = value;
-                        });
+                  // Basic information
+                  ColoredPageHeader(title: 'Basic information', eventId: eventId),
+                  _section([
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: pageFieldDecoration('Event Name'),
+                      style: const TextStyle(color: Colors.black87, fontSize: 16),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter an event name';
+                        }
+                        return null;
                       },
                     ),
-                  ),
-
-                  // Entry Lock Dates Section Header
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    color: Colors.white,
-                    child: Text(
-                      'Entry Lock Dates',
-                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
+                    TextFormField(
+                      controller: _locationController,
+                      decoration: pageFieldDecoration('Location'),
+                      style: const TextStyle(color: Colors.black87, fontSize: 16),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter a location';
+                        }
+                        return null;
+                      },
                     ),
-                  ),
-
-                  // Name Entries Lock
-                  Container(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: Colors.grey, width: 0.5),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      child: _buildDateTimeSelector(
-                        'Name Entries Lock',
-                        _nameEntriesLock,
-                        () => _selectDate('name'),
-                      ),
-                    ),
-                  ),
-
-                  // Crew Entries Lock
-                  Container(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: Colors.grey, width: 0.5),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      child: _buildDateTimeSelector(
-                        'Crew Entries Lock',
-                        _crewEntriesLock,
-                        () => _selectDate('crew'),
-                      ),
-                    ),
-                  ),
-
-                  // Race Entries Lock
-                  Container(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: Colors.grey, width: 0.5),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      child: _buildDateTimeSelector(
-                        'Race Entries Lock',
-                        _raceEntriesLock,
-                        () => _selectDate('race'),
-                      ),
-                    ),
-                  ),
-
-                  // Standard Boat Configuration Section Header
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    color: Colors.white,
-                    child: Text(
-                      'Standard Boat Configuration',
-                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-
-                  // Standard Boat Fields (all in one row)
-                  Container(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: Colors.grey, width: 0.5),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _standardReservesController,
-                              decoration: InputDecoration(
-                                labelText: 'Reserves',
-                                labelStyle: const TextStyle(
-                                  color: Color.fromARGB(255, 0, 80, 150),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                contentPadding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
-                                fillColor: Colors.white,
-                                filled: true,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Color.fromARGB(255, 0, 80, 150), width: 2.0),
-                                ),
-                              ),
-                              style: const TextStyle(color: Colors.black87, fontSize: 16),
-                              keyboardType: TextInputType.number,
-                              validator: (value) {
-                                if (value != null && value.trim().isNotEmpty) {
-                                  final number = int.tryParse(value.trim());
-                                  if (number == null || number < 0) {
-                                    return 'Please enter a valid positive number';
-                                  }
-                                }
-                                return null;
-                              },
-                            ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _yearController,
+                            decoration: pageFieldDecoration('Year'),
+                            style: const TextStyle(color: Colors.black87, fontSize: 16),
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Please enter a year';
+                              }
+                              final year = int.tryParse(value.trim());
+                              if (year == null || year < 2020 || year > 2050) {
+                                return 'Please enter a valid year (2020-2050)';
+                              }
+                              return null;
+                            },
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _standardMinGenderController,
-                              decoration: InputDecoration(
-                                labelText: 'Min Gender',
-                                labelStyle: const TextStyle(
-                                  color: Color.fromARGB(255, 0, 80, 150),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                contentPadding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
-                                fillColor: Colors.white,
-                                filled: true,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Color.fromARGB(255, 0, 80, 150), width: 2.0),
-                                ),
-                              ),
-                              style: const TextStyle(color: Colors.black87, fontSize: 16),
-                              keyboardType: TextInputType.number,
-                              validator: (value) {
-                                if (value != null && value.trim().isNotEmpty) {
-                                  final number = int.tryParse(value.trim());
-                                  if (number == null || number < 0) {
-                                    return 'Please enter a valid positive number';
-                                  }
-                                }
-                                return null;
-                              },
-                            ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            value: _status,
+                            decoration: pageFieldDecoration('Status'),
+                            style: const TextStyle(color: Colors.black87, fontSize: 16),
+                            dropdownColor: Colors.white,
+                            items: const [
+                              DropdownMenuItem(value: 'active', child: Text('Active')),
+                              DropdownMenuItem(value: 'inactive', child: Text('Inactive')),
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                _status = value ?? 'active';
+                              });
+                            },
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _standardMaxGenderController,
-                              decoration: InputDecoration(
-                                labelText: 'Max Gender',
-                                labelStyle: const TextStyle(
-                                  color: Color.fromARGB(255, 0, 80, 150),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                contentPadding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
-                                fillColor: Colors.white,
-                                filled: true,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Color.fromARGB(255, 0, 80, 150), width: 2.0),
-                                ),
-                              ),
-                              style: const TextStyle(color: Colors.black87, fontSize: 16),
-                              keyboardType: TextInputType.number,
-                              validator: (value) {
-                                if (value != null && value.trim().isNotEmpty) {
-                                  final number = int.tryParse(value.trim());
-                                  if (number == null || number < 0) {
-                                    return 'Please enter a valid positive number';
-                                  }
-                                }
-                                return null;
-                              },
-                            ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8.0),
+                        border: Border.all(color: Colors.grey, width: 1.0),
+                      ),
+                      child: SwitchListTile(
+                        title: const Text(
+                          'Available',
+                          style: TextStyle(
+                            color: pageBlue,
+                            fontWeight: FontWeight.w500,
                           ),
-                        ],
+                        ),
+                        subtitle: Text(
+                          _available
+                            ? 'Event is visible in public views'
+                            : 'Event is hidden from public views (admin only)',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _available ? Colors.teal.shade700 : Colors.red.shade700,
+                          ),
+                        ),
+                        value: _available,
+                        onChanged: (bool value) {
+                          setState(() {
+                            _available = value;
+                          });
+                        },
                       ),
                     ),
-                  ),
+                  ]),
+                  pageSectionGap,
 
-                  // Small Boat Configuration Section Header
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    color: Colors.white,
-                    child: Text(
-                      'Small Boat Configuration',
-                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
+                  // Entry lock dates
+                  ColoredPageHeader(title: 'Entry lock dates', eventId: eventId),
+                  _section([
+                    _buildDateTimeSelector(
+                      'Name Entries Lock',
+                      _nameEntriesLock,
+                      () => _selectDate('name'),
                     ),
-                  ),
+                    _buildDateTimeSelector(
+                      'Crew Entries Lock',
+                      _crewEntriesLock,
+                      () => _selectDate('crew'),
+                    ),
+                    _buildDateTimeSelector(
+                      'Race Entries Lock',
+                      _raceEntriesLock,
+                      () => _selectDate('race'),
+                    ),
+                  ]),
+                  pageSectionGap,
 
-                  // Small Boat Fields (all in one row)
-                  Container(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: Colors.grey, width: 0.5),
-                      ),
+                  // Standard boat configuration
+                  ColoredPageHeader(title: 'Standard boat configuration', eventId: eventId),
+                  _section([
+                    _boatConfigRow(
+                      _standardReservesController,
+                      _standardMinGenderController,
+                      _standardMaxGenderController,
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _smallReservesController,
-                              decoration: InputDecoration(
-                                labelText: 'Reserves',
-                                labelStyle: const TextStyle(
-                                  color: Color.fromARGB(255, 0, 80, 150),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                contentPadding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
-                                fillColor: Colors.white,
-                                filled: true,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Color.fromARGB(255, 0, 80, 150), width: 2.0),
-                                ),
-                              ),
-                              style: const TextStyle(color: Colors.black87, fontSize: 16),
-                              keyboardType: TextInputType.number,
-                              validator: (value) {
-                                if (value != null && value.trim().isNotEmpty) {
-                                  final number = int.tryParse(value.trim());
-                                  if (number == null || number < 0) {
-                                    return 'Please enter a valid positive number';
-                                  }
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _smallMinGenderController,
-                              decoration: InputDecoration(
-                                labelText: 'Min Gender',
-                                labelStyle: const TextStyle(
-                                  color: Color.fromARGB(255, 0, 80, 150),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                contentPadding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
-                                fillColor: Colors.white,
-                                filled: true,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Color.fromARGB(255, 0, 80, 150), width: 2.0),
-                                ),
-                              ),
-                              style: const TextStyle(color: Colors.black87, fontSize: 16),
-                              keyboardType: TextInputType.number,
-                              validator: (value) {
-                                if (value != null && value.trim().isNotEmpty) {
-                                  final number = int.tryParse(value.trim());
-                                  if (number == null || number < 0) {
-                                    return 'Please enter a valid positive number';
-                                  }
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _smallMaxGenderController,
-                              decoration: InputDecoration(
-                                labelText: 'Max Gender',
-                                labelStyle: const TextStyle(
-                                  color: Color.fromARGB(255, 0, 80, 150),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                contentPadding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
-                                fillColor: Colors.white,
-                                filled: true,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: const BorderSide(color: Color.fromARGB(255, 0, 80, 150), width: 2.0),
-                                ),
-                              ),
-                              style: const TextStyle(color: Colors.black87, fontSize: 16),
-                              keyboardType: TextInputType.number,
-                              validator: (value) {
-                                if (value != null && value.trim().isNotEmpty) {
-                                  final number = int.tryParse(value.trim());
-                                  if (number == null || number < 0) {
-                                    return 'Please enter a valid positive number';
-                                  }
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
+                  ]),
+                  pageSectionGap,
+
+                  // Small boat configuration
+                  ColoredPageHeader(title: 'Small boat configuration', eventId: eventId),
+                  _section([
+                    _boatConfigRow(
+                      _smallReservesController,
+                      _smallMinGenderController,
+                      _smallMaxGenderController,
                     ),
-                  ),
+                  ]),
+                  pageSectionGap,
 
                   // Save Button
-                  Container(
+                  Padding(
                     padding: const EdgeInsets.all(16),
-                    child: longButtons(
-                      _isEditMode ? 'Update Event' : 'Create Event',
-                      _saveEvent,
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _saveEvent,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: pageBlue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                        ),
+                        child: Text(
+                          _isEditMode ? 'Update Event' : 'Create Event',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                      ),
                     ),
                   ),
                 ],

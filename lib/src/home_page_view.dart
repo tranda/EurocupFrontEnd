@@ -7,6 +7,7 @@ import 'package:eurocup_frontend/src/races/competition_selector_view.dart';
 import 'package:eurocup_frontend/src/races/boat_checkin_race_list_view.dart';
 import 'package:eurocup_frontend/src/teams/team_list_view.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:excel/excel.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -56,188 +57,83 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
+    final level = currentUser.accessLevel ?? -1;
+
     return Scaffold(
       appBar: appBar(title: 'Events Platform'),
       body: Container(
-        decoration: naslovnaDecoration(),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.center,
+        decoration: bckDecoration(),
+        child: ListView(
           children: [
-            Visibility(
-              visible: (currentUser.accessLevel ?? -1) == 0,
-              child: ListTile(
-                title: Text('List of Athletes',
-                    style: Theme.of(context).textTheme.displayLarge,
-                    textAlign: TextAlign.left),
-                onTap: () {
-                  Navigator.pushNamed(context, AthleteListView.routeName);
-                },
-                leading: const Icon(
-                  Icons.play_arrow,
-                  color: Color.fromARGB(255, 0, 80, 150),
+            const MenuBanner(),
+            if (level == 0)
+              MenuSection(title: 'My club', rows: [
+                MenuRow(
+                  icon: Icons.groups,
+                  title: 'List of Athletes',
+                  onTap: () => Navigator.pushNamed(context, AthleteListView.routeName),
                 ),
-              ),
-            ),
-            Visibility(
-              visible: false,// (currentUser.accessLevel! == 0),
-              child: ListTile(
-                title: Text('Import Athletes',
-                    style: Theme.of(context).textTheme.displayLarge,
-                    textAlign: TextAlign.left),
-                onTap: () {
-                  selectAndParseCSV();
-                },
-                leading: const Icon(
-                  Icons.play_arrow,
-                  color: Color.fromARGB(255, 0, 80, 150),
+                MenuRow(
+                  icon: Icons.flag,
+                  title: 'Teams/Races',
+                  onTap: () => Navigator.pushNamed(context, TeamListView.routeName),
                 ),
-              ),
-            ),
-            Visibility(
-              visible: (currentUser.accessLevel ?? -1) == 0,
-              child: ListTile(
-                title: Text('Teams/Races',
-                    style: Theme.of(context).textTheme.displayLarge,
-                    textAlign: TextAlign.left),
-                onTap: () {
-                  Navigator.pushNamed(context, TeamListView.routeName);
-                },
-                leading: const Icon(
-                  Icons.play_arrow,
-                  color: Color.fromARGB(255, 0, 80, 150),
+                MenuRow(
+                  icon: Icons.rowing,
+                  title: 'Crew Members',
+                  onTap: () => Navigator.pushNamed(context, CrewListView.routeName),
                 ),
-              ),
-            ),
-            Visibility(
-              visible: (currentUser.accessLevel ?? -1) == 0,
-              child: ListTile(
-                title: Text('Crew Members',
-                    style: Theme.of(context).textTheme.displayLarge,
-                    textAlign: TextAlign.left),
-                onTap: () {
-                  Navigator.pushNamed(context, CrewListView.routeName);
-                },
-                leading: const Icon(
-                  Icons.play_arrow,
-                  color: Color.fromARGB(255, 0, 80, 150),
+              ]),
+            MenuSection(title: 'Races', rows: [
+              if (level >= 0)
+                MenuRow(
+                  icon: Icons.list_alt,
+                  title: 'Current Entries',
+                  onTap: () => Navigator.pushNamed(context, DisciplineRaceListView.routeName),
                 ),
-              ),
-            ),
-            const SizedBox(
-              height: smallSpace,
-            ),
-            Visibility(
-              visible: (currentUser.accessLevel ?? -1) >= 0,
-              child: ListTile(
-                enabled: true,
-                title: Text('Current Entries',
-                    style: Theme.of(context).textTheme.displayMedium,
-                    textAlign: TextAlign.left),
-                onTap: () {
-                  Navigator.pushNamed(
-                      context, DisciplineRaceListView.routeName);
-                },
-                leading: const Icon(
-                  Icons.play_arrow,
-                  color: Color.fromARGB(255, 0, 80, 150),
+              if (level >= 0)
+                MenuRow(
+                  icon: Icons.emoji_events,
+                  title: 'Race Results',
+                  onTap: () => Navigator.pushNamed(context, CompetitionSelectorView.routeName),
                 ),
-              ),
-            ),
-            Visibility(
-              visible: (currentUser.accessLevel ?? -1) >= 0,
-              child: ListTile(
-                enabled: true,
-                title: Text('Race Results',
-                    style: Theme.of(context).textTheme.displayMedium,
-                    textAlign: TextAlign.left),
-                onTap: () {
-                  Navigator.pushNamed(
-                      context, CompetitionSelectorView.routeName);
-                },
-                leading: const Icon(
-                  Icons.play_arrow,
-                  color: Color.fromARGB(255, 0, 80, 150),
+              if (level >= 1)
+                MenuRow(
+                  icon: Icons.qr_code_scanner,
+                  title: 'Boat Check-in',
+                  onTap: () => Navigator.pushNamed(context, BoatCheckinRaceListView.routeName),
                 ),
-              ),
-            ),
-            Visibility(
-              visible: (currentUser.accessLevel ?? -1) >= 1,
-              child: ListTile(
-                title: Text('Boat Check-in',
-                    style: Theme.of(context).textTheme.displayMedium,
-                    textAlign: TextAlign.left),
-                onTap: () {
-                  Navigator.pushNamed(context, BoatCheckinRaceListView.routeName);
-                },
-                leading: const Icon(
-                  Icons.qr_code_scanner,
-                  color: Color.fromARGB(255, 0, 80, 150),
+            ]),
+            MenuSection(title: 'Account', rows: [
+              if (level >= 1)
+                MenuRow(
+                  icon: Icons.admin_panel_settings,
+                  title: 'Administration',
+                  onTap: () => Navigator.pushNamed(context, AdministrationPage.routeName),
                 ),
-              ),
-            ),
-            const SizedBox(
-              height: smallSpace,
-            ),
-            Visibility(
-              visible: (currentUser.accessLevel ?? -1) >= 1,
-              child: ListTile(
-                enabled: (currentUser.accessLevel ?? -1) >= 1,
-                title: Text('Administration',
-                    style: Theme.of(context).textTheme.displayMedium,
-                    textAlign: TextAlign.left),
-                onTap: () {
-                  Navigator.pushNamed(context, AdministrationPage.routeName);
-                },
-                leading: const Icon(
-                  Icons.play_arrow,
-                  color: Color.fromARGB(255, 0, 80, 150),
-                ),
-              ),
-            ),
-            ListTile(
-              enabled: true,
-              title: Text('Log out',
-                  style: Theme.of(context).textTheme.displayMedium,
-                  textAlign: TextAlign.left),
-              onTap: () {
-                // Call logout API first while token is still available
-                api.sendLogoutRequest().then((value) {
-                  // Clear local authentication data after API call
-                  lastUser = null;
-                  lastPassword = null;
-                  currentUser = User(); // Reset user
-
-                  // Navigate to login page and clear all previous routes
-                  Navigator.of(context).pushNamedAndRemoveUntil(
-                    '/login',
-                    (Route<dynamic> route) => false,
-                  );
-                }).catchError((error) {
-                  // Even if logout request fails, clear local data and navigate to login
-                  lastUser = null;
-                  lastPassword = null;
-                  clearToken();
-                  currentUser = User(); // Reset user
-
-                  Navigator.of(context).pushNamedAndRemoveUntil(
-                    '/login',
-                    (Route<dynamic> route) => false,
-                  );
-                });
-              },
-              leading: const Icon(
-                Icons.play_arrow,
-                color: Color.fromARGB(255, 0, 80, 150),
-              ),
-            ),
-            const SizedBox(
-              height: bigSpace,
-            ),
+              MenuRow(icon: Icons.logout, title: 'Log out', onTap: _logout),
+            ]),
           ],
         ),
       ),
     );
+  }
+
+  void _logout() {
+    // Call logout API first while token is still available
+    api.sendLogoutRequest().then((value) {
+      lastUser = null;
+      lastPassword = null;
+      currentUser = User();
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (Route<dynamic> route) => false);
+    }).catchError((error) {
+      // Even if logout request fails, clear local data and go to login
+      lastUser = null;
+      lastPassword = null;
+      clearToken();
+      currentUser = User();
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (Route<dynamic> route) => false);
+    });
   }
 
   void selectAndParseCSV() async {

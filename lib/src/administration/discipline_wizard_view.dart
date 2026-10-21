@@ -1,6 +1,7 @@
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
 /// Wizard that generates every combination of the selected boat groups,
@@ -16,7 +17,6 @@ class DisciplineWizardView extends StatefulWidget {
 }
 
 class _DisciplineWizardViewState extends State<DisciplineWizardView> {
-  static const _headerColor = Color.fromARGB(255, 0, 80, 150);
 
   final _competitionController = TextEditingController();
 
@@ -201,6 +201,7 @@ class _DisciplineWizardViewState extends State<DisciplineWizardView> {
     final existing = _existingKeys;
     final toCreateCount = _combosToCreate.length;
     final existingCount = combos.where((c) => existing.contains(c.key)).length;
+    final canCreate = !(toCreateCount == 0 || _selectedEvent == null);
 
     return Scaffold(
       appBar: appBar(title: 'Discipline Wizard'),
@@ -213,13 +214,13 @@ class _DisciplineWizardViewState extends State<DisciplineWizardView> {
               children: [
                 _eventSelector(),
                 _multiSelectSection<String>(
-                  title: 'Boat Groups',
+                  title: 'Boat groups',
                   options: disciplineBoatGroups,
                   selected: _selectedBoatGroups,
                   label: (v) => v,
                 ),
                 _multiSelectSection<String>(
-                  title: 'Age Categories',
+                  title: 'Age categories',
                   options: disciplineAgeGroups,
                   selected: _selectedAgeGroups,
                   label: (v) => v,
@@ -240,16 +241,25 @@ class _DisciplineWizardViewState extends State<DisciplineWizardView> {
                 _previewSection(combos, existing, toCreateCount, existingCount),
                 Padding(
                   padding: const EdgeInsets.all(16),
-                  child: longButtons(
-                    toCreateCount == 0
-                        ? 'Nothing to create'
-                        : 'Create $toCreateCount discipline${toCreateCount == 1 ? '' : 's'}',
-                    (toCreateCount == 0 || _selectedEvent == null)
-                        ? () {}
-                        : _createDisciplines,
-                    color: (toCreateCount == 0 || _selectedEvent == null)
-                        ? Colors.grey
-                        : Colors.blue,
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: canCreate ? _createDisciplines : () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: canCreate ? pageBlue : Colors.grey,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                      ),
+                      child: Text(
+                        toCreateCount == 0
+                            ? 'Nothing to create'
+                            : 'Create $toCreateCount discipline${toCreateCount == 1 ? '' : 's'}',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -261,43 +271,29 @@ class _DisciplineWizardViewState extends State<DisciplineWizardView> {
     );
   }
 
-  Widget _sectionContainer({required Widget child}) => Container(
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          child: child,
-        ),
+  int? get _eventId => _selectedEvent?.id;
+
+  /// Section body: padded content under a ColoredPageHeader.
+  Widget _sectionBody({required Widget child}) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: child,
       );
 
-  Widget _eventSelector() => _sectionContainer(
-        child: Row(
-          children: [
-            const Text(
-              'Event',
-              style: TextStyle(
-                color: _headerColor,
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-              ),
+  Widget _eventSelector() => PageTitleBlock(
+        title: 'New disciplines',
+        children: [
+          Text(
+            _selectedEvent != null
+                ? '${_selectedEvent!.name} ${_selectedEvent!.year}'
+                : 'No event selected — pick one on the previous screen',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: _selectedEvent != null ? pageBlue : Colors.red,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                _selectedEvent != null
-                    ? '${_selectedEvent!.name} ${_selectedEvent!.year}'
-                    : 'No event selected — pick one on the previous screen',
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  color: _selectedEvent != null ? Colors.black87 : Colors.red,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       );
 
   Widget _multiSelectSection<T>({
@@ -307,38 +303,29 @@ class _DisciplineWizardViewState extends State<DisciplineWizardView> {
     required String Function(T) label,
   }) {
     final allSelected = selected.length == options.length;
-    return _sectionContainer(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: _headerColor,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                ),
-              ),
-              TextButton(
-                onPressed: () => setState(() {
-                  if (allSelected) {
-                    selected.clear();
-                  } else {
-                    selected
-                      ..clear()
-                      ..addAll(options);
-                  }
-                  _deselectedKeys.clear();
-                }),
-                child: Text(allSelected ? 'Clear' : 'Select all'),
-              ),
-            ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ColoredPageHeader(
+          title: title,
+          eventId: _eventId,
+          trailing: TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.white),
+            onPressed: () => setState(() {
+              if (allSelected) {
+                selected.clear();
+              } else {
+                selected
+                  ..clear()
+                  ..addAll(options);
+              }
+              _deselectedKeys.clear();
+            }),
+            child: Text(allSelected ? 'Clear' : 'Select all'),
           ),
-          const SizedBox(height: 4),
-          Wrap(
+        ),
+        _sectionBody(
+          child: Wrap(
             spacing: 8,
             runSpacing: 4,
             children: options.map((option) {
@@ -347,17 +334,17 @@ class _DisciplineWizardViewState extends State<DisciplineWizardView> {
                 label: Text(label(option)),
                 selected: isSelected,
                 showCheckmark: true,
-                selectedColor: _headerColor.withValues(alpha: 0.15),
-                checkmarkColor: _headerColor,
+                selectedColor: pageBlue.withValues(alpha: 0.15),
+                checkmarkColor: pageBlue,
                 backgroundColor: Colors.white,
                 labelStyle: TextStyle(
-                  color: isSelected ? _headerColor : Colors.black87,
+                  color: isSelected ? pageBlue : Colors.black87,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                   side: BorderSide(
-                    color: isSelected ? _headerColor : Colors.grey,
+                    color: isSelected ? pageBlue : Colors.grey,
                   ),
                 ),
                 onSelected: (value) => setState(() {
@@ -371,68 +358,65 @@ class _DisciplineWizardViewState extends State<DisciplineWizardView> {
               );
             }).toList(),
           ),
-        ],
-      ),
+        ),
+        pageSectionGap,
+      ],
     );
   }
 
-  Widget _competitionField() => _sectionContainer(
-        child: TextFormField(
-          controller: _competitionController,
-          textCapitalization: TextCapitalization.words,
-          onChanged: (_) => setState(() {}),
-          decoration: _inputDecoration('Competition (optional)').copyWith(
-            hintText: 'Applied to all generated disciplines',
+  Widget _competitionField() => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ColoredPageHeader(title: 'Competition', eventId: _eventId),
+          _sectionBody(
+            child: TextFormField(
+              controller: _competitionController,
+              textCapitalization: TextCapitalization.words,
+              onChanged: (_) => setState(() {}),
+              decoration: pageFieldDecoration('Competition (optional)').copyWith(
+                hintText: 'Applied to all generated disciplines',
+              ),
+              style: const TextStyle(color: Colors.black87, fontSize: 16),
+            ),
           ),
-          style: const TextStyle(color: Colors.black87, fontSize: 16),
-        ),
+          pageSectionGap,
+        ],
       );
 
   Widget _previewSection(List<_Combo> combos, Set<String> existing,
       int toCreateCount, int existingCount) {
-    return _sectionContainer(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ColoredPageHeader(
+          title: 'Preview',
+          subtitle: '$toCreateCount to create'
+              '${existingCount > 0 ? ' · $existingCount exist' : ''}',
+          eventId: _eventId,
+        ),
+        _sectionBody(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Preview',
-                style: TextStyle(
-                  color: _headerColor,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                ),
-              ),
-              Text(
-                '$toCreateCount to create'
-                '${existingCount > 0 ? ' · $existingCount exist' : ''}',
-                style: const TextStyle(
-                  color: Colors.black54,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              if (combos.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    'Select at least one option in each group to preview '
+                    'combinations.',
+                    style: TextStyle(color: Colors.black54),
+                  ),
+                )
+              else
+                ...combos.map((combo) {
+                  final exists = existing.contains(combo.key);
+                  final willCreate = !exists && !_deselectedKeys.contains(combo.key);
+                  return _previewRow(combo, exists, willCreate);
+                }),
             ],
           ),
-          const SizedBox(height: 8),
-          if (combos.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: Text(
-                'Select at least one option in each group to preview '
-                'combinations.',
-                style: TextStyle(color: Colors.black54),
-              ),
-            )
-          else
-            ...combos.map((combo) {
-              final exists = existing.contains(combo.key);
-              final willCreate = !exists && !_deselectedKeys.contains(combo.key);
-              return _previewRow(combo, exists, willCreate);
-            }),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -449,7 +433,7 @@ class _DisciplineWizardViewState extends State<DisciplineWizardView> {
                 ? const SizedBox.shrink()
                 : Checkbox(
                     value: willCreate,
-                    activeColor: _headerColor,
+                    activeColor: pageBlue,
                     onChanged: (value) => setState(() {
                       if (value == true) {
                         _deselectedKeys.remove(combo.key);
@@ -469,45 +453,11 @@ class _DisciplineWizardViewState extends State<DisciplineWizardView> {
               ),
             ),
           ),
-          if (exists)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Text(
-                'exists',
-                style: TextStyle(fontSize: 11, color: Colors.black54),
-              ),
-            ),
+          if (exists) const StatusChip(label: 'exists', color: Colors.grey),
         ],
       ),
     );
   }
-
-  InputDecoration _inputDecoration(String labelText) => InputDecoration(
-        labelText: labelText,
-        labelStyle: const TextStyle(
-          color: _headerColor,
-          fontWeight: FontWeight.w500,
-        ),
-        contentPadding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
-        fillColor: Colors.white,
-        filled: true,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.0),
-          borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.0),
-          borderSide: const BorderSide(color: Colors.grey, width: 1.0),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.0),
-          borderSide: const BorderSide(color: _headerColor, width: 2.0),
-        ),
-      );
 
   Widget _creatingOverlay(BuildContext context) {
     return Container(

@@ -402,3 +402,66 @@ class StatusChip extends StatelessWidget {
 
 /// Spacer between sections, as Current Entries uses.
 const Widget pageSectionGap = Divider(height: smallSpace);
+
+/// Short photo banner for menu pages (top of the old full-screen photo).
+class MenuBanner extends StatelessWidget {
+  const MenuBanner({super.key, this.height = 170});
+
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/images/naslovna-bck.jpg'),
+          fit: BoxFit.cover,
+          alignment: Alignment.topCenter,
+        ),
+      ),
+    );
+  }
+}
+
+/// One menu entry in style C: blue icon, name, arrow.
+class MenuRow extends StatelessWidget {
+  const MenuRow({super.key, required this.icon, required this.title, required this.onTap, this.subtitle});
+
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return PageListItem(
+      onTap: onTap,
+      child: ListTile(
+        leading: Icon(icon, color: pageBlue, size: 28),
+        title: Text(title, style: Theme.of(context).textTheme.displaySmall),
+        subtitle: subtitle == null ? null : Text(subtitle!),
+        trailing: const Icon(Icons.arrow_forward),
+      ),
+    );
+  }
+}
+
+/// A coloured bar plus its menu rows; hidden when no row is visible.
+class MenuSection extends StatelessWidget {
+  const MenuSection({super.key, required this.title, required this.rows});
+
+  final String title;
+  final List<Widget> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    if (rows.isEmpty) return const SizedBox.shrink();
+    return Column(children: [
+      ColoredPageHeader(title: title),
+      const Divider(height: 4),
+      ...rows,
+      pageSectionGap,
+    ]);
+  }
+}

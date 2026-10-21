@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
@@ -40,6 +41,58 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
   bool allowEdit = true;
   late Athlete currentAthlete;
  
+  /// Style C section body: 16px padding, 12px gaps between fields.
+  Widget _section(List<Widget> fields) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (int i = 0; i < fields.length; i++) ...[
+            if (i > 0) const SizedBox(height: 12),
+            fields[i],
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Checkboxes laid out two per row, with the same 16px side padding.
+  Widget _checkboxSection(List<Widget> tiles) {
+    final rows = <Widget>[];
+    for (int i = 0; i < tiles.length; i += 2) {
+      rows.add(Row(
+        children: [
+          Expanded(child: tiles[i]),
+          Expanded(
+              child: i + 1 < tiles.length ? tiles[i + 1] : const SizedBox()),
+        ],
+      ));
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Column(children: rows),
+    );
+  }
+
+  /// One checkbox; disabled (read-only) unless the page is in edit mode.
+  Widget _checkTile(String label, bool? value, void Function(bool) assign) {
+    return CheckboxListTile(
+      value: value ?? false,
+      controlAffinity: ListTileControlAffinity.leading,
+      contentPadding: EdgeInsets.zero,
+      activeColor: pageBlue,
+      title: Text(label, style: Theme.of(context).textTheme.displaySmall),
+      onChanged: (editable)
+          ? (v) {
+              setState(() {
+                assign(v ?? false);
+              });
+            }
+          : null,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments;
@@ -94,25 +147,43 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
             ),
           ],
         ),
-        body: SingleChildScrollView(
-          child: Column(children: [
-            Container(
-              decoration: bckDecoration(),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                        child: GestureDetector(
-                      child: imagePreview(
-                          photoUrl: photoUrl, currentAthlete: currentAthlete),
-                      onTap: () {
-                        if (editable) {
-                          selectImageSource();
-                        }
-                      },
-                    )),
+        body: Container(
+          decoration: bckDecoration(),
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  PageTitleBlock(
+                    title: currentAthlete.id == null
+                        ? 'New athlete'
+                        : '${currentAthlete.firstName ?? ""} ${currentAthlete.lastName ?? ""}'
+                            .trim(),
+                    children: [
+                      Center(
+                          child: GestureDetector(
+                        child: imagePreview(
+                            photoUrl: photoUrl, currentAthlete: currentAthlete),
+                        onTap: () {
+                          if (editable) {
+                            selectImageSource();
+                          }
+                        },
+                      )),
+                      if (!editable && (currentAthlete.category ?? '').isNotEmpty)
+                        Text(
+                          currentAthlete.category!,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: pageBlue,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                    ],
+                  ),
+                  const ColoredPageHeader(title: 'Personal details'),
+                  _section([
                     TextFormField(
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -121,8 +192,7 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                         return null;
                       },
                       textCapitalization: TextCapitalization.words,
-                      decoration:
-                          buildStandardInputDecorationWithLabel('First Name'),
+                      decoration: pageFieldDecoration('First Name'),
                       controller: firstNameController,
                       enabled: editable,
                       style: Theme.of(context).textTheme.displaySmall,
@@ -138,8 +208,7 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                         return null;
                       },
                       textCapitalization: TextCapitalization.words,
-                      decoration:
-                          buildStandardInputDecorationWithLabel('Last Name'),
+                      decoration: pageFieldDecoration('Last Name'),
                       controller: lastNameController,
                       enabled: editable,
                       style: Theme.of(context).textTheme.displaySmall,
@@ -154,8 +223,9 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                         }
                         return null;
                       },
-                      decoration:
-                          buildStandardInputDecorationWithLabel('Date of Birth'),
+                      decoration: pageFieldDecoration('Date of Birth').copyWith(
+                        suffixIcon: const Icon(Icons.calendar_today, color: pageBlue),
+                      ),
                       controller: dateOfBirthController,
                       readOnly: true,
                       enabled: editable,
@@ -173,11 +243,11 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                           lastDate: DateTime.now(),
                           initialDatePickerMode: DatePickerMode.year,
                         );
-        
+
                         if (pickedDate != null) {
                           String formattedDate =
                               DateFormat('yyyy-MM-dd').format(pickedDate);
-      
+
                           setState(() {
                             dateOfBirthController.text = formattedDate;
                             currentAthlete.birthDate = dateOfBirthController.text;
@@ -193,13 +263,13 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                               }
                               return null;
                             },
-                            decoration:
-                                buildStandardInputDecorationWithLabel('Gender'),
+                            decoration: pageFieldDecoration('Gender'),
                             controller: genderController,
                             enabled: false,
                             style: Theme.of(context).textTheme.displaySmall,
                           )
                         : DropdownButtonFormField(
+                            decoration: pageFieldDecoration('Gender'),
                             hint: const Text('Select Gender'),
                             value: currentAthlete.gender,
                             validator: (value) {
@@ -220,302 +290,74 @@ class _AthleteDetailViewState extends State<AthleteDetailView> {
                               });
                             },
                             style: Theme.of(context).textTheme.displaySmall,
-                            padding:
-                                const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
                           ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(
-                                  20.0, 10.0, 20.0, 0.0),
-                              child: Checkbox(
-                                value: currentAthlete.coach ?? false,
-                                onChanged: (editable)
-                                    ? (value) {
-                                        setState(() {
-                                          currentAthlete.coach = value ?? false;
-                                        });
-                                      }
-                                    : null,
-                              ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
-                              child: Text(
-                                'Coach',
-                                style: Theme.of(context).textTheme.displaySmall,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(
-                                  20.0, 10.0, 20.0, 0.0),
-                              child: Text(
-                                'Official',
-                                style: Theme.of(context).textTheme.displaySmall,
-                              ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
-                              child: Checkbox(
-                                value: currentAthlete.official ?? false,
-                                onChanged: (editable)
-                                    ? (value) {
-                                        setState(() {
-                                          currentAthlete.official =
-                                              value ?? false;
-                                        });
-                                      }
-                                    : null,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(
-                                  20.0, 10.0, 20.0, 0.0),
-                              child: Checkbox(
-                                value: currentAthlete.media ?? false,
-                                onChanged: (editable)
-                                    ? (value) {
-                                        setState(() {
-                                          currentAthlete.media = value ?? false;
-                                        });
-                                      }
-                                    : null,
-                              ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
-                              child: Text(
-                                'Media',
-                                style: Theme.of(context).textTheme.displaySmall,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(
-                                  20.0, 10.0, 20.0, 0.0),
-                              child: Text(
-                                'Supporter',
-                                style: Theme.of(context).textTheme.displaySmall,
-                              ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
-                              child: Checkbox(
-                                value: currentAthlete.supporter ?? false,
-                                onChanged: (editable)
-                                    ? (value) {
-                                        setState(() {
-                                          currentAthlete.supporter =
-                                              value ?? false;
-                                        });
-                                      }
-                                    : null,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: smallSpace,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(
-                                  20.0, 10.0, 20.0, 0.0),
-                              child: Checkbox(
-                                value: currentAthlete.leftSide ?? false,
-                                onChanged: (editable)
-                                    ? (value) {
-                                        setState(() {
-                                          currentAthlete.leftSide =
-                                              value ?? false;
-                                        });
-                                      }
-                                    : null,
-                              ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
-                              child: Text(
-                                'Left Side',
-                                style: Theme.of(context).textTheme.displaySmall,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(
-                                  20.0, 10.0, 20.0, 0.0),
-                              child: Text(
-                                'Right Side',
-                                style: Theme.of(context).textTheme.displaySmall,
-                              ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
-                              child: Checkbox(
-                                value: currentAthlete.rightSide ?? false,
-                                onChanged: (editable)
-                                    ? (value) {
-                                        setState(() {
-                                          currentAthlete.rightSide =
-                                              value ?? false;
-                                        });
-                                      }
-                                    : null,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(
-                                  20.0, 10.0, 20.0, 0.0),
-                              child: Checkbox(
-                                value: currentAthlete.helm ?? false,
-                                onChanged: (editable)
-                                    ? (value) {
-                                        setState(() {
-                                          currentAthlete.helm = value ?? false;
-                                        });
-                                      }
-                                    : null,
-                              ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
-                              child: Text(
-                                'Helm',
-                                style: Theme.of(context).textTheme.displaySmall,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(
-                                  20.0, 10.0, 20.0, 0.0),
-                              child: Text(
-                                'Drummer',
-                                style: Theme.of(context).textTheme.displaySmall,
-                              ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(0.0, 10.0, 20.0, 0.0),
-                              child: Checkbox(
-                                value: currentAthlete.drummer ?? false,
-                                onChanged: (editable)
-                                    ? (value) {
-                                        setState(() {
-                                          currentAthlete.drummer = value ?? false;
-                                        });
-                                      }
-                                    : null,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: smallSpace,
-                    ),
-                    Visibility(
-                      visible: !editable,
-                      child: ListTile(
-                        title: Text(
-                          currentAthlete.category ?? "",
-                          style: Theme.of(context).textTheme.displayLarge,
-                          textAlign: TextAlign.center,
-                        ),
+                  ]),
+                  pageSectionGap,
+                  const ColoredPageHeader(title: 'Boat positions'),
+                  _checkboxSection([
+                    _checkTile('Left Side', currentAthlete.leftSide, (v) {
+                      currentAthlete.leftSide = v;
+                    }),
+                    _checkTile('Right Side', currentAthlete.rightSide, (v) {
+                      currentAthlete.rightSide = v;
+                    }),
+                    _checkTile('Helm', currentAthlete.helm, (v) {
+                      currentAthlete.helm = v;
+                    }),
+                    _checkTile('Drummer', currentAthlete.drummer, (v) {
+                      currentAthlete.drummer = v;
+                    }),
+                  ]),
+                  pageSectionGap,
+                  const ColoredPageHeader(title: 'Roles'),
+                  _checkboxSection([
+                    _checkTile('Coach', currentAthlete.coach, (v) {
+                      currentAthlete.coach = v;
+                    }),
+                    _checkTile('Official', currentAthlete.official, (v) {
+                      currentAthlete.official = v;
+                    }),
+                    _checkTile('Media', currentAthlete.media, (v) {
+                      currentAthlete.media = v;
+                    }),
+                    _checkTile('Supporter', currentAthlete.supporter, (v) {
+                      currentAthlete.supporter = v;
+                    }),
+                  ]),
+                  if (currentAthlete.id != null) ...[
+                    pageSectionGap,
+                    const ColoredPageHeader(title: 'Documents'),
+                    _section([
+                      Row(
+                        children: [
+                          Text(
+                            'Antidoping certificate: ',
+                            style: Theme.of(context).textTheme.displaySmall,
+                          ),
+                          editable
+                              ? ElevatedButton(
+                                  onPressed: () {
+                                    selectFile(context);
+                                  },
+                                  child: const Text('Upload'))
+                              : currentAthlete.certificate == null
+                                  ? const StatusChip(
+                                      label: 'missing', color: Colors.red)
+                                  : ElevatedButton(
+                                      onPressed: () =>
+                                          _launchUrl(certificateUrl),
+                                      child: const Text('Open')),
+                        ],
                       ),
-                    ),
-                    const SizedBox(
-                      height: smallSpace,
-                    ),
-                    Visibility(
-                      visible: currentAthlete.id != null,
-                      child: Padding(
-                        padding:
-                            const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-                        child: Row(
-                          children: [
-                            Text(
-                              'Antidoping certificate: ',
-                              style: Theme.of(context).textTheme.displaySmall,
-                            ),
-                            editable
-                                ? ElevatedButton(
-                                    onPressed: () {
-                                      selectFile(context);
-                                    },
-                                    child: const Text('Upload'))
-                                : currentAthlete.certificate == null
-                                    ? Text(
-                                        'missing',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .displaySmall,
-                                      )
-                                    : ElevatedButton(
-                                        onPressed: () =>
-                                            _launchUrl(certificateUrl),
-                                        child: const Text('Open')),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: bigSpace,
-                    ),
+                    ]),
                   ],
-                ),
+                  const SizedBox(
+                    height: bigSpace,
+                  ),
+                ],
               ),
             ),
-            // ElevatedButton(
-            //     onPressed: () => _launchUrl(certificateUrl), child: Text('Open')),
-          ]),
+          ),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         floatingActionButton: Visibility(
