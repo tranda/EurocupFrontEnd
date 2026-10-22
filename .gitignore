@@ -49,3 +49,7 @@ app.*.map.json
 .env
 .env.local
 .env.*.local
+
+# Never ship credentials in assets (they are public in the web build)
+assets/*.env
+assets/config.json
