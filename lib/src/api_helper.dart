@@ -1561,11 +1561,13 @@ Future<NewApiKey> createApiKey(
   String name,
   List<String> permissions, {
   int? expiresInDays,
+  int? clubId,
 }) async {
   final body = <String, dynamic>{
     'name': name,
     'permissions': permissions,
     if (expiresInDays != null) 'expires_in_days': expiresInDays,
+    if (clubId != null) 'club_id': clubId,
   };
   final res = await http.post(
     Uri.parse('$apiURL/api-keys'),
@@ -1579,13 +1581,13 @@ Future<NewApiKey> createApiKey(
   );
 }
 
-/// Change which permissions an existing key has. The secret stays the same,
+/// Change an existing key's permissions and club. The secret stays the same,
 /// so apps already using the key keep working.
-Future<ApiKey> updateApiKeyPermissions(int id, List<String> permissions) async {
+Future<ApiKey> updateApiKey(int id, List<String> permissions, int? clubId) async {
   final res = await http.put(
     Uri.parse('$apiURL/api-keys/$id'),
     headers: _jsonAuthHeaders(),
-    body: jsonEncode({'permissions': permissions}),
+    body: jsonEncode({'permissions': permissions, 'club_id': clubId}),
   );
   final data = _unwrap(res, action: 'update API key') as Map<String, dynamic>;
   return ApiKey.fromMap(data);

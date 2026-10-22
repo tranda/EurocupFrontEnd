@@ -13,6 +13,9 @@ class ApiKey {
   final bool isActive;
   final DateTime? createdAt;
   final String? creatorName;
+  /// Club the key is limited to (required for the athletes.* permissions).
+  final int? clubId;
+  final String? clubName;
 
   ApiKey({
     this.id,
@@ -24,6 +27,8 @@ class ApiKey {
     this.isActive = true,
     this.createdAt,
     this.creatorName,
+    this.clubId,
+    this.clubName,
   });
 
   factory ApiKey.fromMap(Map<String, dynamic> map) {
@@ -47,6 +52,8 @@ class ApiKey {
       creatorName: (map['creator'] is Map)
           ? (map['creator']['name'] ?? map['creator']['username'])?.toString()
           : null,
+      clubId: map['club_id'] is int ? map['club_id'] : int.tryParse('${map['club_id'] ?? ''}'),
+      clubName: (map['club'] is Map) ? map['club']['name']?.toString() : null,
     );
   }
 }

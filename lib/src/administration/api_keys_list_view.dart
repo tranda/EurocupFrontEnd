@@ -3,6 +3,7 @@ import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
+import 'package:eurocup_frontend/src/model/club/club.dart';
 import 'package:eurocup_frontend/src/model/api_key.dart';
 
 /// Admin-only screen to mint and manage server API keys (e.g. a `races.read`
@@ -31,11 +32,34 @@ const Color _brandBlue = Color.fromARGB(255, 0, 80, 150);
 
 class _ApiKeysListViewState extends State<ApiKeysListView> {
   late Future<List<ApiKey>> dataFuture;
+  List<Club> _clubs = [];
 
   @override
   void initState() {
     super.initState();
     dataFuture = api.getApiKeys();
+    api.getClubs().then((clubs) {
+      clubs.sort((a, b) => (a.name ?? '').toLowerCase().compareTo((b.name ?? '').toLowerCase()));
+      if (mounted) setState(() => _clubs = clubs);
+    });
+  }
+
+  /// athletes.* permissions only work for a key linked to a club.
+  static bool _needsClub(Set<String> scopes) =>
+      scopes.any((s) => s.startsWith('athletes.') || s == '*');
+
+  Widget _clubPicker(int? value, ValueChanged<int?> onChanged) {
+    return DropdownButtonFormField<int?>(
+      isExpanded: true,
+      initialValue: _clubs.any((c) => c.id == value) ? value : null,
+      decoration: buildStandardInputDecorationWithLabel('Club (needed for athletes.*)'),
+      items: [
+        const DropdownMenuItem<int?>(value: null, child: Text('No club')),
+        for (final c in _clubs)
+          DropdownMenuItem<int?>(value: c.id, child: Text(c.name ?? '#${c.id}', overflow: TextOverflow.ellipsis)),
+      ],
+      onChanged: onChanged,
+    );
   }
 
   void _refresh() {
@@ -131,6 +155,10 @@ class _ApiKeysListViewState extends State<ApiKeysListView> {
               ),
               const SizedBox(height: 4),
               Text(
+                key.clubId == null ? 'No club' : 'Club: ${key.clubName ?? '#${key.clubId}'}',
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+              Text(
                 '${key.keyPrefix ?? 'ak_…'}…  •  '
                 '${expired ? 'expired' : (key.expiresAt == null ? 'never expires' : 'expires ${_fmtDate(key.expiresAt)}')}',
                 style: const TextStyle(fontSize: 12),
@@ -147,7 +175,7 @@ class _ApiKeysListViewState extends State<ApiKeysListView> {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                tooltip: 'Edit permissions',
+                tooltip: 'Edit permissions and club',
                 icon: const Icon(Icons.edit_outlined, color: _brandBlue),
                 onPressed: () => _showEditPermissionsDialog(key),
               ),
@@ -174,6 +202,7 @@ class _ApiKeysListViewState extends State<ApiKeysListView> {
     final nameController = TextEditingController();
     final expiresController = TextEditingController();
     final selectedScopes = <String>{'races.read'};
+    int? clubId;
 
     showDialog(
       context: context,
@@ -216,6 +245,8 @@ class _ApiKeysListViewState extends State<ApiKeysListView> {
                           },
                         ),
                       const SizedBox(height: 8),
+                      _clubPicker(clubId, (v) => setLocal(() => clubId = v)),
+                      const SizedBox(height: 8),
                       TextFormField(
                         controller: expiresController,
                         keyboardType: TextInputType.number,
@@ -248,12 +279,19 @@ class _ApiKeysListViewState extends State<ApiKeysListView> {
                       );
                       return;
                     }
+                    if (_needsClub(selectedScopes) && clubId == null) {
+                      ScaffoldMessenger.of(dialogContext).showSnackBar(
+                        const SnackBar(content: Text('Pick the club this key is for (needed for athletes.*)')),
+                      );
+                      return;
+                    }
                     final expiresText = expiresController.text.trim();
                     try {
                       final created = await api.createApiKey(
                         nameController.text.trim(),
                         selectedScopes.toList(),
                         expiresInDays: expiresText.isEmpty ? null : int.parse(expiresText),
+                        clubId: clubId,
                       );
                       if (!dialogContext.mounted) return;
                       Navigator.pop(dialogContext);
@@ -282,6 +320,7 @@ class _ApiKeysListViewState extends State<ApiKeysListView> {
   void _showEditPermissionsDialog(ApiKey key) {
     if (key.id == null) return;
     final selectedScopes = <String>{...key.permissions};
+    int? clubId = key.clubId;
 
     showDialog(
       context: context,
@@ -289,7 +328,7 @@ class _ApiKeysListViewState extends State<ApiKeysListView> {
         return StatefulBuilder(
           builder: (context, setLocal) {
             return AlertDialog(
-              title: Text('Permissions: ${key.name ?? 'API key'}'),
+              title: Text('Edit: ${key.name ?? 'API key'}'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -316,6 +355,8 @@ class _ApiKeysListViewState extends State<ApiKeysListView> {
                           });
                         },
                       ),
+                    const SizedBox(height: 8),
+                    _clubPicker(clubId, (v) => setLocal(() => clubId = v)),
                   ],
                 ),
               ),
@@ -326,6 +367,12 @@ class _ApiKeysListViewState extends State<ApiKeysListView> {
                 ),
                 TextButton(
                   onPressed: () async {
+                    if (_needsClub(selectedScopes) && clubId == null) {
+                      ScaffoldMessenger.of(dialogContext).showSnackBar(
+                        const SnackBar(content: Text('Pick the club this key is for (needed for athletes.*)')),
+                      );
+                      return;
+                    }
                     if (selectedScopes.isEmpty) {
                       ScaffoldMessenger.of(dialogContext).showSnackBar(
                         const SnackBar(content: Text('Select at least one permission')),
@@ -333,13 +380,13 @@ class _ApiKeysListViewState extends State<ApiKeysListView> {
                       return;
                     }
                     try {
-                      await api.updateApiKeyPermissions(key.id!, selectedScopes.toList());
+                      await api.updateApiKey(key.id!, selectedScopes.toList(), clubId);
                       if (!dialogContext.mounted) return;
                       Navigator.pop(dialogContext);
                       _refresh();
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Permissions updated')),
+                          const SnackBar(content: Text('Key updated')),
                         );
                       }
                     } catch (e) {
