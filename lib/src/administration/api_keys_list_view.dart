@@ -143,10 +143,20 @@ class _ApiKeysListViewState extends State<ApiKeysListView> {
               ),
             ],
           ),
-          trailing: IconButton(
-            tooltip: 'Delete key',
-            icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-            onPressed: () => _confirmDelete(key),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                tooltip: 'Edit permissions',
+                icon: const Icon(Icons.edit_outlined, color: _brandBlue),
+                onPressed: () => _showEditPermissionsDialog(key),
+              ),
+              IconButton(
+                tooltip: 'Delete key',
+                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                onPressed: () => _confirmDelete(key),
+              ),
+            ],
           ),
         ),
       ),
@@ -258,6 +268,89 @@ class _ApiKeysListViewState extends State<ApiKeysListView> {
                     }
                   },
                   child: const Text('Create'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Change an existing key's permissions. The secret stays the same, so the
+  /// app using it keeps working with the new scopes.
+  void _showEditPermissionsDialog(ApiKey key) {
+    if (key.id == null) return;
+    final selectedScopes = <String>{...key.permissions};
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setLocal) {
+            return AlertDialog(
+              title: Text('Permissions: ${key.name ?? 'API key'}'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'The key itself does not change; apps using it get the new permissions right away.',
+                      style: TextStyle(fontSize: 12, color: Colors.black54),
+                    ),
+                    const SizedBox(height: 8),
+                    for (final scope in _availableScopes)
+                      CheckboxListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(scope),
+                        value: selectedScopes.contains(scope),
+                        onChanged: (checked) {
+                          setLocal(() {
+                            if (checked == true) {
+                              selectedScopes.add(scope);
+                            } else {
+                              selectedScopes.remove(scope);
+                            }
+                          });
+                        },
+                      ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    if (selectedScopes.isEmpty) {
+                      ScaffoldMessenger.of(dialogContext).showSnackBar(
+                        const SnackBar(content: Text('Select at least one permission')),
+                      );
+                      return;
+                    }
+                    try {
+                      await api.updateApiKeyPermissions(key.id!, selectedScopes.toList());
+                      if (!dialogContext.mounted) return;
+                      Navigator.pop(dialogContext);
+                      _refresh();
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Permissions updated')),
+                        );
+                      }
+                    } catch (e) {
+                      if (dialogContext.mounted) {
+                        ScaffoldMessenger.of(dialogContext).showSnackBar(
+                          SnackBar(content: Text('Failed to update: $e')),
+                        );
+                      }
+                    }
+                  },
+                  child: const Text('Save'),
                 ),
               ],
             );

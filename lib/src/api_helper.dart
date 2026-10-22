@@ -1579,6 +1579,18 @@ Future<NewApiKey> createApiKey(
   );
 }
 
+/// Change which permissions an existing key has. The secret stays the same,
+/// so apps already using the key keep working.
+Future<ApiKey> updateApiKeyPermissions(int id, List<String> permissions) async {
+  final res = await http.put(
+    Uri.parse('$apiURL/api-keys/$id'),
+    headers: _jsonAuthHeaders(),
+    body: jsonEncode({'permissions': permissions}),
+  );
+  final data = _unwrap(res, action: 'update API key') as Map<String, dynamic>;
+  return ApiKey.fromMap(data);
+}
+
 Future<void> deleteApiKey(int id) async {
   final res = await http.delete(
     Uri.parse('$apiURL/api-keys/$id'),
