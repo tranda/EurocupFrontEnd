@@ -23,6 +23,7 @@ const List<String> _availableScopes = [
   'races.write',
   'races.bulk-update',
   'athletes.read',
+  'athletes.write',
   '*',
 ];
 
