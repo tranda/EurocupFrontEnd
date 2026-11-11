@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:eurocup_frontend/src/model/athlete/athlete.dart';
 import 'package:eurocup_frontend/src/model/medal_standing.dart';
@@ -2460,4 +2461,153 @@ String? _messageFrom(String body) {
     if (decoded is Map && decoded['message'] is String) return decoded['message'] as String;
   } catch (_) {}
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// Event accreditation badges (Event Managers and up). Raw maps; see
+// lib/src/administration/badges/.
+// ---------------------------------------------------------------------------
+
+/// Template settings, every badge entry (athletes + staff + added people)
+/// and the hand-added people for an event.
+Future<Map<String, dynamic>> getBadges(int eventId) async {
+  final res = await http.get(Uri.parse('$apiURL/events/$eventId/badges'),
+      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json', 'Cache-Control': 'no-cache'});
+  if (res.statusCode != 200) {
+    throw Exception('Failed to load badges (${res.statusCode}): ${res.body}');
+  }
+  return json.decode(res.body) as Map<String, dynamic>;
+}
+
+/// URL of an uploaded badge file (logo, background, person photo).
+/// Needs the Authorization header (see [badgeFileHeaders]).
+String badgeFileUrl(int eventId, String name) => '$apiURL/events/$eventId/badges/files/$name';
+
+Map<String, String> get badgeFileHeaders => {'Authorization': 'Bearer $token'};
+
+Future<String> _sendBadgeMultipart(http.MultipartRequest request) async {
+  request.headers.addAll({'Authorization': 'Bearer $token', 'Accept': 'application/json'});
+  final res = await http.Response.fromStream(await request.send());
+  if (res.statusCode != 200) {
+    String msg = res.body;
+    try {
+      final body = json.decode(res.body);
+      msg = body['message']?.toString() ?? msg;
+    } catch (_) {}
+    throw Exception(msg);
+  }
+  return res.body;
+}
+
+/// Save template settings. [fields]/[types] go as JSON strings. Pass
+/// [logo]/[background] bytes to upload, or the remove flags to clear.
+Future<Map<String, dynamic>> saveBadgeTemplate(
+  int eventId, {
+  required Map<String, dynamic> settings,
+  required Map<String, bool> fields,
+  required Map<String, dynamic> types,
+  required List<Map<String, dynamic>> areas,
+  Uint8List? logo,
+  String? logoName,
+  Uint8List? background,
+  String? backgroundName,
+  Uint8List? backBackground,
+  String? backBackgroundName,
+  bool removeLogo = false,
+  bool removeBackground = false,
+  bool removeBackBackground = false,
+}) async {
+  final request = http.MultipartRequest('POST', Uri.parse('$apiURL/events/$eventId/badges/template'));
+  settings.forEach((k, v) {
+    if (v != null) request.fields[k] = v.toString();
+  });
+  request.fields['fields'] = json.encode(fields);
+  request.fields['types'] = json.encode(types);
+  request.fields['areas'] = json.encode(areas);
+  if (removeLogo) request.fields['remove_logo'] = '1';
+  if (removeBackground) request.fields['remove_background'] = '1';
+  if (removeBackBackground) request.fields['remove_back_background'] = '1';
+  if (backBackground != null) {
+    request.files.add(
+        http.MultipartFile.fromBytes('back_background', backBackground, filename: backBackgroundName ?? 'back.png'));
+  }
+  if (logo != null) {
+    request.files.add(http.MultipartFile.fromBytes('logo', logo, filename: logoName ?? 'logo.png'));
+  }
+  if (background != null) {
+    request.files.add(http.MultipartFile.fromBytes('background', background, filename: backgroundName ?? 'background.png'));
+  }
+  final body = json.decode(await _sendBadgeMultipart(request)) as Map<String, dynamic>;
+  return body['template'] as Map<String, dynamic>;
+}
+
+/// Create ([personId] null) or update a hand-added badge person.
+Future<void> saveBadgePerson(
+  int eventId, {
+  int? personId,
+  required String type,
+  required String firstName,
+  required String lastName,
+  String? organisation,
+  String? country,
+  Uint8List? photo,
+  String? photoName,
+  bool removePhoto = false,
+}) async {
+  final path = personId == null ? 'people' : 'people/$personId';
+  final request = http.MultipartRequest('POST', Uri.parse('$apiURL/events/$eventId/badges/$path'));
+  request.fields.addAll({
+    'type': type,
+    'first_name': firstName,
+    'last_name': lastName,
+    'organisation': organisation ?? '',
+    'country': country ?? '',
+  });
+  if (removePhoto) request.fields['remove_photo'] = '1';
+  if (photo != null) {
+    request.files.add(http.MultipartFile.fromBytes('photo', photo, filename: photoName ?? 'photo.jpg'));
+  }
+  await _sendBadgeMultipart(request);
+}
+
+Future<void> deleteBadgePerson(int eventId, int personId) async {
+  final res = await http.delete(Uri.parse('$apiURL/events/$eventId/badges/people/$personId'),
+      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'});
+  if (res.statusCode != 200) {
+    throw Exception('Delete failed (${res.statusCode}): ${res.body}');
+  }
+}
+
+/// Print file: one PDF ([split] 'single') or a ZIP with one PDF per club
+/// ('club'). [sides] 'duplex' alternates front/back pages, 'spread' puts
+/// both sides on one page. [keys] (a12, p3) and [types] narrow the selection.
+Future<Map<String, dynamic>> downloadBadges(
+  int eventId, {
+  String? size,
+  String split = 'single',
+  String sides = 'duplex',
+  List<String>? keys,
+  List<String>? types,
+}) async {
+  final params = <String, String>{'split': split, 'sides': sides};
+  if (size != null) params['size'] = size;
+  if (keys != null && keys.isNotEmpty) params['keys'] = keys.join(',');
+  if (types != null && types.isNotEmpty) params['types'] = types.join(',');
+  final uri = Uri.parse('$apiURL/events/$eventId/badges/download').replace(queryParameters: params);
+  final res = await http.get(uri, headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'});
+  if (res.statusCode != 200) {
+    String msg = res.body;
+    try {
+      msg = json.decode(res.body)['message']?.toString() ?? msg;
+    } catch (_) {}
+    throw Exception(msg);
+  }
+  final cd = res.headers['content-disposition'] ?? '';
+  final m = RegExp(r'filename="?([^"]+)"?').firstMatch(cd);
+  final zip = split == 'club';
+  return {
+    'bytes': res.bodyBytes,
+    'filename': m?.group(1) ?? (zip ? 'badges_by_club.zip' : 'badges.pdf'),
+    'contentType': res.headers['content-type'] ?? (zip ? 'application/zip' : 'application/pdf'),
+  };
 }

@@ -9,6 +9,8 @@ import 'package:eurocup_frontend/src/administration/discipline_detail_view.dart'
 import 'package:eurocup_frontend/src/administration/discipline_wizard_view.dart';
 import 'package:eurocup_frontend/src/administration/schedule/schedule_builder_page.dart';
 import 'package:eurocup_frontend/src/administration/schedule/schedule_event_picker.dart';
+import 'package:eurocup_frontend/src/administration/badges/badge_event_picker.dart';
+import 'package:eurocup_frontend/src/administration/badges/badges_page.dart';
 import 'package:eurocup_frontend/src/athletes/athlete_detail_view.dart';
 import 'package:eurocup_frontend/src/athletes/athlete_list_view.dart';
 import 'package:eurocup_frontend/src/model/user.dart';
@@ -139,6 +141,8 @@ class MyApp extends StatelessWidget {
     ClubAdelListView.routeName: AdministrationPage.routeName,
     ScheduleEventPicker.routeName: AdministrationPage.routeName,
     ScheduleBuilderPage.routeName: ScheduleEventPicker.routeName,
+    BadgeEventPicker.routeName: AdministrationPage.routeName,
+    BadgesPage.routeName: BadgeEventPicker.routeName,
 
     // Detail pages → corresponding list/parent
     UserDetailView.routeName: UserListView.routeName,
@@ -489,6 +493,16 @@ class MyApp extends StatelessWidget {
               targetRoute: ScheduleBuilderPage.routeName,
               child: ScheduleBuilderPage(),
             );
+          case BadgeEventPicker.routeName:
+            return const StartupWrapper(
+              targetRoute: BadgeEventPicker.routeName,
+              child: BadgeEventPicker(),
+            );
+          case BadgesPage.routeName:
+            return const StartupWrapper(
+              targetRoute: BadgesPage.routeName,
+              child: BadgesPage(),
+            );
           case DatabaseBackupView.routeName:
             return const StartupWrapper(
               targetRoute: DatabaseBackupView.routeName,
@@ -713,6 +727,7 @@ class MyApp extends StatelessWidget {
         UserListView.routeName,
         ScheduleEventPicker.routeName,
         ScheduleBuilderPage.routeName,
+        BadgeEventPicker.routeName,
       ];
 
       if (validDirectRoutes.contains(routePath)) {

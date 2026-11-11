@@ -12,6 +12,7 @@ import 'api_keys_list_view.dart';
 import 'event_list_view.dart';
 import 'discipline_list_view.dart';
 import 'schedule/schedule_event_picker.dart';
+import 'badges/badge_event_picker.dart';
 
 class AdministrationPage extends StatefulWidget {
   const AdministrationPage({super.key});
@@ -53,6 +54,8 @@ class _AdministrationPageState extends State<AdministrationPage> {
                     icon: Icons.event_available,
                     title: 'Race Schedule Builder',
                     onTap: () => go(ScheduleEventPicker.routeName)),
+              if (level >= 2)
+                MenuRow(icon: Icons.badge, title: 'Badges', onTap: () => go(BadgeEventPicker.routeName)),
             ]),
             MenuSection(title: 'Clubs and people', rows: [
               if (level >= 2)
