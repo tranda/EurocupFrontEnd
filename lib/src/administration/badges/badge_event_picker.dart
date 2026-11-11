@@ -19,6 +19,8 @@ class _BadgeEventPickerState extends State<BadgeEventPicker> {
   bool _loading = true;
   String? _error;
   List<Competition> _events = [];
+  /// event id → layout ('classic' / 'eurocup') for events that have a badge template.
+  Map<int, String> _templates = {};
 
   @override
   void initState() {
@@ -34,8 +36,17 @@ class _BadgeEventPickerState extends State<BadgeEventPicker> {
     try {
       final events = await api.getCompetitions(allEvents: true);
       events.sort((a, b) => (b.year ?? 0).compareTo(a.year ?? 0));
+      Map<int, String> templates = {};
+      try {
+        templates = {
+          for (final t in await api.getBadgeTemplates()) t['event_id'] as int: (t['layout'] ?? 'classic') as String,
+        };
+      } catch (_) {
+        // The chips are a hint only; the list still works without them.
+      }
       setState(() {
         _events = events;
+        _templates = templates;
         _loading = false;
       });
     } catch (e) {
@@ -90,7 +101,17 @@ class _BadgeEventPickerState extends State<BadgeEventPicker> {
               leading: const Icon(Icons.badge_outlined),
               title: Text('${event.name ?? "Event"} ${event.year ?? ""}'.trim(),
                   style: Theme.of(context).textTheme.displaySmall),
-              subtitle: Text(event.location ?? 'No location', style: Theme.of(context).textTheme.headlineMedium),
+              subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(event.location ?? 'No location', style: Theme.of(context).textTheme.headlineMedium),
+                if (_templates.containsKey(event.id))
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: StatusChip(
+                      label: 'Template · ${_templates[event.id] == 'eurocup' ? 'Euro Cup' : 'Classic'}',
+                      color: Colors.green,
+                    ),
+                  ),
+              ]),
               trailing: const Icon(Icons.chevron_right),
             ),
           ),
