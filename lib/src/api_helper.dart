@@ -2665,3 +2665,16 @@ Future<Map<String, dynamic>> copyBadgeTemplate(int eventId, int fromEventId) asy
   }
   return (json.decode(res.body) as Map)['template'] as Map<String, dynamic>;
 }
+
+/// Designer template PDF (front + back at print size with bleed, no artwork,
+/// placeholders where the app prints data). Uses the saved template.
+Future<Map<String, dynamic>> downloadBadgeGuide(int eventId, {String? size}) async {
+  final uri = Uri.parse('$apiURL/events/$eventId/badges/template/guide')
+      .replace(queryParameters: size != null ? {'size': size} : null);
+  final res = await http.get(uri, headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'});
+  if (res.statusCode != 200) {
+    throw Exception('Download failed (${res.statusCode})');
+  }
+  final m = RegExp(r'filename="?([^"]+)"?').firstMatch(res.headers['content-disposition'] ?? '');
+  return {'bytes': res.bodyBytes, 'filename': m?.group(1) ?? 'badge-design-template.pdf'};
+}

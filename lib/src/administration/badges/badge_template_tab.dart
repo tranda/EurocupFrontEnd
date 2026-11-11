@@ -4,6 +4,7 @@ import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:file_picker/file_picker.dart';
 import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/material.dart';
+import 'package:universal_html/html.dart' as html;
 
 import 'badges_page.dart' show badgeTypeLabels;
 
@@ -201,6 +202,23 @@ class _BadgeTemplateTabState extends State<BadgeTemplateTab> with AutomaticKeepA
     }
   }
 
+  Future<void> _downloadGuide() async {
+    setState(() => _saving = true);
+    try {
+      final r = await api.downloadBadgeGuide(widget.eventId, size: _size);
+      final blob = html.Blob([r['bytes'] as Uint8List], 'application/pdf');
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      html.AnchorElement(href: url)
+        ..setAttribute('download', r['filename'] as String)
+        ..click();
+      html.Url.revokeObjectUrl(url);
+    } catch (e) {
+      _snack(e.toString().replaceFirst('Exception: ', ''), error: true);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
   Future<void> _save() async {
     final colors = [_bannerColor.text, _footerColor.text, ..._typeColor.values.map((c) => c.text)];
     if (colors.any((c) => !_isHex(c))) {
@@ -294,12 +312,25 @@ class _BadgeTemplateTabState extends State<BadgeTemplateTab> with AutomaticKeepA
           PageTitleBlock(title: 'Badge Template', children: [
             const Text('Settings for this event\'s badges. Save, then use Preview to see the real PDF.',
                 textAlign: TextAlign.center, style: TextStyle(color: Colors.black54)),
-            OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(foregroundColor: pageBlue, side: const BorderSide(color: pageBlue)),
-              onPressed: _saving ? null : _copyFrom,
-              icon: const Icon(Icons.content_copy),
-              label: const Text('Copy from another event…'),
-            ),
+            Wrap(spacing: 8, runSpacing: 8, alignment: WrapAlignment.center, children: [
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(foregroundColor: pageBlue, side: const BorderSide(color: pageBlue)),
+                onPressed: _saving ? null : _copyFrom,
+                icon: const Icon(Icons.content_copy),
+                label: const Text('Copy from another event…'),
+              ),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(foregroundColor: pageBlue, side: const BorderSide(color: pageBlue)),
+                onPressed: _saving || _dirty ? null : _downloadGuide,
+                icon: const Icon(Icons.download),
+                label: const Text('Designer template (PDF)'),
+              ),
+            ]),
+            const Text(
+                'For the designer: card at print size with bleed, no artwork, and boxes where the app prints '
+                'photo, QR, names, club... Pink = bleed, dashed = trim, dotted = 2 mm safe area. Save first.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: Colors.black54)),
           ]),
           _card('Card', [
             const Text('Layout', style: TextStyle(fontWeight: FontWeight.w600)),
