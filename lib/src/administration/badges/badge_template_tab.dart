@@ -60,10 +60,10 @@ class _BadgeTemplateTabState extends State<BadgeTemplateTab> with AutomaticKeepA
   late String _size;
   late String _layout;
   late int _bleed;
-  late final TextEditingController _banner;
-  late final TextEditingController _bannerColor;
-  late final TextEditingController _footerColor;
-  late final TextEditingController _backText;
+  late TextEditingController _banner;
+  late TextEditingController _bannerColor;
+  late TextEditingController _footerColor;
+  late TextEditingController _backText;
   late Map<String, bool> _fields;
   late Map<String, TextEditingController> _typeLabel;
   late Map<String, TextEditingController> _typeColor;
