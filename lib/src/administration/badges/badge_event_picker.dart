@@ -85,7 +85,7 @@ class _BadgeEventPickerState extends State<BadgeEventPicker> {
         const Divider(height: 4),
         for (final event in items)
           PageListItem(
-            onTap: () => Navigator.pushNamed(context, BadgesPage.routeName, arguments: event),
+            onTap: () => Navigator.pushNamed(context, '${BadgesPage.routeName}?eventId=${event.id}', arguments: event),
             child: ListTile(
               leading: const Icon(Icons.badge_outlined),
               title: Text('${event.name ?? "Event"} ${event.year ?? ""}'.trim(),

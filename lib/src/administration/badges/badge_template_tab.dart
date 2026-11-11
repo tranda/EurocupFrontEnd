@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:file_picker/file_picker.dart';
+import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/material.dart';
 
 import 'badges_page.dart' show badgeTypeLabels;
@@ -216,7 +217,11 @@ class _BadgeTemplateTabState extends State<BadgeTemplateTab> with AutomaticKeepA
     super.build(context);
     return Column(children: [
       Expanded(
-        child: ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 24), children: [
+        child: ListView(padding: const EdgeInsets.only(bottom: 24), children: [
+          const PageTitleBlock(title: 'Badge Template', children: [
+            Text('Settings for this event\'s badges. Save, then use Preview to see the real PDF.',
+                textAlign: TextAlign.center, style: TextStyle(color: Colors.black54)),
+          ]),
           _card('Card', [
             SegmentedButton<String>(
               segments: const [
@@ -277,6 +282,7 @@ class _BadgeTemplateTabState extends State<BadgeTemplateTab> with AutomaticKeepA
             for (final f in _fieldLabels.entries)
               SwitchListTile(
                 dense: true,
+                activeThumbColor: pageBlue,
                 contentPadding: EdgeInsets.zero,
                 title: Text(f.value),
                 value: _fields[f.key] ?? true,
@@ -294,6 +300,7 @@ class _BadgeTemplateTabState extends State<BadgeTemplateTab> with AutomaticKeepA
             for (final f in _backFieldLabels.entries)
               SwitchListTile(
                 dense: true,
+                activeThumbColor: pageBlue,
                 contentPadding: EdgeInsets.zero,
                 title: Text(f.value),
                 value: _fields[f.key] ?? true,
@@ -364,16 +371,25 @@ class _BadgeTemplateTabState extends State<BadgeTemplateTab> with AutomaticKeepA
         elevation: 8,
         color: Colors.white,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
             if (_dirty) const Expanded(child: Text('Unsaved changes', style: TextStyle(color: Colors.orange))),
             OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: pageBlue,
+                side: const BorderSide(color: pageBlue),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              ),
               onPressed: _saving || _dirty ? null : widget.onPreview,
               icon: const Icon(Icons.visibility),
               label: const Text('Preview'),
             ),
             const SizedBox(width: 8),
             FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: pageBlue,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              ),
               onPressed: _saving ? null : _save,
               icon: _saving
                   ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
@@ -386,16 +402,19 @@ class _BadgeTemplateTabState extends State<BadgeTemplateTab> with AutomaticKeepA
     ]);
   }
 
-  Widget _card(String title, List<Widget> children) => Card(
-        margin: const EdgeInsets.only(bottom: 12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 8),
-            ...children,
-          ]),
-        ),
+  /// Style C section: event-coloured bar, white body, section gap.
+  Widget _card(String title, List<Widget> children) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ColoredPageHeader(title: title, eventId: widget.eventId),
+          const Divider(height: 4),
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
+          ),
+          pageSectionGap,
+        ],
       );
 
   Widget _colorField(String label, TextEditingController c, {double width = 170}) => SizedBox(
@@ -495,6 +514,8 @@ class _BadgeTemplateTabState extends State<BadgeTemplateTab> with AutomaticKeepA
               for (var i = 1; i <= _areas.length; i++)
                 FilterChip(
                   visualDensity: VisualDensity.compact,
+                  selectedColor: Colors.blue.shade100,
+                  checkmarkColor: pageBlue,
                   label: Text('$i'),
                   tooltip: _areas[i - 1].text,
                   selected: _typeAreas[type]!.contains(i),

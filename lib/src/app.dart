@@ -728,6 +728,7 @@ class MyApp extends StatelessWidget {
         ScheduleEventPicker.routeName,
         ScheduleBuilderPage.routeName,
         BadgeEventPicker.routeName,
+        BadgesPage.routeName,
       ];
 
       if (validDirectRoutes.contains(routePath)) {
@@ -796,6 +797,14 @@ class MyApp extends StatelessWidget {
             }
             if (queryParams.containsKey('eventName')) {
               arguments['eventName'] = queryParams['eventName'];
+            }
+            break;
+          case BadgesPage.routeName:
+            if (queryParams.containsKey('eventId')) {
+              arguments['eventId'] = queryParams['eventId'];
+            }
+            if (queryParams.containsKey('tab')) {
+              arguments['tab'] = queryParams['tab'];
             }
             break;
           case ScheduleBuilderPage.routeName:

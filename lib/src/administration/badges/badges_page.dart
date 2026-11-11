@@ -3,9 +3,11 @@ import 'dart:typed_data';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 import 'package:eurocup_frontend/src/common.dart';
 import 'package:eurocup_frontend/src/widgets.dart';
+import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/material.dart';
 import 'package:universal_html/html.dart' as html;
 
+import '../../athletes/image_widget_web.dart' if (dart.library.io) 'package:flutter/material.dart';
 import 'badge_event_picker.dart';
 import 'badge_person_dialog.dart';
 import 'badge_template_tab.dart';
@@ -46,16 +48,70 @@ class _BadgesPageState extends State<BadgesPage> with SingleTickerProviderStateM
   final Set<String> _selected = {};
   String _search = '';
 
+  bool _resolving = false;
+  bool _noEvent = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabs.addListener(() {
+      if (!_tabs.indexIsChanging && _event != null) {
+        syncBadgesUrl(_event!.id?.toString(), tabIndex: _tabs.index);
+      }
+    });
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_event != null) return;
+    if (_event != null || _resolving) return;
+    _resolveEvent();
+  }
+
+  /// Warm navigation passes the Competition; on a browser refresh the id
+  /// comes from the URL (?eventId=, &tab=) or local storage and the event is
+  /// re-fetched from the events list (there is no by-id endpoint).
+  Future<void> _resolveEvent() async {
+    _resolving = true;
     final args = ModalRoute.of(context)?.settings.arguments;
     if (args is Competition) {
       _event = args;
+      syncBadgesUrl(_event!.id?.toString(), tabIndex: _tabs.index);
       _load();
-    } else {
-      _loading = false;
+      return;
+    }
+    final map = args is Map ? args : const {};
+    final tab = int.tryParse(map['tab']?.toString() ?? '') ?? loadBadgesTab();
+    if (tab != null && tab >= 0 && tab < _tabs.length) _tabs.index = tab;
+    final id = int.tryParse(map['eventId']?.toString() ?? '') ?? int.tryParse(loadBadgesEventId() ?? '');
+    if (id == null) {
+      setState(() {
+        _loading = false;
+        _noEvent = true;
+      });
+      return;
+    }
+    try {
+      final list = await api.getCompetitions(allEvents: true);
+      if (!mounted) return;
+      final match = list.where((c) => c.id == id);
+      if (match.isEmpty) {
+        setState(() {
+          _loading = false;
+          _noEvent = true;
+        });
+        return;
+      }
+      _event = match.first;
+      syncBadgesUrl(_event!.id?.toString(), tabIndex: _tabs.index);
+      await _load();
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = e.toString();
+        });
+      }
     }
   }
 
@@ -103,6 +159,13 @@ class _BadgesPageState extends State<BadgesPage> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    if (_event == null && !_noEvent) {
+      return Scaffold(
+        appBar: appBar(title: 'Badges'),
+        body: Center(
+            child: _error != null ? Text('Error: $_error') : const CircularProgressIndicator()),
+      );
+    }
     if (_event == null) {
       return Scaffold(
         appBar: appBar(title: 'Badges'),
@@ -116,26 +179,27 @@ class _BadgesPageState extends State<BadgesPage> with SingleTickerProviderStateM
     }
 
     return Scaffold(
-      appBar: appBar(title: 'Badges'),
+      appBar: appBar(title: _event!.getShortName()),
       body: Container(
         decoration: bckDecoration(),
         child: Column(children: [
-          Container(
-            width: double.infinity,
-            color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-            child: Text('${_event!.name ?? "Event"} ${_event!.year ?? ""}'.trim(),
-                style: Theme.of(context).textTheme.displaySmall),
-          ),
           Material(
             color: Colors.white,
+            elevation: 1,
             child: TabBar(
               controller: _tabs,
-              labelColor: Colors.blue.shade800,
-              tabs: const [Tab(icon: Icon(Icons.people), text: 'Badges'), Tab(icon: Icon(Icons.palette), text: 'Template')],
+              labelColor: pageBlue,
+              unselectedLabelColor: Colors.black54,
+              indicatorColor: pageBlue,
+              indicatorWeight: 3,
+              labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+              tabs: const [
+                Tab(icon: Icon(Icons.people), text: 'Badges'),
+                Tab(icon: Icon(Icons.palette), text: 'Template'),
+              ],
             ),
           ),
-          if (_busy) const LinearProgressIndicator(minHeight: 3),
+          if (_busy) const LinearProgressIndicator(minHeight: 3, color: pageBlue),
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
@@ -158,6 +222,31 @@ class _BadgesPageState extends State<BadgesPage> with SingleTickerProviderStateM
 
   // ------------------------------------------------------------ badges tab
 
+  static const _typeColors = <String, MaterialColor>{
+    'athlete': Colors.blue,
+    'coach': Colors.green,
+    'official': Colors.purple,
+    'support': Colors.blueGrey,
+    'media': Colors.orange,
+    'volunteer': Colors.teal,
+    'vip': Colors.amber,
+  };
+
+  bool? _selectionState(List<Map<String, dynamic>> list) {
+    if (list.isEmpty) return false;
+    final n = list.where((e) => _selected.contains(e['key'])).length;
+    return n == 0 ? false : (n == list.length ? true : null);
+  }
+
+  void _toggleAll(List<Map<String, dynamic>> list) {
+    setState(() {
+      final all = list.every((e) => _selected.contains(e['key']));
+      for (final e in list) {
+        all ? _selected.remove(e['key']) : _selected.add(e['key'] as String);
+      }
+    });
+  }
+
   Widget _badgesTab() {
     final visible = _visible;
     final counts = <String, int>{};
@@ -173,65 +262,47 @@ class _BadgesPageState extends State<BadgesPage> with SingleTickerProviderStateM
     }
 
     return Column(children: [
-      Container(
-        color: Colors.white,
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Wrap(spacing: 6, runSpacing: 6, children: [
-            for (final t in badgeTypeLabels.keys)
-              if ((counts[t] ?? 0) > 0)
-                FilterChip(
-                  label: Text('${badgeTypeLabels[t]} ${counts[t]}'),
-                  selected: _typeFilter.contains(t),
-                  onSelected: (on) => setState(() => on ? _typeFilter.add(t) : _typeFilter.remove(t)),
-                ),
-          ]),
-          const SizedBox(height: 6),
-          TextField(
-            decoration: const InputDecoration(
-              isDense: true,
-              prefixIcon: Icon(Icons.search),
-              hintText: 'Search name, club, EDBF ID',
-              border: OutlineInputBorder(),
-            ),
-            onChanged: (v) => setState(() => _search = v),
-          ),
-          const SizedBox(height: 6),
-          Row(children: [
-            Checkbox(
-              tristate: true,
-              value: visible.isEmpty
-                  ? false
-                  : visible.every((e) => _selected.contains(e['key']))
-                      ? true
-                      : visible.any((e) => _selected.contains(e['key']))
-                          ? null
-                          : false,
-              onChanged: (_) => setState(() {
-                final all = visible.every((e) => _selected.contains(e['key']));
-                for (final e in visible) {
-                  all ? _selected.remove(e['key']) : _selected.add(e['key'] as String);
-                }
-              }),
-            ),
-            Expanded(
-              child: Text(
-                '${visible.length} shown · ${_selected.length} selected'
-                '${missingPhotos > 0 ? ' · $missingPhotos without photo' : ''}',
-                style: const TextStyle(fontSize: 13, color: Colors.black54),
-              ),
-            ),
-          ]),
-        ]),
-      ),
-      const Divider(height: 1),
       Expanded(
         child: RefreshIndicator(
           onRefresh: _load,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.only(bottom: 90),
             children: [
+              PageTitleBlock(title: 'Badges (${_entries.length})', children: [
+                Wrap(spacing: 6, runSpacing: 6, alignment: WrapAlignment.center, children: [
+                  for (final t in badgeTypeLabels.keys)
+                    if ((counts[t] ?? 0) > 0)
+                      FilterChip(
+                        label: Text('${badgeTypeLabels[t]} ${counts[t]}'),
+                        selected: _typeFilter.contains(t),
+                        selectedColor: (_typeColors[t] ?? Colors.blue).shade100,
+                        checkmarkColor: (_typeColors[t] ?? Colors.blue).shade800,
+                        side: BorderSide(color: (_typeColors[t] ?? Colors.blue).shade300),
+                        backgroundColor: Colors.white,
+                        onSelected: (on) => setState(() => on ? _typeFilter.add(t) : _typeFilter.remove(t)),
+                      ),
+                ]),
+                TextField(
+                  decoration: pageFieldDecoration('Search name, club or EDBF ID')
+                      .copyWith(prefixIcon: const Icon(Icons.search, color: pageBlue)),
+                  onChanged: (v) => setState(() => _search = v),
+                ),
+                Row(children: [
+                  Checkbox(
+                    tristate: true,
+                    activeColor: pageBlue,
+                    value: _selectionState(visible),
+                    onChanged: (_) => _toggleAll(visible),
+                  ),
+                  Expanded(
+                    child: Text(
+                      '${visible.length} shown · ${_selected.length} selected',
+                      style: const TextStyle(fontSize: 13, color: Colors.black54),
+                    ),
+                  ),
+                  if (missingPhotos > 0) StatusChip(label: '$missingPhotos without photo', color: Colors.orange),
+                ]),
+              ]),
               if (visible.isEmpty)
                 const Padding(
                   padding: EdgeInsets.all(24),
@@ -239,14 +310,26 @@ class _BadgesPageState extends State<BadgesPage> with SingleTickerProviderStateM
                       textAlign: TextAlign.center, style: TextStyle(color: Colors.black54)),
                 ),
               for (final g in groups.entries) ...[
-                Container(
-                  color: Colors.blueGrey.shade50,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  child: Text('${g.key} (${g.value.length})',
-                      style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.black87)),
+                ColoredPageHeader(
+                  title: '${g.key} (${g.value.length})',
+                  eventId: _eventId,
+                  trailing: Theme(
+                    data: Theme.of(context).copyWith(unselectedWidgetColor: Colors.white),
+                    child: Checkbox(
+                      tristate: true,
+                      value: _selectionState(g.value),
+                      activeColor: Colors.white,
+                      checkColor: pageBlue,
+                      side: const BorderSide(color: Colors.white, width: 2),
+                      onChanged: (_) => _toggleAll(g.value),
+                    ),
+                  ),
                 ),
+                const Divider(height: 4),
                 for (final e in g.value) _entryTile(e),
+                pageSectionGap,
               ],
+              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -255,72 +338,109 @@ class _BadgesPageState extends State<BadgesPage> with SingleTickerProviderStateM
     ]);
   }
 
+  Widget _avatar(Map<String, dynamic> e) {
+    final file = e['photo_file'] as String?;
+    Widget? img;
+    if (file != null && file.isNotEmpty) {
+      img = e['source'] == 'person'
+          ? Image.network(api.badgeFileUrl(_eventId, file),
+              headers: api.badgeFileHeaders, width: 48, height: 48, fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => const Icon(Icons.person, color: Colors.grey))
+          : WebImage(imageUrl: 'https://$imagePrefix/$file', width: 48, height: 48);
+    }
+    return CircleAvatar(
+      radius: 24,
+      backgroundColor: Colors.grey.shade200,
+      child: img != null ? ClipOval(child: img) : const Icon(Icons.person, size: 28, color: Colors.grey),
+    );
+  }
+
   Widget _entryTile(Map<String, dynamic> e) {
     final key = e['key'] as String;
+    final type = e['type'] as String;
     final isPerson = e['source'] == 'person';
-    final details = [
-      badgeTypeLabels[e['type']] ?? e['type'],
-      if ((e['category'] ?? '') != '') e['category'],
-      if (e['gender'] != null) e['gender'],
-      if ((e['edbf_id'] ?? '') != '') 'ID ${e['edbf_id']}',
-    ].join(' · ');
+    final selected = _selected.contains(key);
 
-    return Material(
-      color: Colors.white,
-      child: ListTile(
-        dense: true,
-        leading: Checkbox(
-          value: _selected.contains(key),
-          onChanged: (on) => setState(() => on == true ? _selected.add(key) : _selected.remove(key)),
-        ),
-        title: Text('${e['last_name']} ${e['first_name']}'.toUpperCase(),
-            style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(details),
-        trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-          if (e['has_photo'] != true)
-            const Tooltip(message: 'No photo', child: Icon(Icons.no_photography_outlined, color: Colors.orange)),
-          if (isPerson) ...[
-            IconButton(
-              tooltip: 'Edit',
-              icon: const Icon(Icons.edit_outlined),
-              onPressed: () => _editPerson(_people[e['id']]),
+    return PageListItem(
+      onTap: () => setState(() => selected ? _selected.remove(key) : _selected.add(key)),
+      child: Container(
+        color: selected ? Colors.blue.shade50 : Colors.white,
+        child: ListTile(
+          leading: Row(mainAxisSize: MainAxisSize.min, children: [
+            Checkbox(
+              value: selected,
+              activeColor: pageBlue,
+              onChanged: (on) => setState(() => on == true ? _selected.add(key) : _selected.remove(key)),
             ),
-            IconButton(
-              tooltip: 'Delete',
-              icon: const Icon(Icons.delete_outline),
-              onPressed: () => _deletePerson(e),
-            ),
-          ],
-          IconButton(
-            tooltip: 'Preview badge',
-            icon: const Icon(Icons.visibility_outlined),
-            onPressed: () => _preview([key]),
+            _avatar(e),
+          ]),
+          title: Text('${e['first_name']} ${e['last_name']}', style: Theme.of(context).textTheme.displaySmall),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Wrap(runSpacing: 4, children: [
+              StatusChip(label: badgeTypeLabels[type] ?? type, color: _typeColors[type] ?? Colors.blue),
+              if ((e['category'] ?? '') != '') StatusChip(label: e['category'] as String, color: Colors.red),
+              if (e['gender'] != null)
+                StatusChip(label: e['gender'] as String, color: e['gender'] == 'FEMALE' ? Colors.pink : Colors.green),
+              if ((e['edbf_id'] ?? '') != '') StatusChip(label: 'ID ${e['edbf_id']}', color: Colors.grey),
+              if (e['has_photo'] != true) const StatusChip(label: 'no photo', color: Colors.orange),
+            ]),
           ),
-        ]),
+          trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+            if (isPerson) ...[
+              IconButton(
+                tooltip: 'Edit',
+                icon: const Icon(Icons.edit, color: pageBlue),
+                onPressed: () => _editPerson(_people[e['id']]),
+              ),
+              IconButton(
+                tooltip: 'Delete',
+                icon: const Icon(Icons.delete_outline, color: pageBlue),
+                onPressed: () => _deletePerson(e),
+              ),
+            ],
+            IconButton(
+              tooltip: 'Preview badge',
+              icon: const Icon(Icons.visibility, color: pageBlue),
+              onPressed: () => _preview([key]),
+            ),
+          ]),
+        ),
       ),
     );
   }
 
   Widget _actionBar(List<Map<String, dynamic>> visible) {
+    final btnStyle = OutlinedButton.styleFrom(
+      foregroundColor: pageBlue,
+      side: const BorderSide(color: pageBlue),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    );
     return Material(
       elevation: 8,
       color: Colors.white,
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Wrap(spacing: 8, runSpacing: 8, alignment: WrapAlignment.end, children: [
             OutlinedButton.icon(
+              style: btnStyle,
               onPressed: _busy ? null : () => _editPerson(null),
-              icon: const Icon(Icons.person_add_alt),
+              icon: const Icon(Icons.person_add),
               label: const Text('Add person'),
             ),
             OutlinedButton.icon(
+              style: btnStyle,
               onPressed: _busy || _selected.isEmpty ? null : () => _preview(_selected.toList()),
               icon: const Icon(Icons.visibility),
-              label: const Text('Preview selected'),
+              label: Text(_selected.isEmpty ? 'Preview selected' : 'Preview ${_selected.length}'),
             ),
             FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: pageBlue,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              ),
               onPressed: _busy || _entries.isEmpty ? null : () => _download(visible),
               icon: const Icon(Icons.download),
               label: const Text('Download for print'),

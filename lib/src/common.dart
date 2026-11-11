@@ -346,6 +346,20 @@ int? loadScheduleBuilderTab() {
   return null;
 }
 
+/// Badges page: keep the event (and tab) in the URL so a refresh reopens
+/// the same event, with a local-storage fallback for a bare URL.
+void syncBadgesUrl(String? eventId, {int? tabIndex}) {
+  if (!kIsWeb || eventId == null) return;
+  final tab = tabIndex != null ? '&tab=$tabIndex' : '';
+  html.window.history.replaceState(null, '', '#/badges?eventId=$eventId$tab');
+  html.window.localStorage['badges_event_id'] = eventId;
+  if (tabIndex != null) html.window.localStorage['badges_tab'] = tabIndex.toString();
+}
+
+String? loadBadgesEventId() => kIsWeb ? html.window.localStorage['badges_event_id'] : null;
+
+int? loadBadgesTab() => kIsWeb ? int.tryParse(html.window.localStorage['badges_tab'] ?? '') : null;
+
 // Country code mappings and flag utilities
 const Map<String, String> countryNameToCode = {
   'Serbia': 'SRB',
