@@ -2640,3 +2640,28 @@ Future<Map<String, dynamic>> runDatabaseUpdates() async {
   } catch (_) {}
   throw Exception('Database update failed (${res.statusCode}): ${res.body}');
 }
+
+/// Events that have a saved badge template: [{event_id, name, year, layout, size}].
+Future<List<Map<String, dynamic>>> getBadgeTemplates() async {
+  final res = await http.get(Uri.parse('$apiURL/badge-templates'),
+      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json', 'Cache-Control': 'no-cache'});
+  if (res.statusCode != 200) {
+    throw Exception('Failed to load templates (${res.statusCode}): ${res.body}');
+  }
+  return ((json.decode(res.body) as Map)['templates'] as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+}
+
+/// Replace [eventId]'s badge template with a copy of [fromEventId]'s (incl. images).
+Future<Map<String, dynamic>> copyBadgeTemplate(int eventId, int fromEventId) async {
+  final res = await http.post(Uri.parse('$apiURL/events/$eventId/badges/template/copy'),
+      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
+      body: {'from_event_id': fromEventId.toString()});
+  if (res.statusCode != 200) {
+    String msg = res.body;
+    try {
+      msg = json.decode(res.body)['message']?.toString() ?? msg;
+    } catch (_) {}
+    throw Exception(msg);
+  }
+  return (json.decode(res.body) as Map)['template'] as Map<String, dynamic>;
+}

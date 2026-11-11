@@ -86,10 +86,7 @@ class _BadgeTemplateTabState extends State<BadgeTemplateTab> with AutomaticKeepA
 
   @override
   void dispose() {
-    for (final c in [_banner, _bannerColor, _footerColor, _backText, ..._areas,
-      ..._typeLabel.values, ..._typeColor.values]) {
-      c.dispose();
-    }
+    _disposeControllers();
     super.dispose();
   }
 
@@ -130,6 +127,79 @@ class _BadgeTemplateTabState extends State<BadgeTemplateTab> with AutomaticKeepA
 
   static Color _parse(String v, Color fallback) =>
       _isHex(v) ? Color(int.parse('FF${v.trim().substring(1)}', radix: 16)) : fallback;
+
+  void _disposeControllers() {
+    for (final c in [_banner, _bannerColor, _footerColor, _backText, ..._areas,
+      ..._typeLabel.values, ..._typeColor.values]) {
+      c.dispose();
+    }
+  }
+
+  /// Replace this event's template with a copy of another event's.
+  Future<void> _copyFrom() async {
+    List<Map<String, dynamic>> list;
+    try {
+      list = (await api.getBadgeTemplates()).where((t) => t['event_id'] != widget.eventId).toList();
+    } catch (e) {
+      _snack(e.toString().replaceFirst('Exception: ', ''), error: true);
+      return;
+    }
+    if (!mounted) return;
+    if (list.isEmpty) {
+      _snack('No other event has a badge template yet.');
+      return;
+    }
+    final picked = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Text('Copy template from'),
+        children: [
+          for (final t in list)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(ctx, t),
+              child: ListTile(
+                leading: const Icon(Icons.event, color: pageBlue),
+                title: Text('${t['name']} ${t['year'] ?? ''}'.trim()),
+                subtitle: Text('${t['layout'] == 'eurocup' ? 'Euro Cup' : 'Classic'} layout · ${t['size'] == 'large' ? 'large' : 'small'}'),
+              ),
+            ),
+        ],
+      ),
+    );
+    if (picked == null || !mounted) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Replace this template?'),
+        content: Text('All settings, the logo and the artwork are copied from '
+            '${picked['name']} ${picked['year'] ?? ''}. This event\'s current template is replaced'
+            '${_dirty ? ' and your unsaved changes are lost' : ''}. People added by hand stay as they are.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: pageBlue),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Copy')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    setState(() => _saving = true);
+    try {
+      final saved = await api.copyBadgeTemplate(widget.eventId, picked['event_id'] as int);
+      _disposeControllers();
+      setState(() {
+        _init(saved);
+        _dirty = false;
+      });
+      widget.onSaved(saved);
+      _snack('Template copied from ${picked['name']} ${picked['year'] ?? ''}.');
+    } catch (e) {
+      _snack(e.toString().replaceFirst('Exception: ', ''), error: true);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
 
   Future<void> _save() async {
     final colors = [_bannerColor.text, _footerColor.text, ..._typeColor.values.map((c) => c.text)];
@@ -221,9 +291,15 @@ class _BadgeTemplateTabState extends State<BadgeTemplateTab> with AutomaticKeepA
     return Column(children: [
       Expanded(
         child: ListView(padding: const EdgeInsets.only(bottom: 24), children: [
-          const PageTitleBlock(title: 'Badge Template', children: [
-            Text('Settings for this event\'s badges. Save, then use Preview to see the real PDF.',
+          PageTitleBlock(title: 'Badge Template', children: [
+            const Text('Settings for this event\'s badges. Save, then use Preview to see the real PDF.',
                 textAlign: TextAlign.center, style: TextStyle(color: Colors.black54)),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(foregroundColor: pageBlue, side: const BorderSide(color: pageBlue)),
+              onPressed: _saving ? null : _copyFrom,
+              icon: const Icon(Icons.content_copy),
+              label: const Text('Copy from another event…'),
+            ),
           ]),
           _card('Card', [
             const Text('Layout', style: TextStyle(fontWeight: FontWeight.w600)),
