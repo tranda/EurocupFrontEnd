@@ -57,6 +57,7 @@ class BadgeTemplateTab extends StatefulWidget {
 
 class _BadgeTemplateTabState extends State<BadgeTemplateTab> with AutomaticKeepAliveClientMixin {
   late String _size;
+  late String _layout;
   late int _bleed;
   late final TextEditingController _banner;
   late final TextEditingController _bannerColor;
@@ -94,6 +95,7 @@ class _BadgeTemplateTabState extends State<BadgeTemplateTab> with AutomaticKeepA
 
   void _init(Map<String, dynamic> t) {
     _size = (t['size'] ?? 'small') as String;
+    _layout = (t['layout'] ?? 'classic') as String;
     _bleed = (t['bleed_mm'] ?? 0) as int;
     _banner = TextEditingController(text: (t['banner_text'] ?? '') as String);
     _bannerColor = TextEditingController(text: (t['banner_color'] ?? '#0072BC') as String);
@@ -145,6 +147,7 @@ class _BadgeTemplateTabState extends State<BadgeTemplateTab> with AutomaticKeepA
         widget.eventId,
         settings: {
           'size': _size,
+          'layout': _layout,
           'banner_text': _banner.text.trim(),
           'banner_color': _bannerColor.text.trim(),
           'footer_color': _footerColor.text.trim(),
@@ -223,6 +226,29 @@ class _BadgeTemplateTabState extends State<BadgeTemplateTab> with AutomaticKeepA
                 textAlign: TextAlign.center, style: TextStyle(color: Colors.black54)),
           ]),
           _card('Card', [
+            const Text('Layout', style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 6),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'classic', label: Text('Classic')),
+                ButtonSegment(value: 'eurocup', label: Text('Euro Cup')),
+              ],
+              selected: {_layout},
+              onSelectionChanged: (s) => setState(() {
+                _layout = s.first;
+                _dirty = true;
+              }),
+            ),
+            const SizedBox(height: 4),
+            Text(
+                _layout == 'eurocup'
+                    ? 'Header and logo strip come from the front artwork; category ribbon, big names and centred club. '
+                        'Text uses the banner colour.'
+                    : 'EDBF Nationals style: banner bar, gender ribbon, footer with the club.',
+                style: const TextStyle(fontSize: 12, color: Colors.black54)),
+            const SizedBox(height: 12),
+            const Text('Size', style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 6),
             SegmentedButton<String>(
               segments: const [
                 ButtonSegment(value: 'small', label: Text('Small 54 × 85.6 mm')),
