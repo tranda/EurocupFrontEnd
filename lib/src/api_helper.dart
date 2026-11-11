@@ -2611,3 +2611,29 @@ Future<Map<String, dynamic>> downloadBadges(
     'contentType': res.headers['content-type'] ?? (zip ? 'application/zip' : 'application/pdf'),
   };
 }
+
+// ---------------------------------------------------------------------------
+// Database updates (admins only): pending migrations and running them.
+// ---------------------------------------------------------------------------
+
+/// {pending: [migration names], ran_count, error}
+Future<Map<String, dynamic>> getDatabaseUpdates() async {
+  final res = await http.get(Uri.parse('$apiURL/database-updates'),
+      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json', 'Cache-Control': 'no-cache'});
+  if (res.statusCode != 200) {
+    throw Exception('Failed to load database updates (${res.statusCode}): ${res.body}');
+  }
+  return json.decode(res.body) as Map<String, dynamic>;
+}
+
+/// Runs `migrate --force`. Returns {success, message, output, pending, ...}
+/// also on failure (HTTP 500), so the screen can show the output.
+Future<Map<String, dynamic>> runDatabaseUpdates() async {
+  final res = await http.post(Uri.parse('$apiURL/database-updates/run'),
+      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'});
+  try {
+    final body = json.decode(res.body) as Map<String, dynamic>;
+    if (body.containsKey('success')) return body;
+  } catch (_) {}
+  throw Exception('Database update failed (${res.statusCode}): ${res.body}');
+}

@@ -4,6 +4,8 @@ import 'package:eurocup_frontend/src/widgets/page_template.dart';
 import 'package:flutter/material.dart';
 import 'package:eurocup_frontend/src/api_helper.dart' as api;
 
+import 'database_updates_panel.dart';
+
 class DatabaseBackupView extends StatefulWidget {
   const DatabaseBackupView({super.key});
 
@@ -292,6 +294,7 @@ class _DatabaseBackupViewState extends State<DatabaseBackupView> {
                     ),
                   ],
                 ),
+                const DatabaseUpdatesPanel(),
                 if (backups.isEmpty)
                   const Padding(
                     padding: EdgeInsets.all(24),
