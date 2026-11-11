@@ -15,7 +15,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.x'
+          flutter-version: '3.35.4' # pinned: 3.50 rejects const Row/Center used across the app
           channel: 'stable'
           cache: true
 
