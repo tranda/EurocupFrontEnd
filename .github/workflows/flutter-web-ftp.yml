@@ -42,7 +42,7 @@ jobs:
           grep -q "flutter_bootstrap.js?v=$V" build/web/index.html
           printf '%s\n' \
             '<IfModule mod_headers.c>' \
-            '  <FilesMatch "\.(html|js|json)$">' \
+            '  <FilesMatch "\.(html|js|json|otf|ttf|woff|woff2)$">' \
             '    Header set Cache-Control "no-cache"' \
             '  </FilesMatch>' \
             '</IfModule>' > build/web/.htaccess
