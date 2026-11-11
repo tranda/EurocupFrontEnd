@@ -472,7 +472,7 @@ class _BadgesPageState extends State<BadgesPage> with SingleTickerProviderStateM
   Future<void> _preview(List<String> keys) async {
     if (keys.isEmpty) return;
     await _run(() async {
-      final r = await api.downloadBadges(_eventId, keys: keys);
+      final r = await api.downloadBadges(_eventId, keys: keys, trimLines: true);
       final blob = html.Blob([r['bytes'] as Uint8List], 'application/pdf');
       final url = html.Url.createObjectUrlFromBlob(blob);
       html.window.open(url, '_blank');

@@ -2586,10 +2586,13 @@ Future<Map<String, dynamic>> downloadBadges(
   String? size,
   String split = 'single',
   String sides = 'duplex',
+  bool trimLines = false,
   List<String>? keys,
   List<String>? types,
 }) async {
   final params = <String, String>{'split': split, 'sides': sides};
+  // Previews only: dashed line on the trim edge. Never sent for print files.
+  if (trimLines) params['trim_lines'] = '1';
   if (size != null) params['size'] = size;
   if (keys != null && keys.isNotEmpty) params['keys'] = keys.join(',');
   if (types != null && types.isNotEmpty) params['types'] = types.join(',');
