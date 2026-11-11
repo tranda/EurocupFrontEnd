@@ -15,7 +15,7 @@ const badgeTypeLabels = <String, String>{
   'athlete': 'Athlete',
   'coach': 'Coach',
   'official': 'Official',
-  'support': 'Support',
+  'support': 'Supporter',
   'media': 'Media',
   'volunteer': 'Volunteer',
   'vip': 'VIP',

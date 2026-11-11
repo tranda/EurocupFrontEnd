@@ -485,7 +485,7 @@ class _BadgeTemplateTabState extends State<BadgeTemplateTab> with AutomaticKeepA
             ),
           if (type != 'athlete') _colorField('Tag colour', _typeColor[type]!, width: 140),
           if (type == 'athlete')
-            const Text('Tag shows gender: F red, O green',
+            const Text('Tag shows gender: FEMALE red, MALE green',
                 style: TextStyle(fontSize: 12, color: Colors.black54)),
         ]),
         if (_areas.isNotEmpty)
